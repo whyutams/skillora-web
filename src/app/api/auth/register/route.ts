@@ -1,6 +1,32 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/utils/supabase/server";
 
+function getPhoneVariants(phone: string): string[] {
+  const digits = phone.replace(/[^0-9]/g, "");
+  if (!digits) return [];
+  const variants = new Set<string>();
+  variants.add(phone.trim());
+  variants.add(digits);
+  if (digits.startsWith("0")) {
+    const withoutZero = digits.slice(1);
+    variants.add(withoutZero);
+    variants.add(`62${withoutZero}`);
+    variants.add(`+62${withoutZero}`);
+    variants.add(`0${withoutZero}`);
+  } else if (digits.startsWith("62")) {
+    const without62 = digits.slice(2);
+    variants.add(without62);
+    variants.add(`0${without62}`);
+    variants.add(`62${without62}`);
+    variants.add(`+62${without62}`);
+  } else {
+    variants.add(`0${digits}`);
+    variants.add(`62${digits}`);
+    variants.add(`+62${digits}`);
+  }
+  return Array.from(variants);
+}
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();
@@ -93,7 +119,43 @@ export async function POST(request: Request) {
       );
     }
 
-    // 7. Buat akun di Supabase Auth via Admin Client (email_confirm: true otomatis aktif)
+    // 7. Cek ketersediaan nomor WhatsApp/HP di tabel profiles
+    const phoneVariants = getPhoneVariants(cleanPhone);
+    const { data: existingPhone } = await adminClient
+      .from("profiles")
+      .select("id, whatsapp_number")
+      .in("whatsapp_number", phoneVariants)
+      .limit(1);
+
+    if (existingPhone && existingPhone.length > 0) {
+      return NextResponse.json(
+        {
+          error: `Nomor WhatsApp / HP "${cleanPhone}" sudah terdaftar pada akun lain. Silakan gunakan nomor WhatsApp lain atau masuk ke akun Anda.`,
+        },
+        { status: 400 }
+      );
+    }
+
+    // 8. Cek apakah email sudah terdaftar di Supabase Auth
+    try {
+      const { data: existingUsersData } =
+        await adminClient.auth.admin.listUsers();
+      const emailExists = existingUsersData?.users?.some(
+        (u) => u.email?.toLowerCase() === cleanEmail
+      );
+      if (emailExists) {
+        return NextResponse.json(
+          {
+            error: `Alamat email "${cleanEmail}" sudah terdaftar. Silakan masuk menggunakan akun Anda.`,
+          },
+          { status: 400 }
+        );
+      }
+    } catch (listErr) {
+      console.error("Error checking existing email list:", listErr);
+    }
+
+    // 9. Buat akun di Supabase Auth via Admin Client (email_confirm: true otomatis aktif)
     const { data: authResult, error: authError } =
       await adminClient.auth.admin.createUser({
         email: cleanEmail,

@@ -82,11 +82,29 @@ export async function GET(
     }
 
     // 3. Ambil rekening aktif
-    const { data: accounts } = await adminClient
+    let activeAccounts: unknown[] = [];
+    const { data: accounts, error: accErr } = await adminClient
       .from("payment_accounts")
       .select("*")
       .eq("is_active", true)
       .order("created_at", { ascending: true });
+
+    if (!accErr && accounts) {
+      activeAccounts = accounts;
+    } else {
+      const { data: fallbackLog } = await adminClient
+        .from("activity_logs")
+        .select("details")
+        .eq("table_name", "payment_accounts")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (fallbackLog?.details && typeof fallbackLog.details === "object" && Array.isArray((fallbackLog.details as Record<string, unknown>).accounts)) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        activeAccounts = ((fallbackLog.details as Record<string, unknown>).accounts as any[]).filter((a) => a.is_active);
+      }
+    }
 
     return NextResponse.json({
       enrollment: {
@@ -104,7 +122,7 @@ export async function GET(
         reviewed_at: parsedMeta.reviewed_at,
         course: parsedCourse,
       },
-      payment_accounts: accounts || [],
+      payment_accounts: activeAccounts || [],
     });
   } catch (err: unknown) {
     const message =

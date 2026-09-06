@@ -227,13 +227,12 @@ export default function DashboardLayout({
         {/* Sidebar Header (Tanpa Role Badge) */}
         <div>
           <div className="h-16 px-6 border-b border-stone-200/80 dark:border-stone-800/80 flex items-center justify-between">
-            <Link href="/" className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-[#0F3E2E] dark:bg-[#134e38] flex items-center justify-center text-emerald-300 border border-emerald-600/30 shadow-xs">
-                <GraduationCap className="w-5 h-5 text-emerald-300" />
-              </div>
-              <span className="font-extrabold text-base tracking-tight text-stone-900 dark:text-stone-100">
-                Skillora
-              </span>
+            <Link href="/" className="flex items-center" title="Skillora">
+              <img
+                src="/logo.png"
+                alt="Skillora"
+                className="h-8 w-auto object-contain"
+              />
             </Link>
 
             <button

@@ -261,16 +261,14 @@ export function Navbar() {
                 window.scrollTo({ top: 0, behavior: "smooth" });
               }
             }}
-            className="flex items-center gap-2.5 group transition-transform active:scale-[0.99]"
+            className="flex items-center group transition-transform active:scale-[0.99]"
+            title="Skillora"
           >
-            <div className="w-8 h-8 rounded-lg bg-[#0F3E2E] dark:bg-[#134e38] flex items-center justify-center text-emerald-300 border border-emerald-600/30 shadow-sm">
-              <GraduationCap className="w-5 h-5 text-emerald-300" />
-            </div>
-            <div className="flex flex-col">
-              <span className="font-extrabold text-lg tracking-tight text-stone-900 dark:text-stone-100 flex items-center gap-1.5">
-                Skillora
-              </span>
-            </div>
+            <img
+              src="/logo.png"
+              alt="Skillora"
+              className="h-8 sm:h-9 w-auto object-contain"
+            />
           </Link>
 
           {/* Desktop Nav Links with Expanding Center Border Animation & Active Scrollspy */}

@@ -16,16 +16,16 @@ const plusJakarta = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://skillora.vercel.app"),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://skillora-web.vercel.app"),
   title: {
-    default: "Skillora | Platform Kursus Online Pelajar & Mahasiswa",
+    default: "Skillora | Platform Kursus Online",
     template: "%s | Skillora",
   },
   description:
     "Kuasai keterampilan digital masa depan (Web Dev, Python Otomasi, UI/UX Design) dengan biaya hemat pelajar dan jadwal belajar fleksibel.",
   keywords: [
     "kursus online pelajar",
-    "kursus coding mahasiswa",
+    "kursus online mahasiswa",
     "belajar figma murah",
     "kursus python dasar",
     "web development pemula",
@@ -33,7 +33,7 @@ export const metadata: Metadata = {
     "kursus murah bersertifikat",
     "skillora kursus digital",
   ],
-  authors: [{ name: "Skillora Edupreneurship Team", url: "https://skillora.vercel.app" }],
+  authors: [{ name: "Skillora Team", url: "https://skillora-web.vercel.app" }],
   creator: "Skillora",
   publisher: "Skillora",
   formatDetection: {
@@ -41,17 +41,24 @@ export const metadata: Metadata = {
     address: false,
     telephone: false,
   },
+  icons: {
+    icon: [
+      { url: "/icon.png", type: "image/png" },
+    ],
+    shortcut: "/icon.png",
+    apple: "/icon.png",
+  },
   openGraph: {
-    title: "Skillora | Platform Kursus Online Pelajar & Mahasiswa",
+    title: "Skillora | Platform Kursus Online",
     description:
       "Kuasai keterampilan digital masa depan (Web Dev, Python, UI/UX) dengan biaya hemat pelajar dan bimbingan mentor via WhatsApp Group.",
-    url: "https://skillora.vercel.app",
+    url: "https://skillora-web.vercel.app",
     siteName: "Skillora",
     locale: "id_ID",
     type: "website",
     images: [
       {
-        url: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=1200&auto=format&fit=crop&q=80",
+        url: "/logo-cropped.png",
         width: 1200,
         height: 630,
         alt: "Skillora Platform Kursus Online",
@@ -60,10 +67,10 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Skillora | Platform Kursus Online Pelajar & Mahasiswa",
+    title: "Skillora | Platform Kursus Online",
     description:
       "Kuasai keterampilan digital masa depan (Web Dev, Python, UI/UX) dengan biaya hemat pelajar.",
-    images: ["https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=1200&auto=format&fit=crop&q=80"],
+    images: ["/logo-cropped.png"],
   },
   robots: {
     index: true,

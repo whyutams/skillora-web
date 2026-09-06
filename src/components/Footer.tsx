@@ -67,13 +67,12 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
           {/* Brand & Visi */}
           <div className="space-y-3 md:col-span-1">
-            <Link href="/" className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-lg bg-[#0F3E2E] dark:bg-[#134e38] flex items-center justify-center text-emerald-300">
-                <GraduationCap className="w-4 h-4" />
-              </div>
-              <span className="font-extrabold text-base tracking-tight text-stone-900 dark:text-stone-100">
-                Skillora
-              </span>
+            <Link href="/" className="inline-flex items-center" title="Skillora">
+              <img
+                src="/logo.png"
+                alt="Skillora"
+                className="h-8 w-auto object-contain"
+              />
             </Link>
             <p className="text-xs text-stone-500 dark:text-stone-400 leading-relaxed">
               Inisiatif platform Techno-Edupreneurship yang memberdayakan pelajar & mahasiswa menguasai skill digital siap kerja dengan biaya terjangkau.

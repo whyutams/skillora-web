@@ -50,6 +50,14 @@ export default function RegisterPage() {
   const [emailStatus, setEmailStatus] = React.useState<{
     loading: boolean;
     valid?: boolean;
+    available?: boolean;
+    message?: string;
+  }>({ loading: false });
+
+  const [whatsappStatus, setWhatsappStatus] = React.useState<{
+    loading: boolean;
+    valid?: boolean;
+    available?: boolean;
     message?: string;
   }>({ loading: false });
 
@@ -109,6 +117,7 @@ export default function RegisterPage() {
         setEmailStatus({
           loading: false,
           valid: data.valid,
+          available: data.available,
           message: data.message,
         });
       } catch {
@@ -118,6 +127,46 @@ export default function RegisterPage() {
 
     return () => clearTimeout(timer);
   }, [email]);
+
+  // Event Validasi WhatsApp / Nomor HP (Real-time debounce)
+  React.useEffect(() => {
+    const clean = whatsappNumber.trim().replace(/[^0-9]/g, "");
+    if (!clean) {
+      setWhatsappStatus({ loading: false });
+      return;
+    }
+    if (clean.length < 9) {
+      setWhatsappStatus({
+        loading: false,
+        valid: false,
+        available: false,
+        message: "Nomor WhatsApp minimal 9 digit.",
+      });
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      setWhatsappStatus({ loading: true });
+      try {
+        const res = await fetch("/api/auth/validate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ type: "whatsapp", value: clean }),
+        });
+        const data = await res.json();
+        setWhatsappStatus({
+          loading: false,
+          valid: data.valid,
+          available: data.available,
+          message: data.message,
+        });
+      } catch {
+        setWhatsappStatus({ loading: false });
+      }
+    }, 450);
+
+    return () => clearTimeout(timer);
+  }, [whatsappNumber]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -155,6 +204,11 @@ export default function RegisterPage() {
       return;
     }
 
+    if (whatsappStatus.available === false) {
+      setError("Nomor WhatsApp sudah terdaftar pada akun lain. Silakan gunakan nomor lain.");
+      return;
+    }
+
     if (!cleanEmail) {
       setError("Alamat email aktif wajib diisi.");
       return;
@@ -162,6 +216,11 @@ export default function RegisterPage() {
 
     if (emailStatus.valid === false) {
       setError("Format email tidak valid.");
+      return;
+    }
+
+    if (emailStatus.available === false) {
+      setError("Alamat email sudah terdaftar. Silakan gunakan alamat email lain atau masuk.");
       return;
     }
 
@@ -374,24 +433,57 @@ export default function RegisterPage() {
                   </div>
 
                   <div>
-                    <label
-                      htmlFor="whatsappNumber"
-                      className="block text-xs font-semibold text-stone-700 dark:text-stone-300 mb-1.5"
-                    >
-                      Nomor WhatsApp Aktif <span className="text-rose-500">*</span>
-                    </label>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label
+                        htmlFor="whatsappNumber"
+                        className="block text-xs font-semibold text-stone-700 dark:text-stone-300"
+                      >
+                        Nomor WhatsApp Aktif <span className="text-rose-500">*</span>
+                      </label>
+                      {whatsappStatus.loading && (
+                        <span className="text-[11px] text-stone-400 flex items-center gap-1">
+                          <Loader2 className="w-3 h-3 animate-spin" /> Cek...
+                        </span>
+                      )}
+                    </div>
                     <div className="relative">
                       <Phone className="w-4 h-4 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2" />
                       <input
                         id="whatsappNumber"
                         type="tel"
                         required
-                        placeholder="Masukkan nomor WhatsApp"
+                        placeholder="Contoh: 08123456789"
                         value={whatsappNumber}
                         onChange={(e) => setWhatsappNumber(e.target.value)}
-                        className="w-full pl-9 pr-3 py-2 text-sm rounded-lg border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-950 text-stone-900 dark:text-stone-100 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-[#0F3E2E] dark:focus:ring-emerald-500 transition-colors"
+                        className={`w-full pl-9 pr-9 py-2 text-sm rounded-lg border bg-white dark:bg-stone-950 text-stone-900 dark:text-stone-100 placeholder-stone-400 focus:outline-none focus:ring-2 transition-colors ${
+                          whatsappNumber && whatsappStatus.available === true
+                            ? "border-emerald-500 focus:ring-emerald-500"
+                            : whatsappNumber && whatsappStatus.available === false
+                            ? "border-rose-500 focus:ring-rose-500"
+                            : "border-stone-300 dark:border-stone-700 focus:ring-[#0F3E2E]"
+                        }`}
                       />
+                      {whatsappNumber && !whatsappStatus.loading && (
+                        <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                          {whatsappStatus.available ? (
+                            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                          ) : whatsappStatus.available === false ? (
+                            <AlertCircle className="w-4 h-4 text-rose-600" />
+                          ) : null}
+                        </div>
+                      )}
                     </div>
+                    {whatsappStatus.message && whatsappNumber && (
+                      <p
+                        className={`text-[11px] mt-1 ${
+                          whatsappStatus.available
+                            ? "text-emerald-600 dark:text-emerald-400"
+                            : "text-rose-600 dark:text-rose-400"
+                        }`}
+                      >
+                        {whatsappStatus.message}
+                      </p>
+                    )}
                   </div>
                 </div>
 
@@ -416,22 +508,22 @@ export default function RegisterPage() {
                       id="email"
                       type="email"
                       required
-                      placeholder="Masukkan email"
+                      placeholder="Masukkan email aktif"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       className={`w-full pl-9 pr-9 py-2 text-sm rounded-lg border bg-white dark:bg-stone-950 text-stone-900 dark:text-stone-100 placeholder-stone-400 focus:outline-none focus:ring-2 transition-colors ${
-                        email && emailStatus.valid === true
+                        email && emailStatus.available === true
                           ? "border-emerald-500 focus:ring-emerald-500"
-                          : email && emailStatus.valid === false
+                          : email && (emailStatus.valid === false || emailStatus.available === false)
                           ? "border-rose-500 focus:ring-rose-500"
                           : "border-stone-300 dark:border-stone-700 focus:ring-[#0F3E2E]"
                       }`}
                     />
                     {email && !emailStatus.loading && (
                       <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                        {emailStatus.valid ? (
+                        {emailStatus.available ? (
                           <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                        ) : emailStatus.valid === false ? (
+                        ) : emailStatus.valid === false || emailStatus.available === false ? (
                           <AlertCircle className="w-4 h-4 text-rose-600" />
                         ) : null}
                       </div>
@@ -440,7 +532,7 @@ export default function RegisterPage() {
                   {emailStatus.message && email && (
                     <p
                       className={`text-[11px] mt-1 ${
-                        emailStatus.valid
+                        emailStatus.available
                           ? "text-emerald-600 dark:text-emerald-400"
                           : "text-rose-600 dark:text-rose-400"
                       }`}
