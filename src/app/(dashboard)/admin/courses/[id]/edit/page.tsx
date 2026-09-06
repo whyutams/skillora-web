@@ -310,9 +310,6 @@ export default function EditCoursePage() {
                 onChange={(e) => setDescription(e.target.value)}
                 className="w-full px-4 py-2.5 text-sm rounded-xl border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-950 text-stone-900 dark:text-stone-100 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-[#0F3E2E] dark:focus:ring-emerald-500 resize-none leading-relaxed"
               />
-              <p className="text-[11px] text-stone-400">
-                Ringkasan ini akan tampil pada kartu kursus di beranda (endpoint &quot;/&quot;).
-              </p>
             </div>
 
             {/* Konten & Silabus Kursus dengan HTML Editor */}
@@ -327,9 +324,6 @@ export default function EditCoursePage() {
                 placeholder="Tuliskan materi silabus, pembahasan modul, dan target pencapaian siswa..."
                 minHeight="280px"
               />
-              <p className="text-[11px] text-stone-400">
-                Konten lengkap ini akan tampil pada halaman detail kursus (/courses/[slug]).
-              </p>
             </div>
           </div>
 

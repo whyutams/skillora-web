@@ -267,7 +267,7 @@ export function Navbar() {
             <img
               src="/logo.png"
               alt="Skillora"
-              className="h-8 sm:h-9 w-auto object-contain"
+              className="h-8 sm:h-8 w-auto object-contain"
             />
           </Link>
 

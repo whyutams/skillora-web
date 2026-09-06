@@ -55,14 +55,14 @@ export function VisitorStatsSection() {
   }, []);
 
   return (
-    <section className="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+    <section id="visitor" className="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
       {/* Header Section Simpel */}
       <div data-aos="fade-up" className="text-center space-y-2 mb-8 sm:mb-10">
         <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#0F3E2E] dark:text-emerald-400 uppercase tracking-wider">
           <span>Statistik Pengunjung</span>
         </div>
         <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-stone-900 dark:text-stone-100">
-          Aktivitas Pengunjung Platform
+          Aktivitas Pengunjung
         </h2>
       </div>
 

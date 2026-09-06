@@ -75,7 +75,7 @@ export function Footer() {
               />
             </Link>
             <p className="text-xs text-stone-500 dark:text-stone-400 leading-relaxed">
-              Inisiatif platform Techno-Edupreneurship yang memberdayakan pelajar & mahasiswa menguasai skill digital siap kerja dengan biaya terjangkau.
+              Skillora adalah layanan platform kursus online yang menyediakan berbagai kelas praktikum dengan menyediakan biaya terjangkau bagi pelajar.
             </p>
           </div>
 
@@ -118,10 +118,9 @@ export function Footer() {
             </ul>
           </div>
 
-          {/* Navigasi Cepat */}
           <div className="space-y-3">
             <p className="font-bold text-xs uppercase tracking-wider text-stone-900 dark:text-stone-200">
-              Navigasi
+              Quick Links
             </p>
             <ul className="space-y-2 text-xs">
               <li>
@@ -130,18 +129,18 @@ export function Footer() {
                 </Link>
               </li>
               <li>
+                <Link href="/#visitor" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">
+                  Aktivitas Pengunjung
+                </Link>
+              </li>
+              <li>
                 <Link href="/#alur" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">
-                  Alur Pembayaran WhatsApp
+                  Alur Pembayaran
                 </Link>
               </li>
               <li>
                 <Link href="/#faq" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">
                   Tanya Jawab (FAQ)
-                </Link>
-              </li>
-              <li>
-                <Link href="/login" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">
-                  Masuk Akun Siswa
                 </Link>
               </li>
             </ul>

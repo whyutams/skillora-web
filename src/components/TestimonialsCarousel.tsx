@@ -119,7 +119,7 @@ export function TestimonialsCarousel({ testimonials = [] }: TestimonialsCarousel
           Belum Ada Ulasan
         </h3>
         <p className="text-xs sm:text-sm text-stone-500 dark:text-stone-400 max-w-sm mx-auto leading-relaxed">
-          Ulasan dan testimoni dari siswa akan tampil di sini setelah menyelesaikan modul kursus.
+          Ulasan dan testimoni dari peserta akan tampil di sini setelah menyelesaikan kursus.
         </p>
       </div>
     );

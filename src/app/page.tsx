@@ -20,7 +20,8 @@ import {
   Star,
   MessageCircle,
   ChevronDown,
-  BookOpen,
+  Pencil,
+  UserCheck
 } from "lucide-react";
 
 
@@ -191,7 +192,7 @@ export default async function HomePage() {
         {/* Subtle grid pattern background */}
         <div className="absolute inset-0 -z-10 opacity-[0.035] dark:opacity-[0.06] pointer-events-none [background-image:radial-gradient(#1c1917_1.2px,transparent_1.2px)] dark:[background-image:radial-gradient(#f5f5f4_1.2px,transparent_1.2px)] [background-size:24px_24px]" />
 
-        <div className="max-w-4xl mx-auto text-center space-y-6 sm:space-y-8"> 
+        <div className="max-w-4xl mx-auto text-center space-y-6 sm:space-y-8">
 
           {/* Heading */}
           <h1
@@ -199,7 +200,7 @@ export default async function HomePage() {
             data-aos-delay="100"
             className="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-stone-900 dark:text-stone-100 leading-[1.14]"
           >
-            Kuasai Keterampilan Digital Masa Depan.{" "}
+            Kursus Digital Untuk Pelajar.{" "}
             <span className="relative inline-block text-[#0F3E2E] dark:text-emerald-400">
               Harga Ramah Pelajar.
               <svg
@@ -223,8 +224,7 @@ export default async function HomePage() {
             data-aos-delay="200"
             className="text-base sm:text-lg text-stone-600 dark:text-stone-400 max-w-2xl mx-auto leading-relaxed"
           >
-            Mulai dari <span className="font-bold text-stone-900 dark:text-stone-100">Rp{lowestPrice.toLocaleString("id-ID")}</span>.
-            Pelajari {courses.map((c) => c.title.split(":")[0]).join(", ")} dengan jadwal ramah di luar jam sekolah. Konfirmasi praktis via WhatsApp tanpa ribet.
+            Skillora adalah layanan platform kursus online yang menyediakan berbagai kelas praktikum dengan menyediakan biaya terjangkau bagi pelajar.
           </p>
 
           {/* Hero CTAs */}
@@ -282,10 +282,10 @@ export default async function HomePage() {
         >
           <div className="max-w-2xl mb-8">
             <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-stone-900 dark:text-stone-100">
-              Mengapa Skillora Berbeda dari Bootcamp Biasa?
+              Mengapa Skillora?
             </h2>
             <p className="text-sm text-stone-600 dark:text-stone-400 mt-2">
-              Kami menyadari pelajar tidak membutuhkan sertifikat ribet jutaan rupiah, melainkan bimbingan ramah, tugas aplikatif, dan biaya yang tidak membebani uang jajan.
+
             </p>
           </div>
 
@@ -296,13 +296,13 @@ export default async function HomePage() {
               className="p-6 rounded-xl border border-stone-200/80 dark:border-stone-800/80 bg-white dark:bg-stone-900/60 space-y-3"
             >
               <div className="w-10 h-10 rounded-lg bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 flex items-center justify-center">
-                <Code className="w-5 h-5" />
+                <Pencil className="w-5 h-5" />
               </div>
               <h3 className="text-base font-bold text-stone-900 dark:text-stone-100">
-                100% Proyek Nyata
+                Kursus Berfokus Pada Praktikum
               </h3>
               <p className="text-xs sm:text-sm text-stone-600 dark:text-stone-400 leading-relaxed">
-                Langsung praktek membuat landing page, script otomasi Python, dan desain aplikasi mobile di Figma yang siap Anda cantumkan di CV magang.
+                Kursus kami lebih berfokus pada kelas praktikum secara daring
               </p>
             </div>
 
@@ -312,13 +312,13 @@ export default async function HomePage() {
               className="p-6 rounded-xl border border-stone-200/80 dark:border-stone-800/80 bg-white dark:bg-stone-900/60 space-y-3"
             >
               <div className="w-10 h-10 rounded-lg bg-amber-500/15 text-amber-700 dark:text-amber-400 flex items-center justify-center">
-                <Terminal className="w-5 h-5" />
+                <Clock className="w-5 h-5" />
               </div>
               <h3 className="text-base font-bold text-stone-900 dark:text-stone-100">
-                Belajar Santai Sesuai Ritme
+                Lebih Fleksibel
               </h3>
               <p className="text-xs sm:text-sm text-stone-600 dark:text-stone-400 leading-relaxed">
-                Tersedia panduan langkah-demi-langkah yang dapat dibuka kapan saja di akhir pekan atau malam hari tanpa mengganggu jam sekolah.
+                Kursus online yang dibuka kapan saja di akhir pekan atau malam hari tanpa mengganggu jam sekolah.
               </p>
             </div>
 
@@ -328,13 +328,13 @@ export default async function HomePage() {
               className="p-6 rounded-xl border border-stone-200/80 dark:border-stone-800/80 bg-white dark:bg-stone-900/60 space-y-3"
             >
               <div className="w-10 h-10 rounded-lg bg-purple-500/15 text-purple-700 dark:text-purple-400 flex items-center justify-center">
-                <Palette className="w-5 h-5" />
+                <UserCheck className="w-5 h-5" />
               </div>
               <h3 className="text-base font-bold text-stone-900 dark:text-stone-100">
-                Jejaring Sesama Pelajar
+                Grup Diskusi Responsif
               </h3>
               <p className="text-xs sm:text-sm text-stone-600 dark:text-stone-400 leading-relaxed">
-                Setelah pembayaran di-approve oleh admin, Anda langsung mendapatkan link masuk ke Grup WhatsApp kelas untuk saling tukar review kode dan desain.
+                Setelah pembayaran disetujui oleh admin, Peserta langsung mendapatkan link masuk ke Grup WhatsApp kelas kursus.
               </p>
             </div>
           </div>
@@ -343,7 +343,7 @@ export default async function HomePage() {
 
       <section id="ulasan" className="scroll-mt-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
         <div data-aos="fade-up" className="text-center space-y-3 mb-10">
-          <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#0F3E2E] dark:text-emerald-400 uppercase tracking-wider"> 
+          <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#0F3E2E] dark:text-emerald-400 uppercase tracking-wider">
             <span>Ulasan</span>
           </div>
           <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-stone-900 dark:text-stone-100">
@@ -365,10 +365,10 @@ export default async function HomePage() {
             <span>Sistem Pendaftaran</span>
           </div>
           <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-stone-900 dark:text-stone-100">
-            Alur Konfirmasi Manual via WhatsApp
+            Alur Pendaftaran
           </h2>
           <p className="text-sm text-stone-600 dark:text-stone-400 max-w-xl mx-auto">
-            Tanpa sistem kartu kredit atau gateway rumit. Cukup transfer langsung dan kirimkan bukti ke Admin.
+            Proses cepat dan praktis. Cukup transfer langsung biaya kursus dan kirimkan bukti pembayaran untuk langsung bergabung ke grup kelas.
           </p>
         </div>
 
@@ -382,10 +382,10 @@ export default async function HomePage() {
               01
             </span>
             <h3 className="text-sm font-bold text-stone-900 dark:text-stone-100">
-              Daftar Akun Pelajar
+              Daftar Akun Peserta
             </h3>
             <p className="text-xs text-stone-600 dark:text-stone-400 mt-1">
-              Isi nama lengkap, username unik, asal sekolah, dan nomor WhatsApp aktif Anda.
+              Isi nama lengkap, username, asal sekolah, nomor whatsapp aktif, dan lain-lain.
             </p>
           </div>
 
@@ -417,7 +417,7 @@ export default async function HomePage() {
               Kirim Bukti Transfer
             </h3>
             <p className="text-xs text-stone-600 dark:text-stone-400 mt-1">
-              Sistem membuka WhatsApp resmi Admin dengan template pesan pendaftaran terisi otomatis.
+              Upload bukti biaya pendaftaran dan akan diperiksa oleh Admin.
             </p>
           </div>
 
@@ -430,10 +430,10 @@ export default async function HomePage() {
               04
             </span>
             <h3 className="text-sm font-bold text-stone-900 dark:text-stone-100">
-              Masuk Grup WhatsApp
+              Masuk Grup Kelas
             </h3>
             <p className="text-xs text-stone-600 dark:text-stone-400 mt-1">
-              Admin menyetujui pendaftaran dan link grup WhatsApp kelas langsung aktif di dashboard Anda.
+              Admin menyetujui pendaftaran dan akan diarahkan ke grup kelas.
             </p>
           </div>
         </div>
@@ -456,11 +456,31 @@ export default async function HomePage() {
             className="group rounded-xl border border-stone-200/80 dark:border-stone-800/80 bg-white/70 dark:bg-stone-900/50 p-5 transition-colors cursor-pointer"
           >
             <summary className="font-bold text-sm text-stone-900 dark:text-stone-100 list-none flex items-center justify-between">
-              <span>Apakah pemula tanpa dasar coding sama sekali bisa ikut?</span>
+              <span>Bagaimana cara saya mendaftar kursus di Skillora?</span>
+              <ChevronDown className="w-4 h-4 text-emerald-600 transition-transform duration-200 group-open:rotate-180" />
+            </summary>
+            <div className="text-xs sm:text-sm text-stone-600 dark:text-stone-400 mt-3 leading-relaxed space-y-2">
+              <p>Proses pendaftaran sangat mudah dan praktis melalui 4 langkah berikut:</p>
+              <ul className="list-decimal list-inside space-y-1 pl-1">
+                <li>Buat akun peserta Anda terlebih dahulu</li>
+                <li>Daftar ke kursus yang Anda minati</li>
+                <li>Lakukan transfer pembayaran ke nomor rekening tertera</li>
+                <li>Unggah dan kirimkan bukti transfer Anda ke form pendaftaran kursus untuk diverifikasi oleh admin</li>
+                <li>Setelah disetujui, Gabung ke grup whatsapp melalui tombol yang disediakan</li>
+              </ul>
+            </div>
+          </details>
+
+          <details
+            data-aos="fade-up"
+            className="group rounded-xl border border-stone-200/80 dark:border-stone-800/80 bg-white/70 dark:bg-stone-900/50 p-5 transition-colors cursor-pointer"
+          >
+            <summary className="font-bold text-sm text-stone-900 dark:text-stone-100 list-none flex items-center justify-between">
+              <span>Apakah ada sertifikat setelah kursus selesai?</span>
               <ChevronDown className="w-4 h-4 text-emerald-600 transition-transform duration-200 group-open:rotate-180" />
             </summary>
             <p className="text-xs sm:text-sm text-stone-600 dark:text-stone-400 mt-3 leading-relaxed">
-              Tentu saja! Materi di Skillora dirancang ramah untuk pemula dari level 0. Anda akan dibimbing dari pengenalan konsep dasar hingga praktik studi kasus nyata.
+              Tentu saja! Anda akan mendapatkan e-sertifikat setelah menyelesaikan seluruh proses dari kursus yang Anda ikuti 
             </p>
           </details>
 
@@ -469,24 +489,11 @@ export default async function HomePage() {
             className="group rounded-xl border border-stone-200/80 dark:border-stone-800/80 bg-white/70 dark:bg-stone-900/50 p-5 transition-colors cursor-pointer"
           >
             <summary className="font-bold text-sm text-stone-900 dark:text-stone-100 list-none flex items-center justify-between">
-              <span>Bagaimana jika saya sibuk sekolah atau kuliah sampai sore?</span>
+              <span>Setelah masuk ke grup WhatsApp, apa langkah selanjutnya yang harus saya lakukan?</span>
               <ChevronDown className="w-4 h-4 text-emerald-600 transition-transform duration-200 group-open:rotate-180" />
             </summary>
             <p className="text-xs sm:text-sm text-stone-600 dark:text-stone-400 mt-3 leading-relaxed">
-              Semua modul materi dapat diakses secara mandiri dan fleksibel 24/7. Anda bisa belajar di malam hari atau akhir pekan tanpa terikat jam sekolah.
-            </p>
-          </details>
-
-          <details
-            data-aos="fade-up"
-            className="group rounded-xl border border-stone-200/80 dark:border-stone-800/80 bg-white/70 dark:bg-stone-900/50 p-5 transition-colors cursor-pointer"
-          >
-            <summary className="font-bold text-sm text-stone-900 dark:text-stone-100 list-none flex items-center justify-between">
-              <span>Berapa lama proses verifikasi transfer bukti pembayaran?</span>
-              <ChevronDown className="w-4 h-4 text-emerald-600 transition-transform duration-200 group-open:rotate-180" />
-            </summary>
-            <p className="text-xs sm:text-sm text-stone-600 dark:text-stone-400 mt-3 leading-relaxed">
-              Admin Skillora memverifikasi bukti transfer secara cepat (umumnya 5-30 menit pada jam kerja). Setelah di-approve, dashboard Anda otomatis mengaktifkan link grup kelas.
+              Cukup tunggu instruksi menyambut dari mentor di dalam grup. Mentor akan membagikan jadwal orientasi, silabus belajar, dan aturan kelas sebelum kursus dimulai.
             </p>
           </details>
         </div>
