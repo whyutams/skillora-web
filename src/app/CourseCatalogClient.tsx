@@ -158,7 +158,7 @@ export default function CourseCatalogClient({
               </div>
 
               {/* Footer Card: Harga & Tombol Lihat Detail */}
-              <div className="p-5 sm:p-6 pt-0 border-t border-stone-100 dark:border-stone-800/60 mt-auto flex items-center justify-between">
+              <div className="p-5 sm:p-6 border-t border-stone-100 dark:border-stone-800/60 mt-auto flex items-center justify-between">
                 <div>
                   <span className="text-[10px] text-stone-400 uppercase tracking-wider block">
                     Biaya Pelajar
