@@ -1,7 +1,8 @@
 {
   "name": "skillora",
-  "version": "0.1.0",
+  "version": "1.2.0",
   "private": true,
+  "author": "whyutams",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

@@ -26,6 +26,7 @@ import {
   Heart,
   CreditCard,
 } from "lucide-react";
+import { APP_VERSION } from "@/config/app";
 
 export default function DashboardLayout({
   children,
@@ -443,7 +444,7 @@ export default function DashboardLayout({
         {/* Dedicated Dashboard Footer */}
         <footer className="border-t border-stone-200/80 dark:border-stone-800/80 px-6 py-4 bg-white/40 dark:bg-stone-950/40 text-stone-400 text-xs flex flex-col sm:flex-row items-center justify-between gap-2">
           <div className="w-full flex space-x-1 gap-1 items-center">© {new Date().getFullYear()} Skillora. All rights reserved. Made with true <Heart className="w-3 h-3 text-rose-500 fill-rose-500" /> by Skillora Dev</div>
-          <div className="text-[11px]">v1.0.0</div>
+          <div className="text-[11px] font-mono font-bold text-stone-500 dark:text-stone-400">v{APP_VERSION}</div>
         </footer>
       </div>
 
