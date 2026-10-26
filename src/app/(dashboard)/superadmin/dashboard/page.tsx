@@ -63,22 +63,22 @@ export default function SuperadminDashboardPage() {
     try {
       // 1. Fetch Users
       const usersRes = await fetch("/api/superadmin/users");
-      const usersData = await usersRes.json();
       if (usersRes.ok) {
+        const usersData = await usersRes.json();
         setUsers(usersData.users || []);
       }
 
       // 2. Fetch Logs
       const logsRes = await fetch("/api/superadmin/logs?limit=5");
-      const logsData = await logsRes.json();
       if (logsRes.ok) {
+        const logsData = await logsRes.json();
         setLogs(logsData.logs || []);
       }
 
       // 3. Fetch Visitor stats
       const visRes = await fetch("/api/analytics/visitor");
-      const visData = await visRes.json();
       if (visRes.ok) {
+        const visData = await visRes.json();
         setVisitorStats({
           daily: typeof visData.dailyVisitors === "number" ? visData.dailyVisitors : 0,
           monthly: typeof visData.monthlyVisitors === "number" ? visData.monthlyVisitors : 0,

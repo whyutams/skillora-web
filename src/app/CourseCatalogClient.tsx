@@ -13,6 +13,7 @@ import {
   Code,
   Terminal,
   Palette,
+  MessageSquareDashed,
 } from "lucide-react";
 
 import { CoursePlaceholderBanner } from "@/components/ui/CoursePlaceholderBanner";
@@ -75,14 +76,13 @@ export default function CourseCatalogClient({
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
   const currentCourses = courses.slice(startIndex, startIndex + ITEMS_PER_PAGE);
 
-  // Tampilan ketika data kursus belum tersedia dari database
   if (!courses || courses.length === 0) {
     return (
       <div
         data-aos="fade-up"
-        className="text-center py-16 px-6 rounded-3xl border border-dashed border-stone-300 dark:border-stone-800 bg-white/40 dark:bg-stone-900/30 backdrop-blur-sm max-w-xl mx-auto space-y-3"
+        className="text-center py-14 px-6 rounded-3xl max-w-xl mx-auto space-y-3"
       >
-        <div className="w-14 h-14 rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center mx-auto border border-amber-500/20">
+        <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 text-[#0F3E2E] dark:text-emerald-400 flex items-center justify-center mx-auto border border-emerald-500/20">
           <BookOpen className="w-7 h-7" />
         </div>
         <h3 className="text-base sm:text-lg font-bold text-stone-900 dark:text-stone-100">
@@ -206,11 +206,10 @@ export default function CourseCatalogClient({
                 <button
                   key={pageNum}
                   onClick={() => setCurrentPage(pageNum)}
-                  className={`w-8 h-8 rounded-xl text-xs font-bold transition-all ${
-                    isActive
-                      ? "bg-[#0F3E2E] dark:bg-emerald-600 text-white shadow-xs"
-                      : "border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-900 text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800"
-                  }`}
+                  className={`w-8 h-8 rounded-xl text-xs font-bold transition-all ${isActive
+                    ? "bg-[#0F3E2E] dark:bg-emerald-600 text-white shadow-xs"
+                    : "border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-900 text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800"
+                    }`}
                 >
                   {pageNum}
                 </button>

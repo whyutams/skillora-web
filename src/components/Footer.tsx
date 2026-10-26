@@ -45,9 +45,14 @@ export function Footer() {
         }
 
         const res = await fetch("/api/analytics/visitor");
-        const visitorData = await res.json();
-        if (typeof visitorData.totalVisitors === "number") {
-          setTotalVisitors(visitorData.totalVisitors);
+        if (res.ok) {
+          const contentType = res.headers.get("content-type");
+          if (contentType && contentType.includes("application/json")) {
+            const visitorData = await res.json();
+            if (typeof visitorData?.totalVisitors === "number") {
+              setTotalVisitors(visitorData.totalVisitors);
+            }
+          }
         }
       } catch (err) {
         console.error("Error loading footer data:", err);

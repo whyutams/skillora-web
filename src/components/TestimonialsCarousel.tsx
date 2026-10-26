@@ -7,7 +7,7 @@ import { Star, ChevronLeft, ChevronRight, Quote, MessageSquareDashed } from "luc
 import { SmoothImage } from "@/components/ui/SmoothImage";
 
 // Konfigurasi locale Bahasa Indonesia untuk Moment.js
-moment.locale("id", {
+moment.updateLocale("id", {
   relativeTime: {
     future: "dalam %s",
     past: "%s yang lalu",

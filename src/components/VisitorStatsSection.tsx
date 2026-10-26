@@ -39,10 +39,15 @@ export function VisitorStatsSection() {
             body: JSON.stringify({ ip: clientIp }),
           });
 
-          const apiData = await apiRes.json();
-          if (typeof apiData.dailyVisitors === "number") setDailyCount(apiData.dailyVisitors);
-          if (typeof apiData.monthlyVisitors === "number") setMonthlyCount(apiData.monthlyVisitors);
-          if (typeof apiData.totalVisitors === "number") setTotalCount(apiData.totalVisitors);
+          if (apiRes.ok) {
+            const contentType = apiRes.headers.get("content-type");
+            if (contentType && contentType.includes("application/json")) {
+              const apiData = await apiRes.json();
+              if (typeof apiData.dailyVisitors === "number") setDailyCount(apiData.dailyVisitors);
+              if (typeof apiData.monthlyVisitors === "number") setMonthlyCount(apiData.monthlyVisitors);
+              if (typeof apiData.totalVisitors === "number") setTotalCount(apiData.totalVisitors);
+            }
+          }
         }
       } catch (err) {
         console.error("Error tracking visitor stats:", err);

@@ -318,7 +318,7 @@ export default async function HomePage() {
                 Lebih Fleksibel
               </h3>
               <p className="text-xs sm:text-sm text-stone-600 dark:text-stone-400 leading-relaxed">
-                Kursus online yang dibuka kapan saja di akhir pekan atau malam hari tanpa mengganggu jam sekolah.
+                Kursus online yang dibuka kapan saja di akhir pekan atau malam hari tanpa mengganggu jam perkuliahan.
               </p>
             </div>
 
@@ -372,11 +372,11 @@ export default async function HomePage() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3 sm:gap-4">
           <div
             data-aos="fade-up"
             data-aos-delay="100"
-            className="p-6 rounded-xl border border-stone-200/80 dark:border-stone-800/80 bg-white dark:bg-stone-900/60"
+            className="p-4 sm:p-5 rounded-xl border border-stone-200/80 dark:border-stone-800/80 bg-white dark:bg-stone-900/60 flex flex-col justify-start"
           >
             <span className="text-3xl font-extrabold text-[#0F3E2E]/20 dark:text-emerald-500/20 mb-2 block">
               01
@@ -392,7 +392,7 @@ export default async function HomePage() {
           <div
             data-aos="fade-up"
             data-aos-delay="200"
-            className="p-6 rounded-xl border border-stone-200/80 dark:border-stone-800/80 bg-white dark:bg-stone-900/60"
+            className="p-4 sm:p-5 rounded-xl border border-stone-200/80 dark:border-stone-800/80 bg-white dark:bg-stone-900/60 flex flex-col justify-start"
           >
             <span className="text-3xl font-extrabold text-[#0F3E2E]/20 dark:text-emerald-500/20 mb-2 block">
               02
@@ -408,7 +408,7 @@ export default async function HomePage() {
           <div
             data-aos="fade-up"
             data-aos-delay="300"
-            className="p-6 rounded-xl border border-stone-200/80 dark:border-stone-800/80 bg-white dark:bg-stone-900/60"
+            className="p-4 sm:p-5 rounded-xl border border-stone-200/80 dark:border-stone-800/80 bg-white dark:bg-stone-900/60 flex flex-col justify-start"
           >
             <span className="text-3xl font-extrabold text-[#0F3E2E]/20 dark:text-emerald-500/20 mb-2 block">
               03
@@ -424,7 +424,7 @@ export default async function HomePage() {
           <div
             data-aos="fade-up"
             data-aos-delay="400"
-            className="p-6 rounded-xl border border-stone-200/80 dark:border-stone-800/80 bg-white dark:bg-stone-900/60"
+            className="p-4 sm:p-5 rounded-xl border border-stone-200/80 dark:border-stone-800/80 bg-white dark:bg-stone-900/60 flex flex-col justify-start"
           >
             <span className="text-3xl font-extrabold text-[#0F3E2E]/20 dark:text-emerald-500/20 mb-2 block">
               04
@@ -434,6 +434,22 @@ export default async function HomePage() {
             </h3>
             <p className="text-xs text-stone-600 dark:text-stone-400 mt-1">
               Admin menyetujui pendaftaran dan akan diarahkan ke grup kelas.
+            </p>
+          </div>
+
+          <div
+            data-aos="fade-up"
+            data-aos-delay="500"
+            className="p-4 sm:p-5 rounded-xl border border-stone-200/80 dark:border-stone-800/80 bg-white dark:bg-stone-900/60 flex flex-col justify-start"
+          >
+            <span className="text-3xl font-extrabold text-[#0F3E2E]/20 dark:text-emerald-500/20 mb-2 block">
+              05
+            </span>
+            <h3 className="text-sm font-bold text-stone-900 dark:text-stone-100">
+              Kerjakan Kursus
+            </h3>
+            <p className="text-xs text-stone-600 dark:text-stone-400 mt-1">
+              Mengerjakan kursus secara mandiri dan bisa bimbingan via whatsapp kapan saja melalui grup kelas
             </p>
           </div>
         </div>
@@ -460,7 +476,7 @@ export default async function HomePage() {
               <ChevronDown className="w-4 h-4 text-emerald-600 transition-transform duration-200 group-open:rotate-180" />
             </summary>
             <div className="text-xs sm:text-sm text-stone-600 dark:text-stone-400 mt-3 leading-relaxed space-y-2">
-              <p>Proses pendaftaran sangat mudah dan praktis melalui 4 langkah berikut:</p>
+              <p>Proses pendaftaran sangat mudah dan praktis melalui 5 langkah berikut:</p>
               <ul className="list-decimal list-inside space-y-1 pl-1">
                 <li>Buat akun peserta Anda terlebih dahulu</li>
                 <li>Daftar ke kursus yang Anda minati</li>
@@ -493,7 +509,7 @@ export default async function HomePage() {
               <ChevronDown className="w-4 h-4 text-emerald-600 transition-transform duration-200 group-open:rotate-180" />
             </summary>
             <p className="text-xs sm:text-sm text-stone-600 dark:text-stone-400 mt-3 leading-relaxed">
-              Cukup tunggu instruksi menyambut dari mentor di dalam grup. Mentor akan membagikan jadwal orientasi, silabus belajar, dan aturan kelas sebelum kursus dimulai.
+              Para peserta sudah bisa untuk mengerjakan kursus secara mandiri melalui akun masing-masing. Bila ada pertanyaan seputar kursus bisa ditanyakan langsung ke mentor kursus melalui grup kelas.
             </p>
           </details>
         </div>
