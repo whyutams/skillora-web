@@ -355,7 +355,7 @@ export function DashboardProfileForm({ roleTitle }: { roleTitle: string }) {
               {/* Editable: Asal Sekolah / Kampus */}
               <div>
                 <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300 mb-1">
-                  Asal Sekolah / Universitas / Lembaga
+                  Asal Kampus
                 </label>
                 <div className="relative">
                   <Building2 className="w-4 h-4 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2" />
@@ -363,7 +363,7 @@ export function DashboardProfileForm({ roleTitle }: { roleTitle: string }) {
                     type="text"
                     value={schoolOrigin}
                     onChange={(e) => setSchoolOrigin(e.target.value)}
-                    placeholder="Masukkan asal sekolah / instansi"
+                    placeholder="Masukkan asal kampus"
                     className="w-full pl-9 pr-3.5 py-2 text-xs sm:text-sm rounded-lg border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-950 text-stone-900 dark:text-stone-100 focus:outline-none focus:ring-2 focus:ring-[#0F3E2E] dark:focus:ring-emerald-500"
                   />
                 </div>

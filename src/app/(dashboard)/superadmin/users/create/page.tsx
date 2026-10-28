@@ -227,11 +227,11 @@ export default function CreateUserPage() {
               <div className="space-y-1.5">
                 <label className="text-xs font-semibold text-stone-700 dark:text-stone-300 flex items-center gap-1.5">
                   <Building2 className="w-3.5 h-3.5 text-stone-400" />
-                  <span>Asal Sekolah / Kampus</span>
+                  <span>Asal Kampus</span>
                 </label>
                 <input
                   type="text"
-                  placeholder="Masukkan asal sekolah / instansi"
+                  placeholder="Masukkan asal kampus"
                   value={schoolOrigin}
                   onChange={(e) => setSchoolOrigin(e.target.value)}
                   className="w-full px-3.5 py-2 text-xs sm:text-sm rounded-xl border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-900 text-stone-900 dark:text-stone-100 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-[#0F3E2E] dark:focus:ring-emerald-500"
