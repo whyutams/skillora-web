@@ -6,7 +6,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Button } from "@/components/ui/Button";
-import { ConfirmModal } from "@/components/ui/ConfirmModal";
+import { ConfirmModal } from "@/components/ui/ModalKonfirmasi";
 import { NavbarUserSkeleton } from "@/components/ui/Skeleton";
 import { SmoothImage } from "@/components/ui/SmoothImage";
 import { UserRole } from "@/types/database";

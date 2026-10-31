@@ -167,7 +167,7 @@ export default function SuperadminDashboardPage() {
             </div>
             <p className="text-[11px] text-stone-400 mt-1">
               <span className="text-purple-600 font-semibold">{countAdmin} Admin</span> •{" "}
-              <span className="text-emerald-600 font-semibold">{countStudent} Siswa</span>
+              <span className="text-emerald-600 font-semibold">{countStudent} Mahasiswa</span>
             </p>
           </div>
         </div>
@@ -348,7 +348,7 @@ export default function SuperadminDashboardPage() {
                       )}
                       {u.role === "student" && (
                         <Badge variant="role-student" className="text-[10px] px-2 py-0.5">
-                          Siswa
+                          Mahasiswa
                         </Badge>
                       )}
                     </div>

@@ -268,16 +268,15 @@ export function StudentDashboardClient() {
 
   return (
     <div className="space-y-8 max-w-7xl mx-auto pb-12">
-      {/* Profil Header Siswa */}
       <div className="p-6 sm:p-8 rounded-3xl border border-stone-200/80 dark:border-stone-800/80 bg-white/70 dark:bg-stone-900/60 backdrop-blur-md flex flex-col md:flex-row items-start md:items-center justify-between gap-6 shadow-xs">
         <div className="flex items-start sm:items-center gap-4">
           <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-[#0F3E2E] text-emerald-300 flex items-center justify-center font-extrabold text-xl sm:text-2xl shrink-0 shadow-md">
-            {profile?.full_name ? profile.full_name.charAt(0).toUpperCase() : "S"}
+            {profile?.full_name ? profile.full_name.charAt(0).toUpperCase() : "M"}
           </div>
           <div className="space-y-1">
             <div className="flex flex-wrap items-center gap-2">
               <h1 className="text-xl sm:text-2xl font-black text-stone-900 dark:text-stone-100">
-                Halo, {profile?.full_name || "Pelajar"}!
+                Halo, {profile?.full_name || "Mahasiswa"}!
               </h1>
               {profile?.username && (
                 <span className="text-xs px-2.5 py-0.5 rounded-md bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 border border-emerald-500/30 flex items-center gap-1 font-semibold">

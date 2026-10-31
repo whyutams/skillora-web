@@ -91,3 +91,5 @@ export const ImagePreviewModal: React.FC<ImagePreviewModalProps> = ({
     </div>
   );
 };
+
+export const ModalPreviewGambar = ImagePreviewModal;

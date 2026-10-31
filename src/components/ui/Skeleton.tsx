@@ -14,21 +14,27 @@ export function Skeleton({
 
 export function CourseCardSkeleton() {
   return (
-    <div className="rounded-2xl border border-stone-200/80 dark:border-stone-800/80 bg-white/70 dark:bg-stone-900/50 overflow-hidden space-y-4 shadow-xs">
-      <Skeleton className="w-full h-44 sm:h-48 rounded-none" />
-      <div className="p-5 sm:p-6 space-y-4">
-        <div className="space-y-2">
-          <Skeleton className="w-3/4 h-5 rounded-md" />
-          <Skeleton className="w-full h-3.5 rounded" />
-          <Skeleton className="w-2/3 h-3.5 rounded" />
-        </div>
-        <div className="pt-4 flex items-center justify-between border-t border-stone-100 dark:border-stone-800/60">
-          <div className="space-y-1">
-            <Skeleton className="w-14 h-3 rounded" />
-            <Skeleton className="w-20 h-5 rounded" />
+    <div className="rounded-2xl border border-stone-200/80 dark:border-stone-800/80 bg-white/70 dark:bg-stone-900/50 overflow-hidden flex flex-col justify-between shadow-xs">
+      <div>
+        <Skeleton className="w-full h-44 sm:h-48 rounded-none" />
+        <div className="p-5 sm:p-6 space-y-3">
+          <div className="flex items-center gap-2">
+            <Skeleton className="w-12 h-3.5 rounded" />
+            <Skeleton className="w-24 h-3.5 rounded" />
           </div>
-          <Skeleton className="w-24 h-8 rounded-xl" />
+          <Skeleton className="w-4/5 h-5 rounded-md" />
+          <div className="space-y-1.5 pt-0.5">
+            <Skeleton className="w-full h-3.5 rounded" />
+            <Skeleton className="w-3/4 h-3.5 rounded" />
+          </div>
         </div>
+      </div>
+      <div className="p-5 sm:p-6 border-t border-stone-100 dark:border-stone-800/60 mt-auto flex items-center justify-between">
+        <div className="space-y-1">
+          <Skeleton className="w-16 h-3 rounded" />
+          <Skeleton className="w-24 h-5 rounded-md" />
+        </div>
+        <Skeleton className="w-28 h-9 rounded-xl" />
       </div>
     </div>
   );
@@ -165,6 +171,16 @@ export function NavbarUserSkeleton() {
     <div className="flex items-center gap-2.5">
       <Skeleton className="w-9 h-9 rounded-xl" />
       <Skeleton className="w-24 h-8 rounded-lg" />
+    </div>
+  );
+}
+
+export function CourseCatalogSkeleton() {
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {Array.from({ length: 6 }).map((_, i) => (
+        <CourseCardSkeleton key={i} />
+      ))}
     </div>
   );
 }

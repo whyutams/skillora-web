@@ -3,8 +3,12 @@ import { createClient, createAdminClient } from "@/utils/supabase/server";
 import { parseEnrollmentMeta, encodeEnrollmentMeta } from "@/utils/enrollmentMeta";
 import { parseCourseDescription } from "@/utils/courseMeta";
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    const { searchParams } = new URL(request.url);
+    const courseId = searchParams.get("course_id");
+    const statusParam = searchParams.get("status");
+
     const supabase = await createClient();
     const {
       data: { user },
@@ -14,7 +18,7 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Periksa role user
+    // periksa role pengguna
     const { data: profile } = await supabase
       .from("profiles")
       .select("role")
@@ -29,7 +33,7 @@ export async function GET() {
     }
 
     const adminClient = createAdminClient();
-    const { data: enrollments, error } = await adminClient
+    let query = adminClient
       .from("enrollments")
       .select(`
         id,
@@ -59,6 +63,16 @@ export async function GET() {
         )
       `)
       .order("created_at", { ascending: false });
+
+    if (courseId) {
+      query = query.eq("course_id", courseId);
+    }
+
+    if (statusParam) {
+      query = query.eq("status", statusParam);
+    }
+
+    const { data: enrollments, error } = await query;
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });

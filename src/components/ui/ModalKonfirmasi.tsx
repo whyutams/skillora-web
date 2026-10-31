@@ -127,3 +127,6 @@ export function AlertModal({
     </Modal>
   );
 }
+
+export const ModalKonfirmasi = ConfirmModal;
+export const ModalPeringatan = AlertModal;

@@ -6,9 +6,9 @@ import { UserRole } from "@/types/database";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
-import { ConfirmModal, AlertModal } from "@/components/ui/ConfirmModal";
+import { ConfirmModal, AlertModal } from "@/components/ui/ModalKonfirmasi";
 import { SmoothImage } from "@/components/ui/SmoothImage";
-import { ImagePreviewModal } from "@/components/ui/ImagePreviewModal";
+import { ImagePreviewModal } from "@/components/ui/ModalPreviewGambar";
 import {
   Users,
   Search,
@@ -212,7 +212,7 @@ export default function SuperadminUsersPage() {
             <Search className="w-4 h-4 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
-              placeholder="Cari nama, username, atau asal sekolah..."
+              placeholder="Cari nama, username, atau asal kampus..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-9 pr-3 py-1.5 text-xs rounded-lg border border-stone-300 dark:border-stone-700 bg-stone-50 dark:bg-stone-900 text-stone-900 dark:text-stone-100 placeholder-stone-400 focus:outline-none focus:ring-1 focus:ring-[#0F3E2E]"
@@ -240,7 +240,7 @@ export default function SuperadminUsersPage() {
                 <thead className="bg-stone-50 dark:bg-stone-900/70 border-b border-stone-200/80 dark:border-stone-800/80 text-[11px] uppercase tracking-wider text-stone-500">
                   <tr>
                     <th className="py-3 px-4 font-semibold">Pengguna</th>
-                    <th className="py-3 px-4 font-semibold">Asal Sekolah / Kampus</th>
+                    <th className="py-3 px-4 font-semibold">Asal Kampus</th>
                     <th className="py-3 px-4 font-semibold">No. WhatsApp</th>
                     <th className="py-3 px-4 font-semibold">Role</th>
                     <th className="py-3 px-4 font-semibold text-center">Aksi</th>
@@ -277,7 +277,7 @@ export default function SuperadminUsersPage() {
                           </div>
                         </td>
 
-                        {/* Asal Sekolah */}
+                        {/* Asal Kampus */}
                         <td className="py-3.5 px-4 text-stone-600 dark:text-stone-400">
                           {u.school_origin && u.school_origin !== "-" ? (
                             <div className="flex items-center gap-1.5">

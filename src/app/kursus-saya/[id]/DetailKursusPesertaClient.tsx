@@ -34,7 +34,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { SmoothImage } from "@/components/ui/SmoothImage";
 import { StudentCourseDetailSkeleton } from "@/components/ui/Skeleton";
-import { StudentEnrollmentItem } from "../StudentDashboardClient";
+import { StudentEnrollmentItem } from "../DashboardPesertaClient";
 
 interface PaymentAccount {
   id: string;
@@ -44,7 +44,7 @@ interface PaymentAccount {
   is_active: boolean;
 }
 
-export function StudentCourseDetailClient({ enrollmentId }: { enrollmentId: string }) {
+export function DetailKursusPesertaClient({ enrollmentId }: { enrollmentId: string }) {
   const [enrollment, setEnrollment] = React.useState<StudentEnrollmentItem | null>(null);
   const [paymentAccounts, setPaymentAccounts] = React.useState<PaymentAccount[]>([]);
   const [loading, setLoading] = React.useState(true);
@@ -995,3 +995,5 @@ function BookOpenIcon(props: React.SVGProps<SVGSVGElement>) {
     </svg>
   );
 }
+
+export const StudentCourseDetailClient = DetailKursusPesertaClient;

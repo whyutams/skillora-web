@@ -133,7 +133,7 @@ export default function AdminDashboardPage() {
             <Badge variant="role-admin">Panel Utama</Badge>
           </div>
           <p className="text-xs sm:text-sm text-stone-500 dark:text-stone-400">
-            Selamat datang kembali, <span className="font-semibold text-stone-800 dark:text-stone-200">{adminName || "Admin"}</span>. Pantau statistik kursus, progres pendaftaran siswa, dan verifikasi pembayaran.
+            Selamat datang kembali, <span className="font-semibold text-stone-800 dark:text-stone-200">{adminName || "Admin"}</span>. Pantau statistik kursus, progres pendaftaran mahasiswa, dan verifikasi pembayaran.
           </p>
         </div>
 
@@ -217,7 +217,7 @@ export default function AdminDashboardPage() {
               <AnimatedCounter value={approvedEnrollments} />
             </div>
             <p className="text-[11px] text-stone-400 mt-1">
-              Dari total {totalEnrollments} pendaftaran siswa
+              Dari total {totalEnrollments} pendaftaran peserta
             </p>
           </div>
         </div>
@@ -237,7 +237,7 @@ export default function AdminDashboardPage() {
               Rp {totalRevenue.toLocaleString("id-ID")}
             </div>
             <p className="text-[11px] text-stone-400 mt-1">
-              Dari siswa yang telah disetujui
+              Dari peserta yang telah disetujui
             </p>
           </div>
         </div>
@@ -251,7 +251,7 @@ export default function AdminDashboardPage() {
             <div>
               <CardTitle className="text-base font-bold">Pendaftaran Terbaru</CardTitle>
               <CardDescription className="text-xs">
-                5 pendaftaran siswa yang baru masuk
+                5 pendaftaran peserta yang baru masuk
               </CardDescription>
             </div>
             <Link href="/admin/pendaftaran">
@@ -279,7 +279,7 @@ export default function AdminDashboardPage() {
                   >
                     <div className="min-w-0">
                       <p className="text-xs font-bold text-stone-900 dark:text-stone-100 truncate">
-                        {item.profiles?.full_name || "Siswa"}
+                        {item.profiles?.full_name || "Mahasiswa"}
                       </p>
                       <p className="text-[11px] text-stone-500 dark:text-stone-400 truncate">
                         {item.courses?.title || "Kursus"}
@@ -347,7 +347,7 @@ export default function AdminDashboardPage() {
                         {c.title}
                       </p>
                       <p className="text-[11px] text-stone-500 dark:text-stone-400">
-                        {c.price > 0 ? `Rp ${c.price.toLocaleString("id-ID")}` : "Gratis"} • {c.enrolled_count || 0} Siswa
+                        {c.price > 0 ? `Rp ${c.price.toLocaleString("id-ID")}` : "Gratis"} • {c.enrolled_count || 0} Peserta
                       </p>
                     </div>
 

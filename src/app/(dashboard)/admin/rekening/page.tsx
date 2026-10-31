@@ -4,7 +4,7 @@ import * as React from "react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
-import { ConfirmModal, AlertModal } from "@/components/ui/ConfirmModal";
+import { ConfirmModal, AlertModal } from "@/components/ui/ModalKonfirmasi";
 import {
   CreditCard,
   Plus,

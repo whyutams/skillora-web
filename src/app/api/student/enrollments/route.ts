@@ -23,7 +23,7 @@ export async function GET() {
       .eq("id", user.id)
       .single();
 
-    // Ambil data enrollments milik siswa
+    // ambil data pendaftaran mahasiswa
     const { data: enrollmentsData, error } = await adminClient
       .from("enrollments")
       .select(`

@@ -6,10 +6,10 @@ import { Course } from "@/types/database";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
-import { ConfirmModal, AlertModal } from "@/components/ui/ConfirmModal";
+import { ConfirmModal, AlertModal } from "@/components/ui/ModalKonfirmasi";
 import { AnimatedCounter } from "@/components/AnimatedCounter";
 import { SmoothImage } from "@/components/ui/SmoothImage";
-import { ImagePreviewModal } from "@/components/ui/ImagePreviewModal";
+import { ImagePreviewModal } from "@/components/ui/ModalPreviewGambar";
 import {
   BookOpen,
   Plus,
@@ -25,6 +25,9 @@ import {
   ChevronRight,
   ZoomIn,
   Images,
+  Star,
+  Eye,
+  Users,
 } from "lucide-react";
 
 interface AdminCourseItem extends Course {
@@ -33,10 +36,20 @@ interface AdminCourseItem extends Course {
   enrolled_count?: number;
   approved_count?: number;
   pending_count?: number;
+  views_count?: number;
+  average_rating?: number;
+  reviews_count?: number;
 }
 
 export default function AdminCoursesPage() {
   const [courses, setCourses] = React.useState<AdminCourseItem[]>([]);
+  const [stats, setStats] = React.useState({
+    totalCourses: 0,
+    publishedCourses: 0,
+    draftCourses: 0,
+    totalApprovedStudents: 0,
+    totalViews: 0,
+  });
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
   const [searchQuery, setSearchQuery] = React.useState("");
@@ -93,6 +106,9 @@ export default function AdminCoursesPage() {
         throw new Error(data.error || "Gagal memuat katalog kursus.");
       }
       setCourses(data.courses || []);
+      if (data.stats) {
+        setStats(data.stats);
+      }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Gagal memuat katalog kursus.");
     } finally {
@@ -167,10 +183,11 @@ export default function AdminCoursesPage() {
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
   const paginatedCourses = filteredCourses.slice(startIndex, startIndex + ITEMS_PER_PAGE);
 
-  const totalCourses = courses.length;
-  const publishedCourses = courses.filter((c) => c.is_published).length;
-  const draftCourses = courses.filter((c) => !c.is_published).length;
-  const totalEnrolledStudents = courses.reduce((acc, c) => acc + (c.enrolled_count || 0), 0);
+  const totalCourses = stats.totalCourses || courses.length;
+  const publishedCourses = stats.publishedCourses || courses.filter((c) => c.is_published).length;
+  const draftCourses = stats.draftCourses || courses.filter((c) => !c.is_published).length;
+  const totalApprovedStudents = stats.totalApprovedStudents || courses.reduce((acc, c) => acc + (c.approved_count || 0), 0);
+  const totalCourseViews = stats.totalViews || courses.reduce((acc, c) => acc + (c.views_count || 0), 0);
 
   return (
     <div className="space-y-8 w-full">
@@ -188,7 +205,7 @@ export default function AdminCoursesPage() {
               <Badge variant="role-admin">Katalog & Silabus</Badge>
             </div>
             <p className="text-xs sm:text-sm text-stone-500 dark:text-stone-400 mt-0.5">
-              Kelola katalog materi kursus, harga pendaftaran, status publikasi, dan link grup WhatsApp.
+              Kelola katalog kursus mandiri, materi silabus, harga pendaftaran, dan link WhatsApp group.
             </p>
           </div>
         </div>
@@ -205,7 +222,6 @@ export default function AdminCoursesPage() {
             <span className="hidden sm:inline">Segarkan</span>
           </Button>
 
-          {/* CRUD Menggunakan Halaman Baru (Bukan Modal) */}
           <Link href="/admin/courses/create">
             <Button
               size="sm"
@@ -242,19 +258,19 @@ export default function AdminCoursesPage() {
           </div>
         </div>
         <div className="p-4 rounded-xl border border-stone-200/80 dark:border-stone-800/80 bg-white/50 dark:bg-stone-900/40">
-          <span className="text-xs font-semibold text-amber-600 dark:text-amber-400">
-            Draft / Non-aktif
+          <span className="text-xs font-semibold text-purple-600 dark:text-purple-400">
+            Peserta Belajar
           </span>
-          <div className="text-2xl font-extrabold text-amber-600 dark:text-amber-400 mt-1">
-            <AnimatedCounter value={draftCourses} />
+          <div className="text-2xl font-extrabold text-purple-600 dark:text-purple-400 mt-1">
+            <AnimatedCounter value={totalApprovedStudents} />
           </div>
         </div>
         <div className="p-4 rounded-xl border border-stone-200/80 dark:border-stone-800/80 bg-white/50 dark:bg-stone-900/40">
-          <span className="text-xs font-semibold text-purple-600 dark:text-purple-400">
-            Total Pendaftar
+          <span className="text-xs font-semibold text-blue-600 dark:text-blue-400">
+            Total Views Kursus
           </span>
-          <div className="text-2xl font-extrabold text-purple-600 dark:text-purple-400 mt-1">
-            <AnimatedCounter value={totalEnrolledStudents} />
+          <div className="text-2xl font-extrabold text-blue-600 dark:text-blue-400 mt-1">
+            <AnimatedCounter value={totalCourseViews} />
           </div>
         </div>
       </div>
@@ -346,6 +362,7 @@ export default function AdminCoursesPage() {
                     <th className="py-3 px-4 font-semibold">Kursus</th>
                     <th className="py-3 px-4 font-semibold">Harga</th>
                     <th className="py-3 px-4 font-semibold">Peserta</th>
+                    <th className="py-3 px-4 font-semibold">Rating & Views</th>
                     <th className="py-3 px-4 font-semibold">Status</th>
                     <th className="py-3 px-4 font-semibold">WhatsApp Group</th>
                     <th className="py-3 px-4 font-semibold text-right">Aksi</th>
@@ -406,12 +423,48 @@ export default function AdminCoursesPage() {
                           </div>
                         </td>
 
-                        {/* Harga */}
                         <td className="py-3.5 px-4 font-semibold text-stone-900 dark:text-stone-100 whitespace-nowrap">
                           {course.price > 0 ? `Rp ${course.price.toLocaleString("id-ID")}` : "-"}
                         </td>
 
-                        {/* Status Publikasi */}
+                        <td className="py-3.5 px-4 whitespace-nowrap">
+                          <div className="space-y-0.5">
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-stone-100 dark:bg-stone-800 text-[11px] font-semibold text-stone-800 dark:text-stone-200">
+                              <Users className="w-3 h-3 text-stone-400" />
+                              <span>{course.approved_count || 0} Peserta</span>
+                            </span>
+                            {typeof course.enrolled_count === "number" && course.enrolled_count > (course.approved_count || 0) && (
+                              <span className="block text-[10px] text-amber-600 dark:text-amber-400">
+                                {course.enrolled_count - (course.approved_count || 0)} menunggu
+                              </span>
+                            )}
+                          </div>
+                        </td>
+
+                        <td className="py-3.5 px-4 whitespace-nowrap">
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-1 text-[11px] font-bold text-stone-900 dark:text-stone-100">
+                              <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400 shrink-0" />
+                              {course.reviews_count && course.reviews_count > 0 ? (
+                                <>
+                                  <span>{course.average_rating}</span>
+                                  <span className="text-[10px] text-stone-400 font-normal">
+                                    ({course.reviews_count} ulasan)
+                                  </span>
+                                </>
+                              ) : (
+                                <span className="text-[11px] text-stone-400 font-normal">
+                                  -
+                                </span>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-1 text-[11px] text-stone-500 dark:text-stone-400">
+                              <Eye className="w-3 h-3 text-stone-400 shrink-0" />
+                              <span>{course.views_count || 0} views</span>
+                            </div>
+                          </div>
+                        </td>
+
                         <td className="py-3.5 px-4 whitespace-nowrap">
                           {course.is_published ? (
                             <Badge
@@ -456,9 +509,18 @@ export default function AdminCoursesPage() {
                           )}
                         </td>
 
-                        {/* Aksi (Edit di Halaman Baru & Hapus) */}
+                        {/* Aksi (Detail, Edit & Hapus) */}
                         <td className="py-3.5 px-4 text-right whitespace-nowrap">
                           <div className="flex items-center justify-end gap-1.5">
+                            <Link
+                              href={`/admin/courses/${course.id}`}
+                              className="px-2.5 py-1.5 rounded-lg border border-stone-200 dark:border-stone-800 text-stone-700 dark:text-stone-200 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors inline-flex items-center gap-1.5 text-xs font-semibold"
+                              title="Detail Kursus & Kelola Silabus"
+                            >
+                              <BookOpen className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                              <span className="hidden sm:inline">Detail</span>
+                            </Link>
+
                             <Link
                               href={`/courses/${course.slug}`}
                               target="_blank"

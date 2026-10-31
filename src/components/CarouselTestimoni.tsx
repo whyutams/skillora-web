@@ -46,11 +46,11 @@ export interface TestimonialItem {
   avatarUrl: string;
 }
 
-interface TestimonialsCarouselProps {
+interface CarouselTestimoniProps {
   testimonials?: TestimonialItem[];
 }
 
-export function TestimonialsCarousel({ testimonials = [] }: TestimonialsCarouselProps) {
+export function CarouselTestimoni({ testimonials = [] }: CarouselTestimoniProps) {
   const items = testimonials;
   const baseCount = items.length;
 
@@ -188,7 +188,7 @@ export function TestimonialsCarousel({ testimonials = [] }: TestimonialsCarousel
                     </div>
                   </div>
 
-                  {/* Profil: Foto, Nama & Asal Sekolah/Instansi Saja */}
+                  {/* Profil: Foto, Nama & Asal Kampus */}
                   <div className="pt-3 border-t border-stone-100 dark:border-stone-800/60 flex items-center gap-3">
                     <div className="w-9 h-9 rounded-full overflow-hidden border border-stone-200 dark:border-stone-700 shrink-0">
                       <SmoothImage
@@ -255,3 +255,5 @@ export function TestimonialsCarousel({ testimonials = [] }: TestimonialsCarousel
     </div>
   );
 }
+
+export const TestimonialsCarousel = CarouselTestimoni;

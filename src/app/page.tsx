@@ -1,200 +1,26 @@
-import { createClient, createAdminClient } from "@/utils/supabase/server";
-import { Course, UserRole } from "@/types/database";
-import { parseEnrollmentMeta } from "@/utils/enrollmentMeta";
-import CourseCatalogClient from "./CourseCatalogClient";
-import { TestimonialsCarousel, TestimonialItem } from "@/components/TestimonialsCarousel";
-import { VisitorStatsSection } from "@/components/VisitorStatsSection";
+import { Suspense } from "react";
+import { Sparkles, HelpCircle, MessageCircle, ChevronDown, Pencil, Clock, UserCheck } from "lucide-react";
+import { LandingKatalogKursus } from "@/components/home/LandingKatalogKursus";
+import { LandingTestimoni } from "@/components/home/LandingTestimoni";
+import { SectionStatistikPengunjung } from "@/components/SectionStatistikPengunjung";
+import { CourseCatalogSkeleton, TestimonialsSkeleton } from "@/components/ui/Skeleton";
 
 export const dynamic = "force-dynamic";
-import {
-  Code,
-  Terminal,
-  Palette,
-  Clock,
-  Wallet,
-  Users,
-  ShieldCheck,
-  GraduationCap,
-  Sparkles,
-  HelpCircle,
-  Star,
-  MessageCircle,
-  ChevronDown,
-  Pencil,
-  UserCheck
-} from "lucide-react";
 
-
-
-export default async function HomePage() {
-  let courses: Course[] = [];
-  let currentUser: { id: string; email: string; role?: UserRole } | null = null;
-  let enrolledCourseIds: string[] = [];
-  let testimonials: TestimonialItem[] = [];
-  let activeStudentCount = 0;
-  let totalEnrollmentCount = 0;
-
-  try {
-    const supabase = await createClient();
-    const adminClient = createAdminClient();
-
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (user?.email) {
-      const { data: profile } = await adminClient
-        .from("profiles")
-        .select("role")
-        .eq("id", user.id)
-        .maybeSingle();
-
-      const userRole =
-        (profile?.role as UserRole) ||
-        (user.email === "skillorastartup26@gmail.com" ? "superadmin" : "student");
-
-      currentUser = { id: user.id, email: user.email, role: userRole };
-
-      // Ambil daftar ID kursus yang sudah didaftari oleh user yang sedang login
-      const { data: userEnrolls } = await adminClient
-        .from("enrollments")
-        .select("course_id")
-        .eq("user_id", user.id);
-
-      enrolledCourseIds = (userEnrolls || []).map((e) => e.course_id);
-    }
-
-    const { data: dbCourses } = await adminClient
-      .from("courses")
-      .select("*")
-      .eq("is_published", true)
-      .order("created_at", { ascending: true });
-
-    if (dbCourses && dbCourses.length > 0) {
-      courses = dbCourses.map((c) => {
-        let rawDesc = c.description || "";
-        let descSummary = "";
-        let htmlContent = "";
-        let img: string | null = null;
-        let regStart: string | null = null;
-        let regEnd: string | null = null;
-
-        const metaMatch = rawDesc.match(/^<!--meta:(.*?)-->\s*/);
-        if (metaMatch) {
-          try {
-            const parsedMeta = JSON.parse(metaMatch[1]);
-            img = parsedMeta.image_url || null;
-            descSummary = parsedMeta.description || "";
-            regStart = parsedMeta.registration_start || null;
-            regEnd = parsedMeta.registration_end || null;
-            htmlContent = rawDesc.replace(metaMatch[0], "").trim();
-          } catch {
-            // fallback
-          }
-        } else {
-          const match = rawDesc.match(/^<!--image:(.*?)-->\s*/);
-          if (match) {
-            img = match[1];
-            htmlContent = rawDesc.replace(match[0], "").trim();
-          } else {
-            htmlContent = rawDesc;
-          }
-        }
-
-        if (!descSummary) {
-          descSummary = htmlContent.replace(/<[^>]*>?/gm, "").trim();
-        }
-
-        return {
-          ...c,
-          description: descSummary,
-          content: htmlContent,
-          image_url: img,
-          registration_start: regStart,
-          registration_end: regEnd,
-        };
-      });
-    } else {
-      courses = [];
-    }
-
-    // Ambil ulasan nyata dari database (tabel enrollments)
-    const { data: dbEnrollmentsWithReviews } = await adminClient
-      .from("enrollments")
-      .select(`
-        id,
-        whatsapp_number,
-        created_at,
-        profiles (
-          full_name,
-          school_origin,
-          avatar_url
-        ),
-        courses (
-          title
-        )
-      `);
-
-    if (dbEnrollmentsWithReviews) {
-      testimonials = dbEnrollmentsWithReviews
-        .map((item) => {
-          const meta = parseEnrollmentMeta(item.whatsapp_number);
-          if (!meta.review_rating || !meta.review_text) return null;
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const prof = item.profiles as any;
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const crs = item.courses as any;
-          return {
-            id: item.id,
-            name: prof?.full_name || "Peserta Skillora",
-            school: prof?.school_origin || "Pelajar",
-            course: crs?.title || "Kursus Online",
-            stars: meta.review_rating,
-            content: meta.review_text,
-            createdAt: meta.reviewed_at || item.created_at,
-            avatarUrl: prof?.avatar_url || `https://api.dicebear.com/7.x/bottts/svg?seed=${item.id}`,
-          };
-        })
-        .filter((item): item is TestimonialItem => item !== null);
-    }
-
-    const { count: studentCount } = await adminClient
-      .from("profiles")
-      .select("*", { count: "exact", head: true })
-      .eq("role", "student");
-
-    const { count: enrollCount } = await adminClient
-      .from("enrollments")
-      .select("*", { count: "exact", head: true });
-
-    activeStudentCount = studentCount || 0;
-    totalEnrollmentCount = enrollCount || 0;
-  } catch (err) {
-    console.error("Error fetching live data for landing page:", err);
-  }
-
-  const adminPhone =
-    process.env.NEXT_PUBLIC_ADMIN_WHATSAPP_NUMBER || "6281234567890";
-
-  const lowestPrice =
-    courses.length > 0
-      ? Math.min(...courses.map((c) => Number(c.price)))
-      : 39000;
+export default function HomePage() {
+  const adminPhone = process.env.NEXT_PUBLIC_ADMIN_WHATSAPP_NUMBER || "6281234567890";
 
   return (
     <div className="space-y-24 sm:space-y-36 pb-24 overflow-hidden">
+      {/* Hero Section */}
       <section id="hero" className="scroll-mt-24 relative pt-14 sm:pt-24 lg:pt-32 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-        {/* Gradient Blur Ambient Background */}
         <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[340px] sm:w-[680px] lg:w-[880px] h-[250px] sm:h-[420px] bg-gradient-to-tr from-emerald-500/20 via-teal-500/15 to-emerald-400/20 dark:from-emerald-600/25 dark:via-emerald-400/10 dark:to-teal-500/20 rounded-full blur-[80px] sm:blur-[130px] pointer-events-none -z-10" />
         <div className="absolute -top-6 left-6 sm:left-12 w-48 sm:w-80 h-48 sm:h-80 bg-emerald-400/15 dark:bg-emerald-700/15 rounded-full blur-[80px] pointer-events-none -z-10" />
         <div className="absolute top-16 right-6 sm:right-12 w-56 sm:w-96 h-56 sm:h-96 bg-teal-400/15 dark:bg-emerald-500/10 rounded-full blur-[90px] pointer-events-none -z-10" />
 
-        {/* Subtle grid pattern background */}
         <div className="absolute inset-0 -z-10 opacity-[0.035] dark:opacity-[0.06] pointer-events-none [background-image:radial-gradient(#1c1917_1.2px,transparent_1.2px)] dark:[background-image:radial-gradient(#f5f5f4_1.2px,transparent_1.2px)] [background-size:24px_24px]" />
 
         <div className="max-w-4xl mx-auto text-center space-y-6 sm:space-y-8">
-
-          {/* Heading */}
           <h1
             data-aos="fade-up"
             data-aos-delay="100"
@@ -227,7 +53,6 @@ export default async function HomePage() {
             Skillora adalah layanan platform kursus online yang menyediakan berbagai kelas praktikum dengan menyediakan biaya terjangkau bagi pelajar.
           </p>
 
-          {/* Hero CTAs */}
           <div
             data-aos="fade-up"
             data-aos-delay="300"
@@ -255,6 +80,7 @@ export default async function HomePage() {
         </div>
       </section>
 
+      {/* Katalog Kursus */}
       <section id="kursus" className="scroll-mt-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
         <div data-aos="fade-up" className="space-y-3 mb-8 text-center sm:text-left">
           <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#0F3E2E] dark:text-emerald-400 uppercase tracking-wider">
@@ -268,13 +94,12 @@ export default async function HomePage() {
           </p>
         </div>
 
-        <CourseCatalogClient
-          courses={courses}
-          currentUser={currentUser}
-          enrolledCourseIds={enrolledCourseIds}
-        />
+        <Suspense fallback={<CourseCatalogSkeleton />}>
+          <LandingKatalogKursus />
+        </Suspense>
       </section>
 
+      {/* Keunggulan */}
       <section id="keunggulan" className="scroll-mt-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
         <div
           data-aos="fade-up"
@@ -285,7 +110,7 @@ export default async function HomePage() {
               Mengapa Skillora?
             </h2>
             <p className="text-sm text-stone-600 dark:text-stone-400 mt-2">
-
+              Platform pembelajaran praktikum digital yang didesain khusus agar mudah diakses dan dipahami pelajar.
             </p>
           </div>
 
@@ -341,6 +166,7 @@ export default async function HomePage() {
         </div>
       </section>
 
+      {/* Ulasan Peserta */}
       <section id="ulasan" className="scroll-mt-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
         <div data-aos="fade-up" className="text-center space-y-3 mb-10">
           <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#0F3E2E] dark:text-emerald-400 uppercase tracking-wider">
@@ -354,11 +180,15 @@ export default async function HomePage() {
           </p>
         </div>
 
-        <TestimonialsCarousel testimonials={testimonials} />
+        <Suspense fallback={<TestimonialsSkeleton />}>
+          <LandingTestimoni />
+        </Suspense>
       </section>
 
-      <VisitorStatsSection />
+      {/* Statistik Pengunjung */}
+      <SectionStatistikPengunjung />
 
+      {/* Alur Pendaftaran */}
       <section id="alur" className="scroll-mt-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
         <div data-aos="fade-up" className="text-center space-y-3 mb-10">
           <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#0F3E2E] dark:text-emerald-400 uppercase tracking-wider">
@@ -385,7 +215,7 @@ export default async function HomePage() {
               Daftar Akun Peserta
             </h3>
             <p className="text-xs text-stone-600 dark:text-stone-400 mt-1">
-              Isi nama lengkap, username, asal sekolah, nomor whatsapp aktif, dan lain-lain.
+              Isi nama lengkap, username, asal kampus, nomor whatsapp aktif, dan lain-lain.
             </p>
           </div>
 
@@ -455,6 +285,7 @@ export default async function HomePage() {
         </div>
       </section>
 
+      {/* FAQ */}
       <section id="faq" className="scroll-mt-24 px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto">
         <div data-aos="fade-up" className="text-center space-y-3 mb-10">
           <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#0F3E2E] dark:text-emerald-400 uppercase tracking-wider">

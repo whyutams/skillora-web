@@ -195,7 +195,7 @@ export default function RegisterPage() {
     }
 
     if (!cleanSchool) {
-      setError("Asal sekolah atau universitas wajib diisi.");
+      setError("Asal kampus wajib diisi.");
       return;
     }
 
@@ -409,7 +409,6 @@ export default function RegisterPage() {
                   )}
                 </div>
 
-                {/* 3. Grid: Asal Sekolah & Nomor WhatsApp */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                   <div>
                     <label

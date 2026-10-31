@@ -49,6 +49,10 @@ export interface Course {
   registration_end?: string | null;
   event_start?: string | null;
   event_end?: string | null;
+  target_learning?: string[];
+  syllabus?: any[];
+  level?: string | null;
+  category?: string | null;
   created_at: string;
 }
 

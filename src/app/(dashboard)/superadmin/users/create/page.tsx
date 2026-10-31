@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { UserRole } from "@/types/database";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
-import { AlertModal } from "@/components/ui/ConfirmModal";
+import { AlertModal } from "@/components/ui/ModalKonfirmasi";
 import {
   Users,
   ArrowLeft,
@@ -223,7 +223,6 @@ export default function CreateUserPage() {
                 </div>
               </div>
 
-              {/* 5. Asal Sekolah */}
               <div className="space-y-1.5">
                 <label className="text-xs font-semibold text-stone-700 dark:text-stone-300 flex items-center gap-1.5">
                   <Building2 className="w-3.5 h-3.5 text-stone-400" />
@@ -270,7 +269,7 @@ export default function CreateUserPage() {
                   }`}
                 >
                   <GraduationCap className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-                  <span>Student / Siswa</span>
+                  <span>Mahasiswa</span>
                 </button>
 
                 <button

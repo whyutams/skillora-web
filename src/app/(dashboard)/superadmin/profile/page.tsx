@@ -1,7 +1,7 @@
 "use client";
 
-import { DashboardProfileForm } from "@/components/DashboardProfileForm";
+import { FormProfilDashboard } from "@/components/FormProfilDashboard";
 
 export default function SuperadminProfilePage() {
-  return <DashboardProfileForm roleTitle="Superadmin" />;
+  return <FormProfilDashboard roleTitle="Superadmin" />;
 }

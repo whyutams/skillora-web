@@ -94,7 +94,7 @@ export async function POST(request: Request) {
     const newUserId = authResult.user.id;
     const { data: savedProfile, error: profileError } = await adminClient.from("profiles").upsert({
       id: newUserId, full_name: fullName.trim(), username: cleanUsername,
-      school_origin: schoolOrigin?.trim() || "Sekolah / Kampus Umum",
+      school_origin: schoolOrigin?.trim() || "Kampus Umum",
       whatsapp_number: whatsappNumber?.trim() || null, role,
     }).select().single();
 

@@ -4,7 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
-import { AlertModal } from "@/components/ui/ConfirmModal";
+import { AlertModal } from "@/components/ui/ModalKonfirmasi";
 import { SmoothImage } from "@/components/ui/SmoothImage";
 import { HtmlEditor } from "@/components/ui/HtmlEditor";
 import {
@@ -22,6 +22,8 @@ import {
   Trash2,
   RefreshCw,
   Settings,
+  Target,
+  Plus,
 } from "lucide-react";
 
 function slugify(text: string): string {
@@ -50,9 +52,27 @@ export default function EditCoursePage() {
   const [imageUrl, setImageUrl] = React.useState<string>("");
   const [registrationStart, setRegistrationStart] = React.useState<string>("");
   const [registrationEnd, setRegistrationEnd] = React.useState<string>("");
-  const [eventStart, setEventStart] = React.useState<string>("");
-  const [eventEnd, setEventEnd] = React.useState<string>("");
   const [isPublished, setIsPublished] = React.useState(true);
+  const [targetLearning, setTargetLearning] = React.useState<string[]>([""]);
+
+  const handleAddTargetLearning = () => {
+    setTargetLearning((prev) => [...prev, ""]);
+  };
+
+  const handleUpdateTargetLearning = (index: number, value: string) => {
+    setTargetLearning((prev) => {
+      const copy = [...prev];
+      copy[index] = value;
+      return copy;
+    });
+  };
+
+  const handleRemoveTargetLearning = (index: number) => {
+    setTargetLearning((prev) => {
+      const copy = prev.filter((_, i) => i !== index);
+      return copy.length > 0 ? copy : [""];
+    });
+  };
 
   const [isUploadingBanner, setIsUploadingBanner] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
@@ -100,9 +120,13 @@ export default function EditCoursePage() {
         setImageUrl(found.image_url || "");
         setRegistrationStart(found.registration_start ? found.registration_start.slice(0, 10) : "");
         setRegistrationEnd(found.registration_end ? found.registration_end.slice(0, 10) : "");
-        setEventStart(found.event_start ? found.event_start.slice(0, 10) : "");
-        setEventEnd(found.event_end ? found.event_end.slice(0, 10) : "");
         setIsPublished(found.is_published ?? true);
+
+        if (Array.isArray(found.target_learning) && found.target_learning.length > 0) {
+          setTargetLearning(found.target_learning);
+        } else {
+          setTargetLearning([""]);
+        }
       } catch (err: unknown) {
         setErrorMessage(
           err instanceof Error ? err.message : "Gagal memuat data kursus."
@@ -181,9 +205,8 @@ export default function EditCoursePage() {
           image_url: imageUrl ? imageUrl.trim() : "",
           registration_start: registrationStart || null,
           registration_end: registrationEnd || null,
-          event_start: eventStart || null,
-          event_end: eventEnd || null,
           is_published: isPublished,
+          target_learning: targetLearning.filter((t) => t.trim().length > 0),
         }),
       });
 
@@ -312,16 +335,65 @@ export default function EditCoursePage() {
               />
             </div>
 
+            {/* Target Pembelajaran Kursus (Input Per Baris CRUD) */}
+            <div className="space-y-3 pt-2">
+              <div className="flex items-center justify-between">
+                <div>
+                  <label className="text-xs font-semibold text-stone-700 dark:text-stone-300 flex items-center gap-1.5">
+                    <Target className="w-3.5 h-3.5 text-emerald-600" />
+                    <span>Target Hasil Pembelajaran (List Poin Kompetensi)</span>
+                  </label>
+                  <p className="text-[11px] text-stone-500 dark:text-stone-400 mt-0.5">
+                    Daftar capaian yang akan tampil pada bagian &quot;Target Pembelajaran&quot; di detail kursus.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleAddTargetLearning}
+                  className="inline-flex items-center gap-1 text-xs font-bold text-emerald-700 dark:text-emerald-400 hover:text-emerald-800 dark:hover:text-emerald-300 px-2.5 py-1 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/15 transition-colors cursor-pointer"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Tambah Baris</span>
+                </button>
+              </div>
+
+              <div className="space-y-2">
+                {targetLearning.map((item, idx) => (
+                  <div key={idx} className="flex items-center gap-2">
+                    <span className="w-7 h-7 rounded-lg bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-300 flex items-center justify-center font-bold text-xs shrink-0 border border-stone-200 dark:border-stone-700">
+                      {idx + 1}
+                    </span>
+                    <input
+                      type="text"
+                      value={item}
+                      onChange={(e) => handleUpdateTargetLearning(idx, e.target.value)}
+                      placeholder={`Misal: Memahami logika dan alur pemrograman materi ${idx + 1}...`}
+                      className="flex-1 px-3.5 py-2 text-xs sm:text-sm rounded-xl border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-950 text-stone-900 dark:text-stone-100 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-[#0F3E2E] dark:focus:ring-emerald-500"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveTargetLearning(idx)}
+                      disabled={targetLearning.length <= 1 && !item}
+                      className="p-2 rounded-xl text-stone-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer shrink-0"
+                      title="Hapus baris target pembelajaran"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+
             {/* Konten & Silabus Kursus dengan HTML Editor */}
             <div className="space-y-1.5 pt-1">
               <label className="text-xs font-semibold text-stone-700 dark:text-stone-300 flex items-center gap-2">
                 <FileText className="w-4 h-4 text-emerald-600" />
-                <span>Konten & Silabus Lengkap Kursus (HTML Editor) *</span>
+                <span>Tentang Kelas Ini (HTML Editor) *</span>
               </label>
               <HtmlEditor
                 value={content}
                 onChange={setContent}
-                placeholder="Tuliskan materi silabus, pembahasan modul, dan target pencapaian siswa..."
+                placeholder="Tuliskan materi silabus, pembahasan modul, dan target pencapaian mahasiswa..."
                 minHeight="280px"
               />
             </div>
@@ -388,16 +460,16 @@ export default function EditCoursePage() {
               />
             </div>
 
-            {/* Waktu Pendaftaran Kursus */}
+            {/* Periode Pendaftaran (Opsional) */}
             <div className="space-y-3 pt-3 border-t border-stone-100 dark:border-stone-800">
               <div className="flex items-center gap-1.5">
                 <Calendar className="w-4 h-4 text-emerald-600" />
                 <h3 className="text-xs font-semibold text-stone-900 dark:text-stone-100">
-                  Waktu Pendaftaran Kursus
+                  Waktu Pendaftaran Kursus (Opsional)
                 </h3>
               </div>
               <p className="text-[11px] text-stone-400">
-                Tentukan periode kapan siswa dapat mendaftar kursus ini.
+                Kosongkan jika pendaftaran kursus mandiri dibuka setiap saat tanpa batas tanggal.
               </p>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -427,46 +499,7 @@ export default function EditCoursePage() {
               </div>
             </div>
 
-            {/* Jadwal Pelaksanaan Kursus */}
-            <div className="space-y-3 pt-3 border-t border-stone-100 dark:border-stone-800">
-              <div className="flex items-center gap-1.5">
-                <Calendar className="w-4 h-4 text-teal-600" />
-                <h3 className="text-xs font-semibold text-stone-900 dark:text-stone-100">
-                  Jadwal Pelaksanaan Kursus
-                </h3>
-              </div>
-              <p className="text-[11px] text-stone-400">
-                Tentukan periode berlangsungnya kelas hingga selesai (patokan pembukaan ulasan siswa).
-              </p>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <label className="text-[11px] font-semibold text-stone-600 dark:text-stone-300">
-                    Mulai Pelaksanaan
-                  </label>
-                  <input
-                    type="date"
-                    value={eventStart}
-                    onChange={(e) => setEventStart(e.target.value)}
-                    className="w-full px-3 py-2 text-xs rounded-xl border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-950 text-stone-900 dark:text-stone-100 focus:outline-none focus:ring-2 focus:ring-[#0F3E2E] dark:focus:ring-emerald-500"
-                  />
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-[11px] font-semibold text-stone-600 dark:text-stone-300">
-                    Selesai Pelaksanaan
-                  </label>
-                  <input
-                    type="date"
-                    value={eventEnd}
-                    onChange={(e) => setEventEnd(e.target.value)}
-                    className="w-full px-3 py-2 text-xs rounded-xl border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-950 text-stone-900 dark:text-stone-100 focus:outline-none focus:ring-2 focus:ring-[#0F3E2E] dark:focus:ring-emerald-500"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Sub-header Biaya & Status */}
+            {/* Biaya & Status */}
             <div className="flex items-center gap-2 pt-4 pb-2 border-t border-stone-100 dark:border-stone-800">
               <Settings className="w-4 h-4 text-emerald-600" />
               <h2 className="text-sm font-bold text-stone-900 dark:text-stone-100">

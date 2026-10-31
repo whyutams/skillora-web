@@ -6,7 +6,7 @@ import { EnrollmentStatus, Course } from "@/types/database";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
-import { ConfirmModal, AlertModal } from "@/components/ui/ConfirmModal";
+import { ConfirmModal, AlertModal } from "@/components/ui/ModalKonfirmasi";
 import { AnimatedCounter } from "@/components/AnimatedCounter";
 import {
   ShieldCheck,
@@ -123,7 +123,7 @@ export default function AdminPendaftaranPage() {
   });
   const [isSubmittingReject, setIsSubmittingReject] = React.useState(false);
 
-  // Modal Upload E-Sertifikat Per Siswa
+  // modal upload e-sertifikat per mahasiswa
   const [certificateModalData, setCertificateModalData] = React.useState<{
     isOpen: boolean;
     enrollmentId: string;
@@ -265,7 +265,7 @@ export default function AdminPendaftaranPage() {
     setApproveModalData({
       isOpen: true,
       enrollmentId: item.id,
-      studentName: item.profiles?.full_name || "Siswa",
+      studentName: item.profiles?.full_name || "Mahasiswa",
       courseTitle: item.courses?.title || "Kursus",
     });
   };
@@ -294,7 +294,7 @@ export default function AdminPendaftaranPage() {
       setAlertModalData({
         isOpen: true,
         title: "Pendaftaran Disetujui",
-        message: `Pendaftaran siswa "${studentName}" berhasil disetujui. Link grup WhatsApp kelas kini aktif untuk siswa.`,
+        message: `Pendaftaran mahasiswa "${studentName}" berhasil disetujui. Link grup WhatsApp kelas kini aktif untuk mahasiswa.`,
         type: "success",
       });
       fetchEnrollments();
@@ -316,7 +316,7 @@ export default function AdminPendaftaranPage() {
     setRejectModalData({
       isOpen: true,
       enrollmentId: item.id,
-      studentName: item.profiles?.full_name || "Siswa",
+      studentName: item.profiles?.full_name || "Mahasiswa",
       courseTitle: item.courses?.title || "Kursus",
       reason: item.rejection_reason || "Bukti transfer tidak sesuai nominal atau tidak terbaca.",
     });
@@ -328,7 +328,7 @@ export default function AdminPendaftaranPage() {
       setAlertModalData({
         isOpen: true,
         title: "Alasan Penolakan Wajib",
-        message: "Silakan tuliskan alasan penolakan agar siswa memahami kendala pendaftarannya.",
+        message: "Silakan tuliskan alasan penolakan agar mahasiswa memahami kendala pendaftarannya.",
         type: "error",
       });
       return;
@@ -357,7 +357,7 @@ export default function AdminPendaftaranPage() {
       setAlertModalData({
         isOpen: true,
         title: "Pendaftaran Ditolak",
-        message: `Pendaftaran siswa "${studentName}" telah ditolak beserta alasan penolakan yang dikirimkan.`,
+        message: `Pendaftaran mahasiswa "${studentName}" telah ditolak beserta alasan penolakan yang dikirimkan.`,
         type: "info",
       });
       fetchEnrollments();
@@ -379,7 +379,7 @@ export default function AdminPendaftaranPage() {
     setCertificateModalData({
       isOpen: true,
       enrollmentId: item.id,
-      studentName: item.profiles?.full_name || "Siswa",
+      studentName: item.profiles?.full_name || "Mahasiswa",
       courseTitle: item.courses?.title || "Kursus",
       currentUrl: item.certificate_url,
     });
@@ -434,7 +434,7 @@ export default function AdminPendaftaranPage() {
       setAlertModalData({
         isOpen: true,
         title: "E-Sertifikat Berhasil Diunggah",
-        message: `E-Sertifikat untuk siswa "${studentName}" berhasil disimpan dan siap diunduh oleh siswa setelah mengisi ulasan kursus.`,
+        message: `E-Sertifikat untuk mahasiswa "${studentName}" berhasil disimpan dan siap diunduh oleh mahasiswa setelah mengisi ulasan kursus.`,
         type: "success",
       });
       fetchEnrollments();
@@ -474,7 +474,7 @@ export default function AdminPendaftaranPage() {
           "No": index + 1,
           "Nama Lengkap": student?.full_name || "-",
           "Username": student?.username || "-",
-          "Asal Sekolah / Kampus": student?.school_origin || "-",
+          "Asal Kampus": student?.school_origin || "-",
           "No WhatsApp": item.whatsapp_number || "-",
           "Kursus": course?.title || "-",
           "Harga Kursus (Rp)": Number(course?.price || 0),
@@ -494,7 +494,7 @@ export default function AdminPendaftaranPage() {
         { wch: 6 },  // No
         { wch: 25 }, // Nama Lengkap
         { wch: 18 }, // Username
-        { wch: 28 }, // Asal Sekolah
+        { wch: 28 }, // Asal Kampus
         { wch: 18 }, // No WhatsApp
         { wch: 38 }, // Kursus
         { wch: 18 }, // Harga
@@ -597,7 +597,7 @@ export default function AdminPendaftaranPage() {
               <Badge variant="role-admin">Verifikasi & E-Sertifikat</Badge>
             </div>
             <p className="text-xs sm:text-sm text-stone-500 dark:text-stone-400">
-              Periksa bukti transfer siswa, berikan alasan penolakan, unggah E-Sertifikat per peserta, dan unduh data ke Excel.
+              Periksa bukti transfer mahasiswa, berikan alasan penolakan, unggah E-Sertifikat per peserta, dan unduh data ke Excel.
             </p>
           </div>
         </div>
@@ -796,7 +796,7 @@ export default function AdminPendaftaranPage() {
                   <Search className="w-4 h-4 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2" />
                   <input
                     type="text"
-                    placeholder="Cari siswa, sekolah, no wa..."
+                    placeholder="Cari mahasiswa, asal kampus, no wa..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="w-full pl-9 pr-3 py-1.5 text-xs rounded-xl border border-stone-300 dark:border-stone-700 bg-stone-50 dark:bg-stone-900 text-stone-900 dark:text-stone-100 placeholder-stone-400 focus:outline-hidden focus:ring-1 focus:ring-emerald-500"
@@ -864,7 +864,7 @@ export default function AdminPendaftaranPage() {
                   <table className="w-full text-left text-xs border-collapse">
                     <thead>
                       <tr className="border-b border-stone-200 dark:border-stone-800 bg-stone-50/50 dark:bg-stone-900/40 text-stone-500">
-                        <th className="py-3 px-4 font-semibold">Siswa & Asal Sekolah</th>
+                        <th className="py-3 px-4 font-semibold">Mahasiswa & Asal Kampus</th>
                         <th className="py-3 px-4 font-semibold">WhatsApp & Tgl</th>
                         <th className="py-3 px-4 font-semibold">Bukti Pembayaran</th>
                         <th className="py-3 px-4 font-semibold">Status Pendaftaran</th>
@@ -880,7 +880,7 @@ export default function AdminPendaftaranPage() {
                         const isLoadingThis = actionLoadingId === item.id;
 
                         const waChatUrl = `https://wa.me/${item.whatsapp_number}?text=${encodeURIComponent(
-                          `Halo ${student?.full_name || "Siswa"}, kami dari Admin Skillora terkait pendaftaran kursus "${course?.title || "kursus"}" Anda.`
+                          `Halo ${student?.full_name || "Mahasiswa"}, kami dari Admin Skillora terkait pendaftaran kursus "${course?.title || "kursus"}" Anda.`
                         )}`;
 
                         return (
@@ -888,7 +888,6 @@ export default function AdminPendaftaranPage() {
                             key={item.id}
                             className="hover:bg-stone-50/50 dark:hover:bg-stone-900/30 transition-colors"
                           >
-                            {/* Siswa */}
                             <td className="py-3.5 px-4">
                               <div className="flex items-center gap-3">
                                 <div className="w-8 h-8 rounded-full overflow-hidden bg-stone-100 dark:bg-stone-800 border border-stone-200 dark:border-stone-700 shrink-0 flex items-center justify-center font-bold text-xs">
@@ -1078,7 +1077,7 @@ export default function AdminPendaftaranPage() {
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   className="p-1.5 rounded-lg border border-stone-200 dark:border-stone-800 text-stone-500 hover:text-stone-900 dark:hover:text-stone-100 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors"
-                                  title="Chat WhatsApp Siswa"
+                                  title="Chat WhatsApp Mahasiswa"
                                 >
                                   <MessageSquare className="w-3.5 h-3.5" />
                                 </a>
@@ -1149,16 +1148,16 @@ export default function AdminPendaftaranPage() {
                 <AlertTriangle className="w-5 h-5" />
               </div>
               <h3 className="text-lg font-bold text-stone-900 dark:text-stone-100">
-                Tolak Pendaftaran Siswa
+                Tolak Pendaftaran Mahasiswa
               </h3>
               <p className="text-xs text-stone-500 dark:text-stone-400 mt-1">
-                Siswa: <span className="font-semibold text-stone-800 dark:text-stone-200">{rejectModalData.studentName}</span> ({rejectModalData.courseTitle})
+                Mahasiswa <span className="font-semibold text-stone-800 dark:text-stone-200">{rejectModalData.studentName}</span> ({rejectModalData.courseTitle})
               </p>
             </div>
 
             <div className="space-y-2">
               <label className="text-xs font-bold text-stone-700 dark:text-stone-300 block">
-                Alasan Penolakan (Wajib Diisi):
+                Alasan Penolakan (Wajib Diisi)
               </label>
               <textarea
                 value={rejectModalData.reason}
@@ -1170,7 +1169,7 @@ export default function AdminPendaftaranPage() {
                 className="w-full p-3 rounded-xl border border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-900 text-xs text-stone-900 dark:text-stone-100 placeholder:text-stone-400 focus:outline-hidden focus:ring-2 focus:ring-rose-500 resize-none"
               />
               <p className="text-[11px] text-stone-400">
-                * Alasan ini akan tampil di kartu dashboard siswa agar siswa dapat memperbaiki bukti bayar.
+                * Alasan ini akan tampil di kartu dashboard mahasiswa agar mahasiswa dapat memperbaiki bukti bayar.
               </p>
             </div>
 
@@ -1207,7 +1206,7 @@ export default function AdminPendaftaranPage() {
         </div>
       )}
 
-      {/* ================= MODAL UPLOAD E-SERTIFIKAT PER SISWA ================= */}
+      {/* modal upload e-sertifikat per mahasiswa */}
       {certificateModalData.isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-950/70 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="bg-white dark:bg-[#0C0A09] border border-stone-200 dark:border-stone-800 rounded-3xl max-w-md w-full p-6 space-y-5 shadow-2xl relative">
@@ -1321,7 +1320,7 @@ export default function AdminPendaftaranPage() {
             </button>
 
             <h3 className="text-base font-bold text-stone-900 dark:text-stone-100">
-              Bukti Transfer Pembayaran Siswa
+              Bukti Transfer Pembayaran Mahasiswa
             </h3>
 
             <div className="w-full max-h-[70vh] rounded-2xl overflow-hidden border border-stone-200 dark:border-stone-800 bg-stone-100 dark:bg-stone-900">
@@ -1350,11 +1349,11 @@ export default function AdminPendaftaranPage() {
         </div>
       )}
 
-      {/* ================= MODAL KONFIRMASI APPROVE ================= */}
+      {/* modal konfirmasi approve */}
       <ConfirmModal
         isOpen={approveModalData.isOpen}
-        title="Setujui Pendaftaran Siswa?"
-        description={`Apakah Anda yakin ingin menyetujui pendaftaran "${approveModalData.studentName}" untuk kursus "${approveModalData.courseTitle}"? Akses tautan grup WhatsApp kelas akan langsung aktif untuk siswa.`}
+        title="Setujui Pendaftaran Mahasiswa?"
+        description={`Apakah Anda yakin ingin menyetujui pendaftaran "${approveModalData.studentName}" untuk kursus "${approveModalData.courseTitle}"? Akses tautan grup WhatsApp kelas akan langsung aktif untuk mahasiswa.`}
         confirmText="Ya, Setujui"
         cancelText="Batal"
         variant="primary"
@@ -1363,7 +1362,7 @@ export default function AdminPendaftaranPage() {
         onClose={() => setApproveModalData((prev) => ({ ...prev, isOpen: false }))}
       />
 
-      {/* ================= MODAL ALERT NOTIFIKASI ================= */}
+      {/* modal alert notifikasi */}
       <AlertModal
         isOpen={alertModalData.isOpen}
         title={alertModalData.title}

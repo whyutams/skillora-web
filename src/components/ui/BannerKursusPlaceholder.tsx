@@ -3,17 +3,17 @@
 import * as React from "react";
 import { Code, Terminal, Palette, BookOpen, GraduationCap } from "lucide-react";
 
-interface CoursePlaceholderBannerProps {
+interface BannerKursusPlaceholderProps {
   title?: string;
   slug?: string;
   className?: string;
 }
 
-export function CoursePlaceholderBanner({
+export function BannerKursusPlaceholder({
   title = "Kursus Skillora",
   slug = "",
   className = "",
-}: CoursePlaceholderBannerProps) {
+}: BannerKursusPlaceholderProps) {
   const s = (slug || "").toLowerCase();
 
   const getIcon = () => {
@@ -55,3 +55,5 @@ export function CoursePlaceholderBanner({
     </div>
   );
 }
+
+export const CoursePlaceholderBanner = BannerKursusPlaceholder;

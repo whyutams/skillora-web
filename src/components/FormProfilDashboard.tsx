@@ -6,10 +6,10 @@ import { createClient } from "@/utils/supabase/client";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
-import { AlertModal } from "@/components/ui/ConfirmModal";
+import { AlertModal } from "@/components/ui/ModalKonfirmasi";
 import { Profile } from "@/types/database";
 import { SmoothImage } from "@/components/ui/SmoothImage";
-import { ImageCropModal } from "@/components/ui/ImageCropModal";
+import { ImageCropModal } from "@/components/ui/ModalCropGambar";
 
 import {
   User,
@@ -25,7 +25,7 @@ import {
   Loader2,
 } from "lucide-react";
 
-export function DashboardProfileForm({ roleTitle }: { roleTitle: string }) {
+export function FormProfilDashboard({ roleTitle }: { roleTitle: string }) {
   const router = useRouter();
   const supabase = createClient();
 
@@ -297,7 +297,7 @@ export function DashboardProfileForm({ roleTitle }: { roleTitle: string }) {
           <CardHeader className="border-b border-stone-100 dark:border-stone-800 p-5">
             <CardTitle className="text-base">Informasi Akun Administrator</CardTitle>
             <CardDescription className="text-xs">
-              Ubah rincian nama, instansi sekolah/kampus, dan nomor kontak aktif.
+              Ubah rincian nama, asal kampus, dan nomor kontak aktif.
             </CardDescription>
           </CardHeader>
           <CardContent className="p-5">
@@ -352,7 +352,7 @@ export function DashboardProfileForm({ roleTitle }: { roleTitle: string }) {
                 </div>
               </div>
 
-              {/* Editable: Asal Sekolah / Kampus */}
+              {/* Editable: Asal Kampus */}
               <div>
                 <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300 mb-1">
                   Asal Kampus
@@ -427,3 +427,5 @@ export function DashboardProfileForm({ roleTitle }: { roleTitle: string }) {
     </div>
   );
 }
+
+export const DashboardProfileForm = FormProfilDashboard;

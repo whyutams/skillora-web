@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient, createAdminClient } from "@/utils/supabase/server";
 import { logActivity } from "@/utils/supabase/activityLogger";
+import { parseEnrollmentMeta } from "@/utils/enrollmentMeta";
 
 function slugify(text: string): string {
   return text
@@ -14,7 +15,7 @@ function slugify(text: string): string {
     .replace(/-+$/, "");
 }
 
-function parseCourseDescription(rawDesc: string | null): {
+interface ParsedCourseMeta {
   description: string;
   content: string;
   image_url: string | null;
@@ -22,7 +23,14 @@ function parseCourseDescription(rawDesc: string | null): {
   registration_end: string | null;
   event_start: string | null;
   event_end: string | null;
-} {
+  target_learning: string[];
+  syllabus: any[];
+  level: string | null;
+  category: string | null;
+  raw_meta: Record<string, unknown>;
+}
+
+function parseCourseDescription(rawDesc: string | null): ParsedCourseMeta {
   if (!rawDesc) {
     return {
       description: "",
@@ -32,6 +40,11 @@ function parseCourseDescription(rawDesc: string | null): {
       registration_end: null,
       event_start: null,
       event_end: null,
+      target_learning: [],
+      syllabus: [],
+      level: null,
+      category: null,
+      raw_meta: {},
     };
   }
 
@@ -49,13 +62,18 @@ function parseCourseDescription(rawDesc: string | null): {
         registration_end: parsedMeta.registration_end || null,
         event_start: parsedMeta.event_start || null,
         event_end: parsedMeta.event_end || null,
+        target_learning: Array.isArray(parsedMeta.target_learning) ? parsedMeta.target_learning : [],
+        syllabus: Array.isArray(parsedMeta.syllabus) ? parsedMeta.syllabus : [],
+        level: parsedMeta.level || null,
+        category: parsedMeta.category || null,
+        raw_meta: parsedMeta,
       };
     } catch {
       // fallback
     }
   }
 
-  // Check legacy <!--image:...--> format
+  // format gambar lama
   const imgMatch = rawDesc.match(/^<!--image:(.*?)-->\s*/);
   if (imgMatch) {
     const htmlContent = rawDesc.replace(imgMatch[0], "").trim();
@@ -67,6 +85,11 @@ function parseCourseDescription(rawDesc: string | null): {
       registration_end: null,
       event_start: null,
       event_end: null,
+      target_learning: [],
+      syllabus: [],
+      level: null,
+      category: null,
+      raw_meta: {},
     };
   }
 
@@ -78,6 +101,11 @@ function parseCourseDescription(rawDesc: string | null): {
     registration_end: null,
     event_start: null,
     event_end: null,
+    target_learning: [],
+    syllabus: [],
+    level: null,
+    category: null,
+    raw_meta: {},
   };
 }
 
@@ -88,30 +116,88 @@ function encodeCourseDescription(
   registrationStart?: string | null,
   registrationEnd?: string | null,
   eventStart?: string | null,
-  eventEnd?: string | null
+  eventEnd?: string | null,
+  targetLearning?: string[] | null,
+  syllabus?: any[] | null,
+  level?: string | null,
+  category?: string | null,
+  existingMeta?: Record<string, unknown>
 ): string {
   const cleanDesc = (description || "").trim();
   const cleanContent = (content || "").trim();
-  const meta: {
-    description?: string;
-    image_url?: string | null;
-    registration_start?: string | null;
-    registration_end?: string | null;
-    event_start?: string | null;
-    event_end?: string | null;
-  } = {};
+  const meta: Record<string, unknown> = {
+    ...(existingMeta || {}),
+  };
 
   if (cleanDesc) meta.description = cleanDesc;
-  if (imageUrl && imageUrl.trim()) meta.image_url = imageUrl.trim();
-  if (registrationStart && registrationStart.trim()) meta.registration_start = registrationStart.trim();
-  if (registrationEnd && registrationEnd.trim()) meta.registration_end = registrationEnd.trim();
-  if (eventStart && eventStart.trim()) meta.event_start = eventStart.trim();
-  if (eventEnd && eventEnd.trim()) meta.event_end = eventEnd.trim();
+  if (imageUrl !== undefined) {
+    if (imageUrl && imageUrl.trim()) {
+      meta.image_url = imageUrl.trim();
+    } else {
+      delete meta.image_url;
+    }
+  }
+  if (registrationStart !== undefined) {
+    if (registrationStart && registrationStart.trim()) {
+      meta.registration_start = registrationStart.trim();
+    } else {
+      delete meta.registration_start;
+    }
+  }
+  if (registrationEnd !== undefined) {
+    if (registrationEnd && registrationEnd.trim()) {
+      meta.registration_end = registrationEnd.trim();
+    } else {
+      delete meta.registration_end;
+    }
+  }
+  if (eventStart !== undefined) {
+    if (eventStart && eventStart.trim()) {
+      meta.event_start = eventStart.trim();
+    } else {
+      delete meta.event_start;
+    }
+  }
+  if (eventEnd !== undefined) {
+    if (eventEnd && eventEnd.trim()) {
+      meta.event_end = eventEnd.trim();
+    } else {
+      delete meta.event_end;
+    }
+  }
+  if (targetLearning !== undefined) {
+    if (Array.isArray(targetLearning)) {
+      meta.target_learning = targetLearning.filter((t) => typeof t === "string" && t.trim().length > 0);
+    } else {
+      delete meta.target_learning;
+    }
+  }
+  if (syllabus !== undefined) {
+    if (Array.isArray(syllabus)) {
+      meta.syllabus = syllabus;
+    } else {
+      delete meta.syllabus;
+    }
+  }
+  if (level !== undefined) {
+    if (level && level.trim()) {
+      meta.level = level.trim();
+    } else {
+      delete meta.level;
+    }
+  }
+  if (category !== undefined) {
+    if (category && category.trim()) {
+      meta.category = category.trim();
+    } else {
+      delete meta.category;
+    }
+  }
 
   return `<!--meta:${JSON.stringify(meta)}-->\n${cleanContent}`;
 }
 
-// GET: Ambil daftar seluruh kursus (untuk Admin & Superadmin)
+// ambil daftar seluruh kursus
 export async function GET() {
   try {
     const supabase = await createClient();
@@ -144,12 +230,14 @@ export async function GET() {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    // Ambil rekap pendaftaran untuk statistik per kursus
+    // Ambil rekap pendaftaran dan ulasan untuk statistik per kursus
     const { data: enrollments } = await adminClient
       .from("enrollments")
-      .select("course_id, status");
+      .select("course_id, status, whatsapp_number");
 
     const enrollmentStatsMap: Record<string, { total: number; approved: number; pending: number }> = {};
+    const reviewsMap: Record<string, { total: number; count: number }> = {};
+
     if (enrollments) {
       for (const e of enrollments) {
         if (!e.course_id) continue;
@@ -162,12 +250,44 @@ export async function GET() {
         } else if (e.status === "pending_payment") {
           enrollmentStatsMap[e.course_id].pending += 1;
         }
+
+        const meta = parseEnrollmentMeta(e.whatsapp_number);
+        if (meta.review_rating) {
+          if (!reviewsMap[e.course_id]) {
+            reviewsMap[e.course_id] = { total: 0, count: 0 };
+          }
+          reviewsMap[e.course_id].total += Number(meta.review_rating);
+          reviewsMap[e.course_id].count += 1;
+        }
+      }
+    }
+
+    // Ambil rekap view per kursus dari activity_logs
+    const { data: viewLogs } = await adminClient
+      .from("activity_logs")
+      .select("table_name")
+      .eq("action", "COURSE_VIEW");
+
+    const viewsMap: Record<string, number> = {};
+    let totalViewsCount = 0;
+    if (viewLogs) {
+      for (const log of viewLogs) {
+        totalViewsCount += 1;
+        const slug = (log.table_name || "").replace(/^course:/, "");
+        if (slug) {
+          viewsMap[slug] = (viewsMap[slug] || 0) + 1;
+        }
       }
     }
 
     const courses = (rawCourses || []).map((c) => {
       const parsed = parseCourseDescription(c.description);
       const stats = enrollmentStatsMap[c.id] || { total: 0, approved: 0, pending: 0 };
+      const reviewStat = reviewsMap[c.id];
+      const avgRating = reviewStat && reviewStat.count > 0
+        ? Number((reviewStat.total / reviewStat.count).toFixed(1))
+        : null;
+
       return {
         ...c,
         description: parsed.description,
@@ -177,9 +297,16 @@ export async function GET() {
         registration_end: parsed.registration_end,
         event_start: parsed.event_start,
         event_end: parsed.event_end,
+        target_learning: parsed.target_learning,
+        syllabus: parsed.syllabus,
+        level: parsed.level,
+        category: parsed.category,
         enrolled_count: stats.total,
         approved_count: stats.approved,
         pending_count: stats.pending,
+        views_count: viewsMap[c.slug] || 0,
+        average_rating: avgRating,
+        reviews_count: reviewStat?.count || 0,
       };
     });
 
@@ -196,6 +323,7 @@ export async function GET() {
         draftCourses: courses.filter((c) => !c.is_published).length,
         totalEnrollments,
         totalApprovedStudents,
+        totalViews: totalViewsCount,
       },
     });
   } catch (err: unknown) {
@@ -204,7 +332,7 @@ export async function GET() {
   }
 }
 
-// POST: Tambah Kursus Baru
+// tambah kursus baru
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient();
@@ -239,6 +367,10 @@ export async function POST(request: NextRequest) {
       registration_start,
       registration_end,
       is_published = true,
+      target_learning,
+      syllabus,
+      level,
+      category,
     } = body;
 
     if (!title || !title.trim()) {
@@ -270,7 +402,11 @@ export async function POST(request: NextRequest) {
       registration_start || null,
       registration_end || null,
       body.event_start || null,
-      body.event_end || null
+      body.event_end || null,
+      target_learning || [],
+      syllabus || [],
+      level || null,
+      category || null
     );
     const numPrice = Math.max(0, parseInt(String(price), 10) || 0);
 
@@ -319,6 +455,10 @@ export async function POST(request: NextRequest) {
         registration_end: parsed.registration_end,
         event_start: parsed.event_start,
         event_end: parsed.event_end,
+        target_learning: parsed.target_learning,
+        syllabus: parsed.syllabus,
+        level: parsed.level,
+        category: parsed.category,
       },
       message: `Kursus "${newCourse.title}" berhasil ditambahkan.`,
     });
@@ -328,7 +468,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// PATCH: Update Kursus
+// update kursus
 export async function PATCH(request: NextRequest) {
   try {
     const supabase = await createClient();
@@ -364,6 +504,10 @@ export async function PATCH(request: NextRequest) {
       registration_start,
       registration_end,
       is_published,
+      target_learning,
+      syllabus,
+      level,
+      category,
     } = body;
 
     if (!id) {
@@ -412,7 +556,11 @@ export async function PATCH(request: NextRequest) {
       registration_start !== undefined ||
       registration_end !== undefined ||
       body.event_start !== undefined ||
-      body.event_end !== undefined
+      body.event_end !== undefined ||
+      target_learning !== undefined ||
+      syllabus !== undefined ||
+      level !== undefined ||
+      category !== undefined
     ) {
       const currentParsed = parseCourseDescription(existing.description);
       const newDesc = description !== undefined ? description : currentParsed.description;
@@ -423,8 +571,25 @@ export async function PATCH(request: NextRequest) {
       const newRegEnd = registration_end !== undefined ? (registration_end ? String(registration_end).trim() : null) : currentParsed.registration_end;
       const newEventStart = body.event_start !== undefined ? (body.event_start ? String(body.event_start).trim() : null) : currentParsed.event_start;
       const newEventEnd = body.event_end !== undefined ? (body.event_end ? String(body.event_end).trim() : null) : currentParsed.event_end;
+      const newTarget = target_learning !== undefined ? target_learning : currentParsed.target_learning;
+      const newSyllabus = syllabus !== undefined ? syllabus : currentParsed.syllabus;
+      const newLevel = level !== undefined ? level : currentParsed.level;
+      const newCat = category !== undefined ? category : currentParsed.category;
 
-      updatePayload.description = encodeCourseDescription(newDesc, newContent, newImg, newRegStart, newRegEnd, newEventStart, newEventEnd);
+      updatePayload.description = encodeCourseDescription(
+        newDesc,
+        newContent,
+        newImg,
+        newRegStart,
+        newRegEnd,
+        newEventStart,
+        newEventEnd,
+        newTarget,
+        newSyllabus,
+        newLevel,
+        newCat,
+        currentParsed.raw_meta
+      );
     }
 
     const { data: updated, error: updateErr } = await adminClient
@@ -462,6 +627,12 @@ export async function PATCH(request: NextRequest) {
         image_url: parsed.image_url,
         registration_start: parsed.registration_start,
         registration_end: parsed.registration_end,
+        event_start: parsed.event_start,
+        event_end: parsed.event_end,
+        target_learning: parsed.target_learning,
+        syllabus: parsed.syllabus,
+        level: parsed.level,
+        category: parsed.category,
       },
       message: `Kursus "${updated.title}" berhasil diperbarui.`,
     });
@@ -471,7 +642,7 @@ export async function PATCH(request: NextRequest) {
   }
 }
 
-// DELETE: Hapus Kursus
+// hapus kursus
 export async function DELETE(request: NextRequest) {
   try {
     const supabase = await createClient();
@@ -514,7 +685,7 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json(
         {
           error:
-            "Kursus ini memiliki data pendaftaran siswa aktif. Anda dapat menonaktifkan status publikasi kursus ini daripada menghapusnya.",
+            "Kursus ini memiliki data pendaftaran peserta aktif. Anda dapat menonaktifkan status publikasi kursus ini daripada menghapusnya.",
         },
         { status: 400 }
       );

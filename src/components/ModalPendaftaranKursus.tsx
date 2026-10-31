@@ -17,7 +17,7 @@ import {
   Edit3,
 } from "lucide-react";
 
-interface EnrollModalProps {
+interface ModalPendaftaranKursusProps {
   course: Course | null;
   isOpen: boolean;
   onClose: () => void;
@@ -27,7 +27,7 @@ interface EnrollModalProps {
   userWhatsapp?: string | null;
 }
 
-export function EnrollModal({
+export function ModalPendaftaranKursus({
   course,
   isOpen,
   onClose,
@@ -35,10 +35,11 @@ export function EnrollModal({
   userId,
   userRole,
   userWhatsapp,
-}: EnrollModalProps) {
+}: ModalPendaftaranKursusProps) {
   const router = useRouter();
   const [whatsappNumber, setWhatsappNumber] = React.useState(userWhatsapp || "");
   const [isLoadingProfile, setIsLoadingProfile] = React.useState(false);
+  const [isProfileIncomplete, setIsProfileIncomplete] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [success, setSuccess] = React.useState(false);
@@ -46,21 +47,29 @@ export function EnrollModal({
   React.useEffect(() => {
     async function fetchWhatsapp() {
       if (!userId) return;
-      if (userWhatsapp) {
-        setWhatsappNumber(userWhatsapp);
-        return;
-      }
       setIsLoadingProfile(true);
       try {
         const supabase = createClient();
         const { data } = await supabase
           .from("profiles")
-          .select("whatsapp_number")
+          .select("whatsapp_number, avatar_url, school_origin")
           .eq("id", userId)
           .maybeSingle();
 
-        if (data?.whatsapp_number && data.whatsapp_number !== "-") {
-          setWhatsappNumber(data.whatsapp_number);
+        if (data) {
+          if (data.whatsapp_number && data.whatsapp_number !== "-") {
+            setWhatsappNumber(data.whatsapp_number);
+          } else if (userWhatsapp) {
+            setWhatsappNumber(userWhatsapp);
+          }
+
+          const hasAv = Boolean(data.avatar_url && data.avatar_url.trim().length > 0);
+          const hasSch = Boolean(
+            data.school_origin &&
+              data.school_origin.trim().length > 0 &&
+              data.school_origin !== "-"
+          );
+          setIsProfileIncomplete(!hasAv || !hasSch);
         }
       } catch {
         // ignore
@@ -96,7 +105,7 @@ export function EnrollModal({
 
     if (isAdminOrSuperadmin) {
       setError(
-        `Akun Anda saat ini memiliki hak akses ${userRole?.toUpperCase()}. Akun admin tidak dapat mendaftar sebagai siswa.`
+        `Akun Anda saat ini memiliki hak akses ${userRole?.toUpperCase()}. Akun admin tidak dapat mendaftar sebagai mahasiswa.`
       );
       return;
     }
@@ -178,7 +187,7 @@ export function EnrollModal({
               Akses Dibatasi untuk Peran {userRole?.toUpperCase()}
             </h4>
             <p className="text-xs sm:text-sm text-stone-600 dark:text-stone-400 mt-1 max-w-sm mx-auto">
-              Akun Administrator dan Superadmin mengelola platform dan verifikasi siswa, sehingga tidak dapat mendaftar kursus sebagai peserta.
+              Akun Administrator dan Superadmin mengelola platform dan verifikasi mahasiswa, sehingga tidak dapat mendaftar kursus sebagai peserta.
             </p>
           </div>
           <div className="pt-2 flex justify-center">
@@ -260,6 +269,19 @@ export function EnrollModal({
             </p>
           </div>
 
+          {isProfileIncomplete && !isLoadingProfile && (
+            <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-800 dark:text-amber-300 text-xs flex items-center justify-between gap-2">
+              <span>Foto profil dan asal kampus wajib dilengkapi terlebih dahulu.</span>
+              <Link
+                href={`/profile?returnUrl=${encodeURIComponent(`/courses/${course.slug}`)}`}
+                className="font-bold underline hover:text-amber-900 dark:hover:text-amber-100 flex items-center gap-1 shrink-0"
+              >
+                <Edit3 className="w-3 h-3" />
+                <span>Lengkapi Profil</span>
+              </Link>
+            </div>
+          )}
+
           {!hasValidWhatsapp && !isLoadingProfile && (
             <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-700 dark:text-rose-400 text-xs flex items-center justify-between gap-2">
               <span>Nomor WhatsApp belum terdaftar di profil Anda.</span>
@@ -288,7 +310,7 @@ export function EnrollModal({
               variant="primary"
               size="sm"
               isLoading={isLoading}
-              disabled={!hasValidWhatsapp || isLoading}
+              disabled={!hasValidWhatsapp || isProfileIncomplete || isLoading}
               className="gap-2 bg-[#0F3E2E] hover:bg-[#15523d] text-white font-semibold"
             >
               <MessageCircle className="w-4 h-4" />
@@ -301,3 +323,5 @@ export function EnrollModal({
     </Modal>
   );
 }
+
+export const EnrollModal = ModalPendaftaranKursus;

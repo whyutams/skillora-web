@@ -16,19 +16,31 @@ export async function POST(request: Request) {
       );
     }
 
-    // 1. Periksa Role Pengguna: Cegah Admin dan Superadmin mendaftar kursus
     const { data: profile } = await supabase
       .from("profiles")
-      .select("role")
+      .select("role, avatar_url, school_origin")
       .eq("id", user.id)
       .maybeSingle();
 
     if (profile && (profile.role === "admin" || profile.role === "superadmin")) {
       return NextResponse.json(
         {
-          error: `Akun dengan role ${profile.role.toUpperCase()} tidak diizinkan mendaftar sebagai peserta kursus. Gunakan akun Siswa (Student) untuk mendaftar.`,
+          error: `Akun dengan role ${profile.role.toUpperCase()} tidak diizinkan mendaftar sebagai peserta kursus. Gunakan akun Mahasiswa (Student) untuk mendaftar.`,
         },
         { status: 403 }
+      );
+    }
+
+    const hasAvatar = Boolean(profile?.avatar_url && profile.avatar_url.trim().length > 0);
+    const hasSchool = Boolean(profile?.school_origin && profile.school_origin.trim().length > 0 && profile.school_origin !== "-");
+
+    if (!hasAvatar || !hasSchool) {
+      return NextResponse.json(
+        {
+          error: "Anda wajib melengkapi foto profil dan asal kampus di menu Profil terlebih dahulu sebelum mendaftar kursus.",
+          requiresProfileCompletion: true,
+        },
+        { status: 400 }
       );
     }
 
@@ -91,44 +103,35 @@ export async function POST(request: Request) {
       }
     }
 
-    // Jika belum diisi jadwal pendaftaran
-    if (!regStart || !regEnd) {
-      return NextResponse.json(
-        {
-          error:
-            "Pendaftaran untuk kursus ini belum dibuka (Jadwal pendaftaran belum diumumkan).",
-        },
-        { status: 400 }
-      );
-    }
+    if (regStart && regEnd) {
+      const now = new Date();
+      const startDate = new Date(regStart);
+      if (regStart.length <= 10) startDate.setHours(0, 0, 0, 0);
 
-    const now = new Date();
-    const startDate = new Date(regStart);
-    if (regStart.length <= 10) startDate.setHours(0, 0, 0, 0);
+      const endDate = new Date(regEnd);
+      if (regEnd.length <= 10) endDate.setHours(23, 59, 59, 999);
 
-    const endDate = new Date(regEnd);
-    if (regEnd.length <= 10) endDate.setHours(23, 59, 59, 999);
+      if (now < startDate) {
+        return NextResponse.json(
+          {
+            error: `Pendaftaran kursus ini belum dibuka. Pendaftaran akan dimulai pada ${startDate.toLocaleDateString(
+              "id-ID"
+            )}.`,
+          },
+          { status: 400 }
+        );
+      }
 
-    if (now < startDate) {
-      return NextResponse.json(
-        {
-          error: `Pendaftaran kursus ini belum dibuka. Pendaftaran akan dimulai pada ${startDate.toLocaleDateString(
-            "id-ID"
-          )}.`,
-        },
-        { status: 400 }
-      );
-    }
-
-    if (now > endDate) {
-      return NextResponse.json(
-        {
-          error: `Pendaftaran kursus ini telah berakhir pada ${endDate.toLocaleDateString(
-            "id-ID"
-          )}.`,
-        },
-        { status: 400 }
-      );
+      if (now > endDate) {
+        return NextResponse.json(
+          {
+            error: `Pendaftaran kursus ini telah berakhir pada ${endDate.toLocaleDateString(
+              "id-ID"
+            )}.`,
+          },
+          { status: 400 }
+        );
+      }
     }
 
     // Insert pendaftaran baru

@@ -6,11 +6,11 @@ import { createClient } from "@/utils/supabase/client";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
-import { AlertModal } from "@/components/ui/ConfirmModal";
+import { AlertModal } from "@/components/ui/ModalKonfirmasi";
 import { ProfileSkeleton } from "@/components/ui/Skeleton";
 import { Profile } from "@/types/database";
 import { SmoothImage } from "@/components/ui/SmoothImage";
-import { ImageCropModal } from "@/components/ui/ImageCropModal";
+import { ImageCropModal } from "@/components/ui/ModalCropGambar";
 
 import {
   User,
@@ -375,7 +375,7 @@ export default function ProfilePage() {
                   </div>
                 </div>
 
-                {/* Asal Sekolah / Kampus */}
+                {/* Asal Kampus */}
                 <div>
                   <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300 mb-1.5">
                     Asal Kampus <span className="text-rose-500">*</span>
@@ -451,7 +451,15 @@ export default function ProfilePage() {
       {/* Modal Notifikasi Sukses */}
       <AlertModal
         isOpen={successModalOpen}
-        onClose={() => setSuccessModalOpen(false)}
+        onClose={() => {
+          setSuccessModalOpen(false);
+          if (typeof window !== "undefined") {
+            const returnUrl = new URLSearchParams(window.location.search).get("returnUrl");
+            if (returnUrl) {
+              router.push(returnUrl);
+            }
+          }
+        }}
         title="Profil Berhasil Disimpan"
         message="Data identitas dan foto profil akun Skillora Anda telah berhasil diperbarui."
         buttonText="Selesai"

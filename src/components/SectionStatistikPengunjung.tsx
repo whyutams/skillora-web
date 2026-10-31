@@ -5,7 +5,7 @@ import { AnimatedCounter } from "./AnimatedCounter";
 import { Calendar, TrendingUp, Users } from "lucide-react";
 import { VisitorStatsSkeleton } from "@/components/ui/Skeleton";
 
-export function VisitorStatsSection() {
+export function SectionStatistikPengunjung() {
   const [dailyCount, setDailyCount] = React.useState<number>(0);
   const [monthlyCount, setMonthlyCount] = React.useState<number>(0);
   const [totalCount, setTotalCount] = React.useState<number>(0);
@@ -25,7 +25,7 @@ export function VisitorStatsSection() {
           return;
         }
 
-        // Cek IP pengunjung untuk mencegah duplikasi (tidak ditampilkan ke layar)
+        // cek ip pengunjung untuk mencegah duplikasi
         const ipRes = await fetch("https://api.ipify.org/?format=json");
         const ipData = await ipRes.json();
         const clientIp = ipData?.ip;
@@ -142,3 +142,5 @@ export function VisitorStatsSection() {
     </section>
   );
 }
+
+export const VisitorStatsSection = SectionStatistikPengunjung;

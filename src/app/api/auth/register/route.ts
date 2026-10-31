@@ -164,7 +164,7 @@ export async function POST(request: Request) {
         user_metadata: {
           full_name: fullName.trim(),
           username: cleanUsername,
-          school_origin: schoolOrigin?.trim() || "Pelajar / Mahasiswa",
+          school_origin: schoolOrigin?.trim() || "Mahasiswa",
           whatsapp_number: cleanPhone,
         },
       });
@@ -191,14 +191,14 @@ export async function POST(request: Request) {
 
     const newUserId = authResult.user.id;
 
-    // 8. Simpan/Upsert record ke tabel public.profiles
+    // Simpan record ke tabel public.profiles
     const { data: savedProfile, error: profileError } = await adminClient
       .from("profiles")
       .upsert({
         id: newUserId,
         full_name: fullName.trim(),
         username: cleanUsername,
-        school_origin: schoolOrigin?.trim() || "Pelajar / Mahasiswa",
+        school_origin: schoolOrigin?.trim() || "Mahasiswa",
         whatsapp_number: cleanPhone,
         role: "student",
       })
@@ -209,7 +209,7 @@ export async function POST(request: Request) {
       console.error("Gagal simpan profile saat registrasi:", profileError);
     }
 
-    // 9. Catat ke Activity Log
+    // Catat ke Activity Log
     try {
       await adminClient.from("activity_logs").insert({
         user_id: newUserId,
@@ -221,7 +221,7 @@ export async function POST(request: Request) {
         details: {
           full_name: fullName.trim(),
           username: cleanUsername,
-          school_origin: schoolOrigin?.trim() || "Pelajar / Mahasiswa",
+          school_origin: schoolOrigin?.trim() || "Mahasiswa",
           whatsapp_number: cleanPhone,
         },
       });

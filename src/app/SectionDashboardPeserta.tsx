@@ -27,15 +27,15 @@ type EnrolledWithCourse = Enrollment & {
   courses: Course | null;
 };
 
-interface StudentDashboardSectionProps {
+interface SectionDashboardPesertaProps {
   userId: string;
   userEmail: string;
 }
 
-export default function StudentDashboardSection({
+export default function SectionDashboardPeserta({
   userId,
   userEmail,
-}: StudentDashboardSectionProps) {
+}: SectionDashboardPesertaProps) {
   const supabase = createClient();
   const [profile, setProfile] = React.useState<Profile | null>(null);
   const [enrollments, setEnrollments] = React.useState<EnrolledWithCourse[]>([]);
@@ -48,7 +48,7 @@ export default function StudentDashboardSection({
     async function loadStudentData() {
       setLoading(true);
       try {
-        // 1. Ambil Profil
+        // ambil profil mahasiswa
         const { data: profileData } = await supabase
           .from("profiles")
           .select("*")
@@ -59,7 +59,7 @@ export default function StudentDashboardSection({
           setProfile(profileData as Profile);
         }
 
-        // 2. Ambil Enrollments
+        // ambil data pendaftaran kursus
         const { data: enrollData } = await supabase
           .from("enrollments")
           .select(`
@@ -89,7 +89,7 @@ export default function StudentDashboardSection({
       } catch (err) {
         console.error("Error loading student dashboard data:", err);
       } finally {
-        // Simulasi delay singkat agar animasi skeleton transisi mulus
+        // simulasi delay singkat transisi skeleton
         setTimeout(() => setLoading(false), 200);
       }
     }
@@ -103,26 +103,25 @@ export default function StudentDashboardSection({
       <div data-aos="fade-up" className="space-y-3 mb-8 text-center sm:text-left">
         <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#0F3E2E] dark:text-emerald-400 uppercase tracking-wider">
           <GraduationCap className="w-4 h-4" />
-          <span>Dashboard Siswa Saya</span>
+          <span>Dashboard Mahasiswa Saya</span>
         </div>
         <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-stone-900 dark:text-stone-100">
           Progres Kelas & Tautan Grup WhatsApp Anda
         </h2>
       </div>
 
-      {/* Profil Siswa Bar */}
       <div
         data-aos="fade-up"
         className="mb-8 p-6 rounded-2xl border border-stone-200/80 dark:border-stone-800/80 bg-white/80 dark:bg-stone-900/60 backdrop-blur-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4"
       >
         <div className="flex items-start sm:items-center gap-3.5">
           <div className="w-12 h-12 rounded-xl bg-[#0F3E2E] text-emerald-300 flex items-center justify-center font-bold text-base shrink-0">
-            {profile?.full_name ? profile.full_name.charAt(0).toUpperCase() : "S"}
+            {profile?.full_name ? profile.full_name.charAt(0).toUpperCase() : "M"}
           </div>
           <div>
             <div className="flex flex-wrap items-center gap-2">
               <h3 className="text-lg sm:text-xl font-bold text-stone-900 dark:text-stone-100">
-                Halo, {profile?.full_name || "Pelajar"}!
+                Halo, {profile?.full_name || "Mahasiswa"}!
               </h3>
               {profile?.username && (
                 <span className="text-xs px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 border border-emerald-500/30 flex items-center gap-1 font-medium">

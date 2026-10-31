@@ -27,6 +27,6 @@ export default async function CoursesRedirectPage() {
     }
   }
 
-  // Pengunjung publik / siswa diarahkan ke section katalog kursus
+  // pengunjung publik dan mahasiswa diarahkan ke katalog kursus
   redirect("/#kursus");
 }

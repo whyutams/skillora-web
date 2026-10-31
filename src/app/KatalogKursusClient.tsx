@@ -10,65 +10,25 @@ import {
   ChevronLeft,
   ChevronRight,
   BookOpen,
-  Code,
-  Terminal,
-  Palette,
-  MessageSquareDashed,
+  Star,
+  Zap,
+  Clock,
+  Sparkles,
 } from "lucide-react";
 
-import { CoursePlaceholderBanner } from "@/components/ui/CoursePlaceholderBanner";
+import { BannerKursusPlaceholder } from "@/components/ui/BannerKursusPlaceholder";
+import { detectCourseTopic } from "@/utils/courseCurriculumParser";
 
-interface CourseCatalogClientProps {
+interface KatalogKursusClientProps {
   courses: Course[];
   currentUser: { id: string; email: string; role?: UserRole } | null;
   enrolledCourseIds?: string[];
 }
 
-function getCourseRegistrationStatus(
-  startStr?: string | null,
-  endStr?: string | null
-) {
-  if (!startStr?.trim() || !endStr?.trim()) {
-    return {
-      isOpen: false,
-      label: "Pendaftaran Belum Dibuka",
-      className:
-        "bg-amber-500/90 text-white dark:bg-amber-600/90 border-amber-400/40",
-    };
-  }
-  const now = new Date();
-  const start = new Date(startStr);
-  if (startStr.length <= 10) start.setHours(0, 0, 0, 0);
-  if (now < start) {
-    return {
-      isOpen: false,
-      label: "Pendaftaran Belum Dibuka",
-      className:
-        "bg-amber-500/90 text-white dark:bg-amber-600/90 border-amber-400/40",
-    };
-  }
-  const end = new Date(endStr);
-  if (endStr.length <= 10) end.setHours(23, 59, 59, 999);
-  if (now > end) {
-    return {
-      isOpen: false,
-      label: "Pendaftaran Ditutup",
-      className:
-        "bg-rose-600/90 text-white dark:bg-rose-700/90 border-rose-500/40",
-    };
-  }
-  return {
-    isOpen: true,
-    label: "Pendaftaran Dibuka",
-    className:
-      "bg-emerald-600/90 text-white dark:bg-emerald-700/90 border-emerald-500/40",
-  };
-}
-
-export default function CourseCatalogClient({
+export default function KatalogKursusClient({
   courses,
   enrolledCourseIds = [],
-}: CourseCatalogClientProps) {
+}: KatalogKursusClientProps) {
   const [currentPage, setCurrentPage] = React.useState(1);
   const ITEMS_PER_PAGE = 6;
 
@@ -89,7 +49,7 @@ export default function CourseCatalogClient({
           Kursus Belum Tersedia
         </h3>
         <p className="text-xs sm:text-sm text-stone-500 dark:text-stone-400 max-w-sm mx-auto leading-relaxed">
-          Saat ini belum ada data kursus yang dipublikasikan. Silakan cek kembali dalam waktu dekat atau hubungi admin.
+          Saat ini belum ada data kursus mandiri yang dipublikasikan. Silakan cek kembali dalam waktu dekat.
         </p>
       </div>
     );
@@ -100,36 +60,17 @@ export default function CourseCatalogClient({
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {currentCourses.map((course, idx) => {
           const isEnrolled = enrolledCourseIds.includes(course.id);
-          const regStatus = getCourseRegistrationStatus(
-            course.registration_start,
-            course.registration_end
-          );
+          const topic = detectCourseTopic(course.slug || course.title);
 
           return (
             <div
               key={course.id}
               data-aos="fade-up"
               data-aos-delay={idx * 100}
-              className="group rounded-2xl border border-stone-200/80 dark:border-stone-800/80 bg-white/70 dark:bg-stone-900/50 backdrop-blur-sm overflow-hidden flex flex-col justify-between transition-all duration-300 hover:border-stone-300 dark:hover:border-stone-700 hover:-translate-y-1 hover:shadow-md"
+              className="group rounded-2xl border border-stone-200/80 dark:border-stone-800/80 bg-white/70 dark:bg-stone-900/50 backdrop-blur-sm overflow-hidden flex flex-col justify-between transition-all duration-300 hover:border-emerald-600/40 dark:hover:border-emerald-500/40 hover:-translate-y-1 hover:shadow-lg hover:shadow-emerald-950/5"
             >
               <div>
-                {/* Thumbnail Gambar Kursus atau Branded Course Logo Banner */}
                 <div className="relative w-full h-44 sm:h-48 overflow-hidden bg-stone-100 dark:bg-stone-800">
-                  {/* Status Badge Pendaftaran / Terdaftar */}
-                  <div className="absolute top-3 left-3 z-10">
-                    {isEnrolled ? (
-                      <span className="px-2.5 py-1 text-[10px] font-bold rounded-full border backdrop-blur-md shadow-2xs bg-[#0F3E2E] text-white dark:bg-emerald-700 border-emerald-500/40">
-                        ✓ Sudah Terdaftar
-                      </span>
-                    ) : (
-                      <span
-                        className={`px-2.5 py-1 text-[10px] font-bold rounded-full border backdrop-blur-md shadow-2xs ${regStatus.className}`}
-                      >
-                        {regStatus.label}
-                      </span>
-                    )}
-                  </div>
-
                   {course.image_url ? (
                     <SmoothImage
                       src={course.image_url}
@@ -137,33 +78,46 @@ export default function CourseCatalogClient({
                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                     />
                   ) : (
-                    <CoursePlaceholderBanner
+                    <BannerKursusPlaceholder
                       title={course.title}
                       slug={course.slug}
                     />
                   )}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
                 </div>
 
                 {/* Konten Kursus */}
                 <div className="p-5 sm:p-6 space-y-3">
-                  <h3 className="text-base sm:text-lg font-bold tracking-tight text-stone-900 dark:text-stone-100 leading-snug line-clamp-2">
+                  {/* Rating & Silabus Module Badge */}
+                  <div className="flex items-center gap-3 text-xs text-stone-500 dark:text-stone-400">
+                    <div className="flex items-center gap-1 text-amber-500 font-bold">
+                      <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                      <span>4.9</span>
+                    </div>
+                    <span className="text-stone-300 dark:text-stone-700">•</span>
+                    <span className="flex items-center gap-1">
+                      <BookOpen className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                      <span>8 Modul Belajar</span>
+                    </span>
+                  </div>
+
+                  <h3 className="text-base sm:text-lg font-bold tracking-tight text-stone-900 dark:text-stone-100 leading-snug line-clamp-2 group-hover:text-emerald-700 dark:group-hover:text-emerald-400 transition-colors">
                     {course.title}
                   </h3>
 
-                  <p className="text-xs sm:text-sm text-stone-600 dark:text-stone-400 line-clamp-3 leading-relaxed">
+                  <p className="text-xs sm:text-sm text-stone-600 dark:text-stone-400 line-clamp-2 leading-relaxed">
                     {(course.description || "").replace(/<[^>]*>?/gm, "").trim()}
                   </p>
                 </div>
               </div>
 
-              {/* Footer Card: Harga & Tombol Lihat Detail */}
+              {/* Footer Card: Harga Pelajar & Tombol CTA */}
               <div className="p-5 sm:p-6 border-t border-stone-100 dark:border-stone-800/60 mt-auto flex items-center justify-between">
                 <div>
-                  <span className="text-[10px] text-stone-400 uppercase tracking-wider block">
-                    Biaya Pelajar
+                  <span className="text-[10px] text-stone-400 uppercase tracking-wider block font-semibold">
+                    Biaya Kursus Mandiri
                   </span>
-                  <span className="text-sm font-extrabold text-[#0F3E2E] dark:text-emerald-400">
+                  <span className="text-sm sm:text-base font-extrabold text-[#0F3E2E] dark:text-emerald-400">
                     Rp {Number(course.price).toLocaleString("id-ID")}
                   </span>
                 </div>
@@ -174,7 +128,7 @@ export default function CourseCatalogClient({
                     size="sm"
                     className="gap-1.5 text-xs font-semibold hover:bg-[#0F3E2E] hover:text-white dark:hover:bg-emerald-600 transition-colors"
                   >
-                    <span>Lihat Detail</span>
+                    <span>Lihat Silabus</span>
                     <ArrowRight className="w-3.5 h-3.5" />
                   </Button>
                 </Link>
@@ -206,10 +160,11 @@ export default function CourseCatalogClient({
                 <button
                   key={pageNum}
                   onClick={() => setCurrentPage(pageNum)}
-                  className={`w-8 h-8 rounded-xl text-xs font-bold transition-all ${isActive
-                    ? "bg-[#0F3E2E] dark:bg-emerald-600 text-white shadow-xs"
-                    : "border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-900 text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800"
-                    }`}
+                  className={`w-8 h-8 rounded-xl text-xs font-bold transition-all ${
+                    isActive
+                      ? "bg-[#0F3E2E] dark:bg-emerald-600 text-white shadow-xs"
+                      : "border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-900 text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800"
+                  }`}
                 >
                   {pageNum}
                 </button>

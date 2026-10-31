@@ -239,3 +239,5 @@ export const ImageCropModal: React.FC<ImageCropModalProps> = ({
     </Modal>
   );
 };
+
+export const ModalCropGambar = ImageCropModal;
