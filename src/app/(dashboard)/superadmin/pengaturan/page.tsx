@@ -201,6 +201,19 @@ export default function SuperadminPengaturanPage() {
                     <p className="text-rose-700 dark:text-rose-300 leading-relaxed font-normal">
                       Seluruh pengunjung dan mahasiswa saat ini dialihkan secara otomatis ke halaman pemeliharaan. Hanya akun dengan hak akses <strong>Admin</strong> dan <strong>Superadmin</strong> yang dapat masuk dan mengoperasikan platform.
                     </p>
+                    <div className="pt-2 flex flex-wrap items-center gap-2">
+                      <Link
+                        href="/maintenance"
+                        target="_blank"
+                        className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-rose-600 text-white font-bold text-[11px] hover:bg-rose-700 transition-colors shadow-2xs"
+                      >
+                        <span>Pratinjau Halaman Pemeliharaan</span>
+                        <ExternalLink className="w-3 h-3" />
+                      </Link>
+                      <span className="text-[11px] text-rose-600 dark:text-rose-400 font-medium">
+                        (Buka di tab penyamaran / Incognito untuk menguji pengalihan otomatis pengunjung publik)
+                      </span>
+                    </div>
                   </div>
                 </div>
               ) : (

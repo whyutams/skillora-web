@@ -53,20 +53,28 @@ export async function updateSession(request: NextRequest) {
 
   // periksa status mode pemeliharaan dari variabel lingkungan atau database
   let isMaintenanceMode = process.env.NEXT_PUBLIC_MAINTENANCE_MODE === "true";
-  try {
-    const { data: settingData } = await supabase
-      .from("activity_logs")
-      .select("details")
-      .eq("table_name", "system_settings")
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-    if (settingData?.details && typeof settingData.details === "object") {
-      isMaintenanceMode = Boolean((settingData.details as Record<string, unknown>).maintenance_mode);
+  if (supabaseUrl && serviceRoleKey) {
+    try {
+      const restUrl = `${supabaseUrl}/rest/v1/activity_logs?table_name=eq.system_settings&select=details&order=created_at.desc&limit=1`;
+      const res = await fetch(restUrl, {
+        headers: {
+          apikey: serviceRoleKey,
+          Authorization: `Bearer ${serviceRoleKey}`,
+        },
+        cache: "no-store",
+      });
+
+      if (res.ok) {
+        const rows = await res.json();
+        if (Array.isArray(rows) && rows.length > 0 && rows[0]?.details) {
+          isMaintenanceMode = Boolean(rows[0].details.maintenance_mode);
+        }
+      }
+    } catch {
+      // abaikan jika fetch mengalami kendala jaringan
     }
-  } catch {
-    // abaikan jika tabel belum dapat diakses
   }
 
   return { supabaseResponse, user, role, isMaintenanceMode };

@@ -18,6 +18,7 @@ import {
   X,
   User,
   ChevronDown,
+  ShieldAlert,
 } from "lucide-react";
 
 export function Navbar() {
@@ -35,6 +36,21 @@ export function Navbar() {
   const [isLogoutModalOpen, setIsLogoutModalOpen] = React.useState(false);
   const [isLoggingOut, setIsLoggingOut] = React.useState(false);
   const [activeSection, setActiveSection] = React.useState<string>("");
+  const [isMaintenanceActive, setIsMaintenanceActive] = React.useState(false);
+
+  // pantau status pemeliharaan untuk pengelola
+  React.useEffect(() => {
+    if (role === "superadmin" || role === "admin") {
+      fetch("/api/system/maintenance")
+        .then((res) => res.json())
+        .then((data) => {
+          setIsMaintenanceActive(Boolean(data?.maintenance_mode));
+        })
+        .catch(() => {});
+    } else {
+      setIsMaintenanceActive(false);
+    }
+  }, [role]);
 
   const dropdownRef = React.useRef<HTMLDivElement>(null);
 
@@ -250,6 +266,20 @@ export function Navbar() {
 
   return (
     <>
+      {isMaintenanceActive && (role === "superadmin" || role === "admin") && (
+        <div className="bg-amber-500 text-stone-950 px-4 py-2 text-xs font-bold text-center flex items-center justify-center gap-2 shadow-sm relative z-50">
+          <ShieldAlert className="w-4 h-4 shrink-0" />
+          <span>
+            Mode Pemeliharaan Aktif — Halaman publik saat ini ditutup untuk pengunjung. Anda dapat melihat halaman ini karena login sebagai {role === "superadmin" ? "Superadmin" : "Admin"}.
+          </span>
+          <Link
+            href="/superadmin/pengaturan"
+            className="underline font-black hover:text-stone-800 ml-1.5"
+          >
+            Buka Pengaturan
+          </Link>
+        </div>
+      )}
       <header className="sticky top-0 z-40 w-full border-b border-stone-200/80 dark:border-stone-800/80 bg-[#FAF9F6]/90 dark:bg-[#0C0A09]/90 backdrop-blur-md">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           {/* Brand Logo */}
