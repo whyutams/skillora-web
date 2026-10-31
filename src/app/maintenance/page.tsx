@@ -62,23 +62,6 @@ export default async function MaintenancePage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-stone-50 via-white to-stone-100 dark:from-[#0C0A09] dark:via-[#141210] dark:to-[#0C0A09] text-stone-900 dark:text-stone-100 flex flex-col justify-between p-4 sm:p-6 lg:p-8">
-      {/* header logo skillora */}
-      <header className="max-w-4xl mx-auto w-full flex items-center justify-between pt-2">
-        <div className="flex items-center gap-2">
-          <div className="w-9 h-9 rounded-2xl bg-[#0F3E2E] text-emerald-400 flex items-center justify-center font-black text-lg shadow-md shadow-emerald-950/20">
-            S
-          </div>
-          <span className="text-lg font-black tracking-tight text-stone-900 dark:text-stone-100">
-            Skill<span className="text-emerald-700 dark:text-emerald-400">ora</span>
-          </span>
-        </div>
-
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20 text-xs font-bold">
-          <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping" />
-          <span>Pemeliharaan Sistem</span>
-        </div>
-      </header>
-
       {/* konten utama */}
       <main className="max-w-2xl mx-auto w-full my-auto py-12 text-center space-y-6">
         {/* animasi ikon ilustrasi */}
@@ -114,16 +97,6 @@ export default async function MaintenancePage() {
 
         {/* aksi tombol bantuan & refresh */}
         <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-3">
-          <a
-            href={waHelpUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-[#0F3E2E] hover:bg-[#15523d] text-white text-xs font-bold transition-all shadow-md hover:shadow-lg"
-          >
-            <MessageCircle className="w-4 h-4 text-emerald-300" />
-            <span>Hubungi WhatsApp Bantuan</span>
-          </a>
-
           <Link
             href="/"
             className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 hover:bg-stone-100 dark:hover:bg-stone-800 text-stone-800 dark:text-stone-200 text-xs font-bold transition-all shadow-xs"
@@ -131,12 +104,6 @@ export default async function MaintenancePage() {
             <RefreshCw className="w-3.5 h-3.5 text-stone-400" />
             <span>Coba Muat Ulang</span>
           </Link>
-        </div>
-
-        {/* jaminan keamanan data */}
-        <div className="pt-6 flex items-center justify-center gap-2 text-[11px] text-stone-400">
-          <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-          <span>Seluruh data akun, sertifikat, dan progres belajar mahasiswa tersimpan dengan aman.</span>
         </div>
       </main>
 
