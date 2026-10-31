@@ -35,7 +35,7 @@ export async function updateSession(request: NextRequest) {
     }
   );
 
-  // Fetch verified user from Supabase Auth
+  // ambil data pengguna terverifikasi dari supabase auth
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -51,5 +51,23 @@ export async function updateSession(request: NextRequest) {
     role = (profile?.role as UserRole) || "student";
   }
 
-  return { supabaseResponse, user, role };
+  // periksa status mode pemeliharaan dari variabel lingkungan atau database
+  let isMaintenanceMode = process.env.NEXT_PUBLIC_MAINTENANCE_MODE === "true";
+  try {
+    const { data: settingData } = await supabase
+      .from("activity_logs")
+      .select("details")
+      .eq("table_name", "system_settings")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (settingData?.details && typeof settingData.details === "object") {
+      isMaintenanceMode = Boolean((settingData.details as Record<string, unknown>).maintenance_mode);
+    }
+  } catch {
+    // abaikan jika tabel belum dapat diakses
+  }
+
+  return { supabaseResponse, user, role, isMaintenanceMode };
 }

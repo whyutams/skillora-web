@@ -25,6 +25,7 @@ import {
   BookOpen,
   Heart,
   CreditCard,
+  Settings,
 } from "lucide-react";
 import { APP_VERSION } from "@/config/app";
 
@@ -162,6 +163,11 @@ export default function DashboardLayout({
           href: "/superadmin/logs",
           icon: <ScrollText className="w-4 h-4 text-amber-500" />,
         },
+        {
+          label: "Pengaturan",
+          href: "/superadmin/pengaturan",
+          icon: <Settings className="w-4 h-4 text-rose-500" />,
+        },
       ];
     }
 
@@ -295,7 +301,9 @@ export default function DashboardLayout({
               </Link>
               <span>/</span>
               <span className="font-semibold text-stone-800 dark:text-stone-200 capitalize">
-                {pathname.includes("/superadmin/logs")
+                {pathname.includes("/superadmin/pengaturan")
+                  ? "Pengaturan Sistem"
+                  : pathname.includes("/superadmin/logs")
                   ? "Activity Logs"
                   : pathname.includes("/superadmin/users")
                   ? "Users Management"
