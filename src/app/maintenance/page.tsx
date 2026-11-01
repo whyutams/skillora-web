@@ -106,23 +106,6 @@ export default async function MaintenancePage() {
           </Link>
         </div>
       </main>
-
-      {/* footer dengan akses pengelola khusus */}
-      <footer className="max-w-4xl mx-auto w-full pt-4 border-t border-stone-200/60 dark:border-stone-800/60 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-stone-400">
-        <p className="text-[11px]">
-          &copy; {new Date().getFullYear()} Skillora. Platform Belajar Mandiri Mahasiswa.
-        </p>
-
-        {/* pintu akses pengelola saat pemeliharaan */}
-        <Link
-          href="/maintenance/login"
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-semibold text-stone-500 hover:text-stone-900 dark:text-stone-400 dark:hover:text-stone-200 bg-stone-100/80 dark:bg-stone-900/80 hover:bg-stone-200 dark:hover:bg-stone-800 transition-colors border border-stone-200/80 dark:border-stone-800/80"
-          title="Masuk sebagai Admin atau Superadmin"
-        >
-          <Lock className="w-3 h-3 text-amber-500" />
-          <span>Akses Pengelola Sistem</span>
-        </Link>
-      </footer>
     </div>
   );
 }
