@@ -5,12 +5,11 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   Lock,
-  Mail,
+  User,
   KeyRound,
   ShieldAlert,
   ArrowLeft,
   AlertCircle,
-  CheckCircle2,
   Eye,
   EyeOff,
 } from "lucide-react";
@@ -21,7 +20,7 @@ import { AlertModal } from "@/components/ui/ModalKonfirmasi";
 
 export default function MaintenanceLoginPage() {
   const router = useRouter();
-  const [email, setEmail] = React.useState("");
+  const [identifier, setIdentifier] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [showPassword, setShowPassword] = React.useState(false);
   const [loading, setLoading] = React.useState(false);
@@ -39,13 +38,14 @@ export default function MaintenanceLoginPage() {
     type: "info",
   });
 
-  // proses login otentikasi pengelola
+  // proses login otentikasi pengelola menggunakan username atau email
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
 
-    if (!email || !password) {
-      setErrorMessage("Silakan lengkapi email dan kata sandi.");
+    const cleanIdentifier = identifier.trim();
+    if (!cleanIdentifier || !password) {
+      setErrorMessage("Silakan masukkan username dan kata sandi.");
       return;
     }
 
@@ -53,17 +53,33 @@ export default function MaintenanceLoginPage() {
     try {
       const supabase = createClient();
 
+      // konversi username menjadi email jika input bukan email langsung
+      let loginEmail = cleanIdentifier;
+      if (!cleanIdentifier.includes("@")) {
+        const lookupRes = await fetch("/api/auth/lookup", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ identifier: cleanIdentifier }),
+        });
+
+        const lookupData = await lookupRes.json();
+        if (!lookupRes.ok || !lookupData.email) {
+          throw new Error("Username atau kata sandi tidak cocok. Silakan periksa kembali akun Anda.");
+        }
+        loginEmail = lookupData.email;
+      }
+
       const { data: authData, error: authError } =
         await supabase.auth.signInWithPassword({
-          email: email.trim(),
+          email: loginEmail,
           password,
         });
 
       if (authError || !authData.user) {
-        throw new Error(authError?.message || "Email atau kata sandi tidak cocok.");
+        throw new Error("Username atau kata sandi tidak cocok. Silakan periksa kembali akun Anda.");
       }
 
-      // periksa role profil pengguna
+      // periksa role profil pengguna di database
       const { data: profile } = await supabase
         .from("profiles")
         .select("role, full_name")
@@ -76,7 +92,7 @@ export default function MaintenanceLoginPage() {
           ? "superadmin"
           : "student");
 
-      // jika akun yang login adalah mahasiswa, tolak akses dan logout otomatis
+      // jika akun yang login adalah mahasiswa tolak akses dan logout otomatis
       if (userRole === "student") {
         await supabase.auth.signOut();
         setAlertData({
@@ -90,7 +106,7 @@ export default function MaintenanceLoginPage() {
         return;
       }
 
-      // jika akun terverifikasi sebagai admin atau superadmin, izinkan masuk
+      // jika akun terverifikasi sebagai admin atau superadmin izinkan masuk ke dashboard
       if (userRole === "superadmin") {
         router.push("/superadmin/dashboard");
       } else if (userRole === "admin") {
@@ -151,19 +167,24 @@ export default function MaintenanceLoginPage() {
             <form onSubmit={handleLogin} className="space-y-4">
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-stone-700 dark:text-stone-300 block">
-                  Email Akun Pengelola
+                  Username Akun Pengelola
                 </label>
                 <div className="relative">
-                  <Mail className="w-4 h-4 text-stone-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <User className="w-4 h-4 text-stone-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                   <input
-                    type="email"
+                    type="text"
                     required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="nama@skillora.id"
+                    value={identifier}
+                    onChange={(e) => setIdentifier(e.target.value)}
+                    placeholder="Masukkan username atau email pengelola..."
+                    autoCapitalize="none"
+                    autoCorrect="off"
                     className="w-full pl-10 pr-3.5 py-2 text-xs sm:text-sm rounded-xl border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-950 text-stone-900 dark:text-stone-100 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-[#0F3E2E]"
                   />
                 </div>
+                <p className="text-[11px] text-stone-400">
+                  Gunakan username akun Admin atau Superadmin Anda (atau email terdaftar).
+                </p>
               </div>
 
               <div className="space-y-1.5">
@@ -220,4 +241,3 @@ export default function MaintenanceLoginPage() {
     </div>
   );
 }
-
