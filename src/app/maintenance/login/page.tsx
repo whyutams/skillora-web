@@ -167,7 +167,7 @@ export default function MaintenanceLoginPage() {
             <form onSubmit={handleLogin} className="space-y-4">
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-stone-700 dark:text-stone-300 block">
-                  Username Akun Pengelola
+                  Username
                 </label>
                 <div className="relative">
                   <User className="w-4 h-4 text-stone-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -183,13 +183,13 @@ export default function MaintenanceLoginPage() {
                   />
                 </div>
                 <p className="text-[11px] text-stone-400">
-                  Gunakan username akun Admin atau Superadmin Anda (atau email terdaftar).
+                  Gunakan username akun Admin atau Superadmin Anda
                 </p>
               </div>
 
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-stone-700 dark:text-stone-300 block">
-                  Kata Sandi
+                  Password
                 </label>
                 <div className="relative">
                   <KeyRound className="w-4 h-4 text-stone-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -220,12 +220,6 @@ export default function MaintenanceLoginPage() {
                 <span>{loading ? "Memverifikasi Akses..." : "Masuk Sebagai Pengelola"}</span>
               </Button>
             </form>
-
-            <div className="pt-4 border-t border-stone-100 dark:border-stone-800 text-center">
-              <p className="text-[11px] text-stone-400">
-                Akun mahasiswa yang mencoba login di halaman ini akan otomatis ditolak dan dikembalikan ke halaman pemeliharaan.
-              </p>
-            </div>
           </CardContent>
         </Card>
       </div>
