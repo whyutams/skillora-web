@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { logActivity } from "@/utils/supabase/activityLogger";
 import { createClient } from "@/utils/supabase/server";
+import { USER_ROLES } from "@/constants/roles";
 
 export async function POST(request: NextRequest) {
   try {
@@ -11,7 +12,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Parameter action dan tableName wajib diisi." }, { status: 400 });
     }
 
-    // Ambil IP client
+    // ambil ip client
     const ip =
       request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
       request.headers.get("x-real-ip") ||
@@ -21,7 +22,7 @@ export async function POST(request: NextRequest) {
     let finalUserEmail = userEmail;
     let finalUserRole = userRole;
 
-    // Jika tidak disediakan, coba ambil dari session aktif & profiles
+    // jika tidak disediakan coba ambil dari session aktif dan profiles
     try {
       const supabase = await createClient();
       const { data: { user } } = await supabase.auth.getUser();
@@ -34,7 +35,7 @@ export async function POST(request: NextRequest) {
             .select("role")
             .eq("id", user.id)
             .maybeSingle();
-          finalUserRole = prof?.role || (user.email === "skillorastartup26@gmail.com" ? "superadmin" : "student");
+          finalUserRole = prof?.role || (user.email === "skillorastartup26@gmail.com" ? USER_ROLES.SUPERADMIN : USER_ROLES.STUDENT);
         }
       }
     } catch {

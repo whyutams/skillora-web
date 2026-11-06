@@ -8,7 +8,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { Badge } from "@/components/ui/Badge";
 import { ConfirmModal } from "@/components/ui/ModalKonfirmasi";
 import { SmoothImage } from "@/components/ui/SmoothImage";
-import { UserRole } from "@/types/database";
+import { UserRole, USER_ROLES } from "@/types/database";
 import {
   GraduationCap,
   LayoutDashboard,
@@ -84,7 +84,7 @@ export default function DashboardLayout({
             setAvatarUrl(profile.avatar_url || null);
             setRole(profile.role as UserRole);
           } else if (session.user.email === "skillorastartup26@gmail.com") {
-            setRole("superadmin");
+            setRole(USER_ROLES.SUPERADMIN);
           }
         }
       } catch (err) {
@@ -97,15 +97,15 @@ export default function DashboardLayout({
     fetchUserData();
   }, [supabase]);
 
-  // Client-Side Route Protection Guard
+  // penjagaan proteksi rute di sisi client
   React.useEffect(() => {
     if (loading) return;
 
-    if (role === "superadmin" && (pathname.startsWith("/admin") || pathname === "/courses")) {
+    if (role === USER_ROLES.SUPERADMIN && (pathname.startsWith("/admin") || pathname === "/courses")) {
       router.replace("/superadmin/dashboard");
-    } else if (role === "admin" && pathname.startsWith("/superadmin")) {
+    } else if (role === USER_ROLES.ADMIN && pathname.startsWith("/superadmin")) {
       router.replace("/admin/dashboard");
-    } else if (role === "student" && (pathname.startsWith("/admin") || pathname.startsWith("/superadmin"))) {
+    } else if (role === USER_ROLES.STUDENT && (pathname.startsWith("/admin") || pathname.startsWith("/superadmin"))) {
       router.replace("/dashboard");
     }
   }, [role, pathname, loading, router]);
@@ -142,11 +142,9 @@ export default function DashboardLayout({
     }
   };
 
-  // Nav Links berdasarkan Role:
-  // - Superadmin: Dashboard, Users, Logs
-  // - Admin: Dashboard, Pendaftaran, Kursus
+  // tautan navigasi berdasarkan peran pengguna
   const getNavLinks = () => {
-    if (role === "superadmin") {
+    if (role === USER_ROLES.SUPERADMIN) {
       return [
         {
           label: "Dashboard",
@@ -171,7 +169,7 @@ export default function DashboardLayout({
       ];
     }
 
-    if (role === "admin") {
+    if (role === USER_ROLES.ADMIN) {
       return [
         {
           label: "Dashboard",
@@ -196,7 +194,7 @@ export default function DashboardLayout({
       ];
     }
 
-    // Default Fallback
+    // fallback default
     return [
       {
         label: "Dashboard",
@@ -209,9 +207,9 @@ export default function DashboardLayout({
   const navLinks = getNavLinks();
 
   const editProfileHref =
-    role === "superadmin"
+    role === USER_ROLES.SUPERADMIN
       ? "/superadmin/profile"
-      : role === "admin"
+      : role === USER_ROLES.ADMIN
       ? "/admin/profile"
       : "/profile";
 
@@ -390,9 +388,9 @@ export default function DashboardLayout({
                       <div className="mt-1.5 flex items-center gap-1.5">
                         <Badge
                           variant={
-                            role === "superadmin"
+                            role === USER_ROLES.SUPERADMIN
                               ? "role-superadmin"
-                              : role === "admin"
+                              : role === USER_ROLES.ADMIN
                               ? "role-admin"
                               : "role-student"
                           }

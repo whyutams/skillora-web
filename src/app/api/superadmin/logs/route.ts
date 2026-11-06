@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient, createAdminClient } from "@/utils/supabase/server";
+import { USER_ROLES } from "@/constants/roles";
 
 export async function GET(request: NextRequest) {
   try {
     const supabase = await createClient();
 
-    // 1. Verifikasi Superadmin
+    // 1. verifikasi superadmin
     const {
       data: { user },
       error: authError,
@@ -24,18 +25,18 @@ export async function GET(request: NextRequest) {
       .eq("id", user.id)
       .maybeSingle();
 
-    const isSuperadmin =
-      profile?.role === "superadmin" ||
+    const isSuperadminUser =
+      profile?.role === USER_ROLES.SUPERADMIN ||
       user.email === "skillorastartup26@gmail.com";
 
-    if (!isSuperadmin) {
+    if (!isSuperadminUser) {
       return NextResponse.json(
         { error: "Hanya Superadmin yang memiliki akses ke Activity Logs." },
         { status: 403 }
       );
     }
 
-    // 2. Query Params (Filter per Table & Search)
+    // 2. query params filter per tabel dan pencarian
     const searchParams = request.nextUrl.searchParams;
     const tableFilter = searchParams.get("table") || "all";
     const searchQuery = searchParams.get("q") || "";

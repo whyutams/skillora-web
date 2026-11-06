@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/utils/supabase/server";
+import { isManagerRole } from "@/constants/roles";
 import { logActivity } from "@/utils/supabase/activityLogger";
 
 export async function POST(request: Request) {
@@ -22,7 +23,7 @@ export async function POST(request: Request) {
       .eq("id", user.id)
       .maybeSingle();
 
-    if (profile && (profile.role === "admin" || profile.role === "superadmin")) {
+    if (profile && isManagerRole(profile.role)) {
       return NextResponse.json(
         {
           error: `Akun dengan role ${profile.role.toUpperCase()} tidak diizinkan mendaftar sebagai peserta kursus. Gunakan akun Mahasiswa (Student) untuk mendaftar.`,

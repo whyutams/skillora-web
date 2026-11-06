@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { UserRole } from "@/types/database";
+import { UserRole, USER_ROLES } from "@/types/database";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { AlertModal } from "@/components/ui/ModalKonfirmasi";
@@ -33,7 +33,7 @@ export default function CreateUserPage() {
   const [password, setPassword] = React.useState("");
   const [schoolOrigin, setSchoolOrigin] = React.useState("");
   const [whatsappNumber, setWhatsappNumber] = React.useState("");
-  const [role, setRole] = React.useState<UserRole>("student");
+  const [role, setRole] = React.useState<UserRole>(USER_ROLES.STUDENT);
 
   const [showPassword, setShowPassword] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
@@ -261,9 +261,9 @@ export default function CreateUserPage() {
               <div className="grid grid-cols-2 gap-3">
                 <button
                   type="button"
-                  onClick={() => setRole("student")}
+                  onClick={() => setRole(USER_ROLES.STUDENT)}
                   className={`p-3 rounded-xl border text-xs font-semibold flex flex-col items-center gap-1.5 transition-all ${
-                    role === "student"
+                    role === USER_ROLES.STUDENT
                       ? "bg-emerald-500/15 border-emerald-500/40 text-emerald-800 dark:text-emerald-300 ring-2 ring-emerald-500/20"
                       : "bg-white dark:bg-stone-900 border-stone-200 dark:border-stone-800 text-stone-600 dark:text-stone-400 hover:bg-stone-50"
                   }`}
@@ -274,9 +274,9 @@ export default function CreateUserPage() {
 
                 <button
                   type="button"
-                  onClick={() => setRole("admin")}
+                  onClick={() => setRole(USER_ROLES.ADMIN)}
                   className={`p-3 rounded-xl border text-xs font-semibold flex flex-col items-center gap-1.5 transition-all ${
-                    role === "admin"
+                    role === USER_ROLES.ADMIN
                       ? "bg-purple-500/15 border-purple-500/40 text-purple-800 dark:text-purple-300 ring-2 ring-purple-500/20"
                       : "bg-white dark:bg-stone-900 border-stone-200 dark:border-stone-800 text-stone-600 dark:text-stone-400 hover:bg-stone-50"
                   }`}

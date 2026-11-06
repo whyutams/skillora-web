@@ -1,5 +1,5 @@
 import { createClient, createAdminClient } from "@/utils/supabase/server";
-import { Course, UserRole } from "@/types/database";
+import { Course, UserRole, USER_ROLES } from "@/types/database";
 import KatalogKursusClient from "@/app/KatalogKursusClient";
 
 export async function LandingKatalogKursus() {
@@ -24,7 +24,7 @@ export async function LandingKatalogKursus() {
 
       const userRole =
         (profile?.role as UserRole) ||
-        (user.email === "skillorastartup26@gmail.com" ? "superadmin" : "student");
+        (user.email === "skillorastartup26@gmail.com" ? USER_ROLES.SUPERADMIN : USER_ROLES.STUDENT);
 
       currentUser = {
         id: user.id,

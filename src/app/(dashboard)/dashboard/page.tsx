@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
+import { USER_ROLES } from "@/constants/roles";
 
 export default async function DashboardRedirectPage() {
   const supabase = await createClient();
@@ -20,16 +21,16 @@ export default async function DashboardRedirectPage() {
 
   const role =
     profile?.role ||
-    (user.email === "skillorastartup26@gmail.com" ? "superadmin" : "student");
+    (user.email === "skillorastartup26@gmail.com" ? USER_ROLES.SUPERADMIN : USER_ROLES.STUDENT);
 
-  if (role === "superadmin") {
+  if (role === USER_ROLES.SUPERADMIN) {
     redirect("/superadmin/dashboard");
   }
 
-  if (role === "admin") {
+  if (role === USER_ROLES.ADMIN) {
     redirect("/admin/dashboard");
   }
 
-  // Peserta diarahkan ke halaman Kursus Saya (di luar layout admin, pakai Navbar landing)
+  // peserta diarahkan ke halaman kursus saya
   redirect("/kursus-saya");
 }

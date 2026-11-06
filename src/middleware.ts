@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { updateSession } from "@/utils/supabase/middleware";
 import { checkRateLimit } from "@/lib/ratelimit";
+import { USER_ROLES, isManagerRole, isSuperadmin, isAdmin, isStudent } from "@/constants/roles";
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -54,7 +55,7 @@ export async function middleware(request: NextRequest) {
 
   // mode pemeliharaan tidak berlaku jika diakses pada lingkungan localhost
   if (isMaintenanceMode && !isLocalhost) {
-    const isManager = role === "superadmin" || role === "admin";
+    const isManager = isManagerRole(role);
 
     // jika pengguna bukan pengelola publik atau mahasiswa
     if (!isManager) {
@@ -66,7 +67,7 @@ export async function middleware(request: NextRequest) {
     } else {
       // jika pengelola yang sudah login membuka portal login pemeliharaan arahkan ke dashboard
       if (pathname === "/maintenance/login") {
-        if (role === "superadmin") {
+        if (isSuperadmin(role)) {
           return NextResponse.redirect(new URL("/superadmin/dashboard", request.url));
         }
         return NextResponse.redirect(new URL("/admin/dashboard", request.url));
@@ -91,26 +92,26 @@ export async function middleware(request: NextRequest) {
   // pembatasan berdasarkan peran akun
   if (user && role) {
     // superadmin tidak boleh mengakses rute admin kursus langsung
-    if (role === "superadmin" && (isAdminRoute || pathname === "/courses")) {
+    if (isSuperadmin(role) && (isAdminRoute || pathname === "/courses")) {
       return NextResponse.redirect(new URL("/superadmin/dashboard", request.url));
     }
 
     // admin tidak boleh mengakses rute superadmin
-    if (role === "admin" && isSuperadminRoute) {
+    if (isAdmin(role) && isSuperadminRoute) {
       return NextResponse.redirect(new URL("/admin/dashboard", request.url));
     }
 
     // mahasiswa tidak boleh mengakses rute admin ataupun superadmin
-    if (role === "student" && (isAdminRoute || isSuperadminRoute)) {
+    if (isStudent(role) && (isAdminRoute || isSuperadminRoute)) {
       return NextResponse.redirect(new URL("/kursus-saya", request.url));
     }
 
     // pengguna yang sudah login mengakses halaman auth login atau register
     if (isAuthRoute) {
-      if (role === "superadmin") {
+      if (isSuperadmin(role)) {
         return NextResponse.redirect(new URL("/superadmin/dashboard", request.url));
       }
-      if (role === "admin") {
+      if (isAdmin(role)) {
         return NextResponse.redirect(new URL("/admin/dashboard", request.url));
       }
       return NextResponse.redirect(new URL("/kursus-saya", request.url));

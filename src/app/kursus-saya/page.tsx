@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
+import { USER_ROLES } from "@/constants/roles";
 import { DashboardPesertaClient } from "./DashboardPesertaClient";
 
 export const metadata = {
@@ -27,14 +28,14 @@ export default async function KursusSayaPage() {
 
   const role =
     profile?.role ||
-    (user.email === "skillorastartup26@gmail.com" ? "superadmin" : "student");
+    (user.email === "skillorastartup26@gmail.com" ? USER_ROLES.SUPERADMIN : USER_ROLES.STUDENT);
 
-  // Admin & superadmin tidak perlu dashboard peserta
-  if (role === "superadmin") {
+  // pengelola tidak perlu dashboard peserta
+  if (role === USER_ROLES.SUPERADMIN) {
     redirect("/superadmin/dashboard");
   }
 
-  if (role === "admin") {
+  if (role === USER_ROLES.ADMIN) {
     redirect("/admin/dashboard");
   }
 

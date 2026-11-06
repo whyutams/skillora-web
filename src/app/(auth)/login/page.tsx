@@ -4,6 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
+import { USER_ROLES } from "@/constants/roles";
 import { Card, CardContent } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { TurnstileWidget } from "@/components/TurnstileWidget";
@@ -83,9 +84,9 @@ function LoginForm() {
           .eq("id", data.user.id)
           .maybeSingle();
 
-        const role = profile?.role || (data.user.email === "skillorastartup26@gmail.com" ? "superadmin" : "student");
+        const role = profile?.role || (data.user.email === "skillorastartup26@gmail.com" ? USER_ROLES.SUPERADMIN : USER_ROLES.STUDENT);
 
-        // Catat aktivitas login pengguna
+        // catat aktivitas login pengguna
         try {
           await fetch("/api/logs", {
             method: "POST",
@@ -107,9 +108,9 @@ function LoginForm() {
           // non-blocking
         }
 
-        if (role === "superadmin") {
+        if (role === USER_ROLES.SUPERADMIN) {
           router.push("/superadmin/users");
-        } else if (role === "admin") {
+        } else if (role === USER_ROLES.ADMIN) {
           router.push("/admin/dashboard");
         } else {
           router.push(redirectPath);

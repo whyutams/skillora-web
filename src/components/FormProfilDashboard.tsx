@@ -7,7 +7,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/com
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { AlertModal } from "@/components/ui/ModalKonfirmasi";
-import { Profile } from "@/types/database";
+import { Profile, USER_ROLES } from "@/types/database";
 import { SmoothImage } from "@/components/ui/SmoothImage";
 import { ImageCropModal } from "@/components/ui/ModalCropGambar";
 
@@ -280,7 +280,7 @@ export function FormProfilDashboard({ roleTitle }: { roleTitle: string }) {
           <div className="pt-2 border-t border-stone-100 dark:border-stone-800 flex justify-center">
             <Badge
               variant={
-                profile?.role === "superadmin"
+                profile?.role === USER_ROLES.SUPERADMIN
                   ? "role-superadmin"
                   : "role-admin"
               }

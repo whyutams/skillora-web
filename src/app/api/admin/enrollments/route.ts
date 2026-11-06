@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient, createAdminClient } from "@/utils/supabase/server";
+import { isManagerRole } from "@/constants/roles";
 import { parseEnrollmentMeta, encodeEnrollmentMeta } from "@/utils/enrollmentMeta";
 import { parseCourseDescription } from "@/utils/courseMeta";
 
@@ -25,7 +26,7 @@ export async function GET(request: Request) {
       .eq("id", user.id)
       .single();
 
-    if (!profile || (profile.role !== "admin" && profile.role !== "superadmin")) {
+    if (!profile || !isManagerRole(profile.role)) {
       return NextResponse.json(
         { error: "Akses ditolak. Khusus Admin & Superadmin." },
         { status: 403 }
@@ -142,7 +143,7 @@ export async function PATCH(request: Request) {
       .eq("id", user.id)
       .single();
 
-    if (!profile || (profile.role !== "admin" && profile.role !== "superadmin")) {
+    if (!profile || !isManagerRole(profile.role)) {
       return NextResponse.json(
         { error: "Akses ditolak. Khusus Admin & Superadmin." },
         { status: 403 }

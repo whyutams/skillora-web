@@ -14,6 +14,7 @@ import {
   EyeOff,
 } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
+import { USER_ROLES } from "@/constants/roles";
 import { Button } from "@/components/ui/Button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/Card";
 import { AlertModal } from "@/components/ui/ModalKonfirmasi";
@@ -89,11 +90,11 @@ export default function MaintenanceLoginPage() {
       const userRole =
         profile?.role ||
         (authData.user.email === "skillorastartup26@gmail.com"
-          ? "superadmin"
-          : "student");
+          ? USER_ROLES.SUPERADMIN
+          : USER_ROLES.STUDENT);
 
       // jika akun yang login adalah mahasiswa tolak akses dan logout otomatis
-      if (userRole === "student") {
+      if (userRole === USER_ROLES.STUDENT) {
         await supabase.auth.signOut();
         setAlertData({
           isOpen: true,
@@ -107,9 +108,9 @@ export default function MaintenanceLoginPage() {
       }
 
       // jika akun terverifikasi sebagai admin atau superadmin izinkan masuk ke dashboard
-      if (userRole === "superadmin") {
+      if (userRole === USER_ROLES.SUPERADMIN) {
         router.push("/superadmin/dashboard");
-      } else if (userRole === "admin") {
+      } else if (userRole === USER_ROLES.ADMIN) {
         router.push("/admin/dashboard");
       } else {
         router.push("/maintenance");

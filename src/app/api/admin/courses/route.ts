@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient, createAdminClient } from "@/utils/supabase/server";
+import { USER_ROLES, isManagerRole } from "@/constants/roles";
 import { logActivity } from "@/utils/supabase/activityLogger";
 import { parseEnrollmentMeta } from "@/utils/enrollmentMeta";
 
@@ -215,8 +216,8 @@ export async function GET() {
       .eq("id", user.id)
       .maybeSingle();
 
-    const role = profile?.role || (user.email === "skillorastartup26@gmail.com" ? "superadmin" : "student");
-    if (role !== "admin" && role !== "superadmin") {
+    const role = profile?.role || (user.email === "skillorastartup26@gmail.com" ? USER_ROLES.SUPERADMIN : USER_ROLES.STUDENT);
+    if (!isManagerRole(role)) {
       return NextResponse.json({ error: "Akses ditolak. Khusus Admin dan Superadmin." }, { status: 403 });
     }
 
@@ -350,8 +351,8 @@ export async function POST(request: NextRequest) {
       .eq("id", user.id)
       .maybeSingle();
 
-    const role = profile?.role || (user.email === "skillorastartup26@gmail.com" ? "superadmin" : "student");
-    if (role !== "admin" && role !== "superadmin") {
+    const role = profile?.role || (user.email === "skillorastartup26@gmail.com" ? USER_ROLES.SUPERADMIN : USER_ROLES.STUDENT);
+    if (!isManagerRole(role)) {
       return NextResponse.json({ error: "Akses ditolak. Khusus Admin dan Superadmin." }, { status: 403 });
     }
 
@@ -486,8 +487,8 @@ export async function PATCH(request: NextRequest) {
       .eq("id", user.id)
       .maybeSingle();
 
-    const role = profile?.role || (user.email === "skillorastartup26@gmail.com" ? "superadmin" : "student");
-    if (role !== "admin" && role !== "superadmin") {
+    const role = profile?.role || (user.email === "skillorastartup26@gmail.com" ? USER_ROLES.SUPERADMIN : USER_ROLES.STUDENT);
+    if (!isManagerRole(role)) {
       return NextResponse.json({ error: "Akses ditolak. Khusus Admin dan Superadmin." }, { status: 403 });
     }
 
@@ -660,8 +661,8 @@ export async function DELETE(request: NextRequest) {
       .eq("id", user.id)
       .maybeSingle();
 
-    const role = profile?.role || (user.email === "skillorastartup26@gmail.com" ? "superadmin" : "student");
-    if (role !== "admin" && role !== "superadmin") {
+    const role = profile?.role || (user.email === "skillorastartup26@gmail.com" ? USER_ROLES.SUPERADMIN : USER_ROLES.STUDENT);
+    if (!isManagerRole(role)) {
       return NextResponse.json({ error: "Akses ditolak. Khusus Admin dan Superadmin." }, { status: 403 });
     }
 

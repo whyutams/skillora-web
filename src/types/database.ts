@@ -6,7 +6,9 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[];
 
-export type UserRole = "superadmin" | "admin" | "student";
+import type { UserRole } from "@/constants/roles";
+export { USER_ROLES, isSuperadmin, isAdmin, isStudent, isManagerRole } from "@/constants/roles";
+export type { UserRole };
 export type EnrollmentStatus = "pending_payment" | "approved" | "rejected";
 
 export interface Profile {

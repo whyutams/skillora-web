@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { Course, UserRole } from "@/types/database";
+import { Course, UserRole, isManagerRole } from "@/types/database";
 import { ModalPendaftaranKursus } from "@/components/ModalPendaftaranKursus";
 import { AlertModal } from "@/components/ui/ModalKonfirmasi";
 import { ImagePreviewModal } from "@/components/ui/ModalPreviewGambar";
@@ -111,7 +111,7 @@ export default function DetailKursusClient({
       return;
     }
 
-    if (currentUser.role === "admin" || currentUser.role === "superadmin") {
+    if (isManagerRole(currentUser.role)) {
       setIsAdminAlertOpen(true);
       return;
     }

@@ -1,6 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
-import { UserRole } from "@/types/database";
+import { UserRole, USER_ROLES } from "@/types/database";
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
@@ -48,7 +48,7 @@ export async function updateSession(request: NextRequest) {
       .eq("id", user.id)
       .single();
 
-    role = (profile?.role as UserRole) || "student";
+    role = (profile?.role as UserRole) || USER_ROLES.STUDENT;
   }
 
   // periksa status mode pemeliharaan dari variabel lingkungan atau database

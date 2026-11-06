@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { UserRole } from "@/types/database";
+import { UserRole, USER_ROLES } from "@/types/database";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -299,23 +299,23 @@ export default function SuperadminUsersPage() {
                         {/* Role Badge */}
                         <td className="py-3.5 px-4">
                           <Badge
-                            variant={u.role === "superadmin" ? "role-superadmin" : u.role === "admin" ? "role-admin" : "role-student"}
+                            variant={u.role === USER_ROLES.SUPERADMIN ? "role-superadmin" : u.role === USER_ROLES.ADMIN ? "role-admin" : "role-student"}
                             className="text-[10px] px-2 py-0.5 uppercase tracking-wide"
                           >
-                            {u.role === "superadmin" && <ShieldAlert className="w-3 h-3 mr-1 inline" />}
-                            {u.role === "admin" && <ShieldCheck className="w-3 h-3 mr-1 inline" />}
-                            {u.role === "student" && <GraduationCap className="w-3 h-3 mr-1 inline" />}
+                            {u.role === USER_ROLES.SUPERADMIN && <ShieldAlert className="w-3 h-3 mr-1 inline" />}
+                            {u.role === USER_ROLES.ADMIN && <ShieldCheck className="w-3 h-3 mr-1 inline" />}
+                            {u.role === USER_ROLES.STUDENT && <GraduationCap className="w-3 h-3 mr-1 inline" />}
                             {u.role}
                           </Badge>
                         </td>
 
-                        {/* Aksi: Reset Password + Hapus */}
+                        {/* aksi reset password dan hapus */}
                         <td className="py-3.5 px-4">
                           <div className="flex items-center gap-1.5 justify-center">
-                            {u.role === "superadmin" ? "-" : (
+                            {u.role === USER_ROLES.SUPERADMIN ? "-" : (
                               <>
-                                {/* Reset Password */}
-                                {u.role === "admin" && (
+                                {/* reset password */}
+                                {u.role === USER_ROLES.ADMIN && (
                                   <button
                                     onClick={() => handleOpenResetModal(u.id, u.full_name)}
                                     title="Reset password akun ini"

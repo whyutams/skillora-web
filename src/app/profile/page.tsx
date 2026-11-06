@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { AlertModal } from "@/components/ui/ModalKonfirmasi";
 import { ProfileSkeleton } from "@/components/ui/Skeleton";
-import { Profile } from "@/types/database";
+import { Profile, USER_ROLES } from "@/types/database";
 import { SmoothImage } from "@/components/ui/SmoothImage";
 import { ImageCropModal } from "@/components/ui/ModalCropGambar";
 
@@ -69,11 +69,11 @@ export default function ProfilePage() {
         const data = await res.json();
 
         if (res.ok && data.profile) {
-          if (data.profile.role === "superadmin") {
+          if (data.profile.role === USER_ROLES.SUPERADMIN) {
             router.push("/superadmin/profile");
             return;
           }
-          if (data.profile.role === "admin") {
+          if (data.profile.role === USER_ROLES.ADMIN) {
             router.push("/admin/profile");
             return;
           }
@@ -289,9 +289,9 @@ export default function ProfilePage() {
             <div className="pt-2 flex justify-center">
               <Badge
                 variant={
-                  profile?.role === "superadmin"
+                  profile?.role === USER_ROLES.SUPERADMIN
                     ? "role-superadmin"
-                    : profile?.role === "admin"
+                    : profile?.role === USER_ROLES.ADMIN
                     ? "role-admin"
                     : "role-student"
                 }

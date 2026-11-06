@@ -8,6 +8,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/com
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { AnimatedCounter } from "@/components/AnimatedCounter";
+import { UserRole, USER_ROLES } from "@/types/database";
 import {
   Users,
   ScrollText,
@@ -27,7 +28,7 @@ moment.locale("id");
 interface SuperadminUser {
   id: string;
   email: string;
-  role: "superadmin" | "admin" | "student";
+  role: UserRole;
   created_at: string;
   profile?: {
     full_name: string;
@@ -97,9 +98,9 @@ export default function SuperadminDashboardPage() {
   }, [fetchSuperadminData]);
 
   const totalUsers = users.length;
-  const countSuperadmin = users.filter((u) => u.role === "superadmin").length;
-  const countAdmin = users.filter((u) => u.role === "admin").length;
-  const countStudent = users.filter((u) => u.role === "student").length;
+  const countSuperadmin = users.filter((u) => u.role === USER_ROLES.SUPERADMIN).length;
+  const countAdmin = users.filter((u) => u.role === USER_ROLES.ADMIN).length;
+  const countStudent = users.filter((u) => u.role === USER_ROLES.STUDENT).length;
 
   const recentUsers = users.slice(0, 5);
   const recentLogs = logs.slice(0, 5);
@@ -336,12 +337,12 @@ export default function SuperadminDashboardPage() {
                     </div>
 
                     <div className="shrink-0">
-                      {u.role === "superadmin" && (
+                      {u.role === USER_ROLES.SUPERADMIN && (
                         <Badge variant="role-superadmin" className="text-[10px] px-2 py-0.5">
                           Superadmin
                         </Badge>
                       )}
-                      {u.role === "admin" && (
+                      {u.role === USER_ROLES.ADMIN && (
                         <Badge variant="role-admin" className="text-[10px] px-2 py-0.5">
                           Admin
                         </Badge>

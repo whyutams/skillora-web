@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
-import { Course, UserRole } from "@/types/database";
+import { Course, UserRole, isManagerRole } from "@/types/database";
 import { createClient } from "@/utils/supabase/client";
 import {
   MessageCircle,
@@ -90,8 +90,8 @@ export function ModalPendaftaranKursus({
   const adminPhone =
     process.env.NEXT_PUBLIC_ADMIN_WHATSAPP_NUMBER || "6281234567890";
 
-  // Jika user adalah Admin atau Superadmin -> tampilkan proteksi modal
-  const isAdminOrSuperadmin = userRole === "admin" || userRole === "superadmin";
+  // jika pengguna adalah admin atau superadmin tampilkan proteksi modal
+  const isAdminOrSuperadmin = isManagerRole(userRole);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

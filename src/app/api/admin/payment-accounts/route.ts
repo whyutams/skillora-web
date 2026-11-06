@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient, createAdminClient } from "@/utils/supabase/server";
+import { USER_ROLES, isManagerRole } from "@/constants/roles";
 
 interface PaymentAccount {
   id: string;
@@ -10,7 +11,7 @@ interface PaymentAccount {
   created_at: string;
 }
 
-// Helper: verifikasi superadmin atau admin
+// helper verifikasi superadmin atau admin
 async function verifyAdminOrSuperadmin(supabase: Awaited<ReturnType<typeof createClient>>) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { error: "Unauthorized", status: 401 };
@@ -22,14 +23,14 @@ async function verifyAdminOrSuperadmin(supabase: Awaited<ReturnType<typeof creat
     .eq("id", user.id)
     .maybeSingle();
 
-  const role = profile?.role || (user.email === "skillorastartup26@gmail.com" ? "superadmin" : null);
-  if (!role || !["admin", "superadmin"].includes(role)) {
+  const role = profile?.role || (user.email === "skillorastartup26@gmail.com" ? USER_ROLES.SUPERADMIN : null);
+  if (!role || !isManagerRole(role)) {
     return { error: "Akses ditolak. Khusus Admin.", status: 403 };
   }
   return { user, role };
 }
 
-// Fallback helper: Ambil accounts dari activity_logs jika tabel SQL tidak tersedia
+// fallback helper ambil accounts dari activity_logs jika tabel sql tidak tersedia
 async function getAccountsFromFallback(): Promise<PaymentAccount[]> {
   try {
     const adminClient = createAdminClient();
@@ -90,7 +91,7 @@ export async function GET() {
   }
 }
 
-// POST — Tambah rekening baru (admin/superadmin)
+// post tambah rekening baru
 export async function POST(request: Request) {
   try {
     const supabase = await createClient();
@@ -144,7 +145,7 @@ export async function POST(request: Request) {
   }
 }
 
-// PATCH — Edit rekening (admin/superadmin)
+// patch edit rekening
 export async function PATCH(request: Request) {
   try {
     const supabase = await createClient();
@@ -163,7 +164,7 @@ export async function PATCH(request: Request) {
     if (account_holder !== undefined) updates.account_holder = account_holder.trim();
     if (is_active !== undefined) updates.is_active = is_active;
 
-    // 1. Coba update ke tabel SQL payment_accounts
+    // 1. coba update ke tabel sql payment_accounts
     const { data, error } = await adminClient
       .from("payment_accounts")
       .update(updates)
@@ -175,7 +176,7 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ success: true, account: data });
     }
 
-    // 2. Fallback update di activity_logs
+    // 2. fallback update di activity_logs
     const existing = await getAccountsFromFallback();
     let updatedAccount: PaymentAccount | null = null;
     const updatedList = existing.map((acc) => {
@@ -206,7 +207,7 @@ export async function PATCH(request: Request) {
   }
 }
 
-// DELETE — Hapus rekening (admin/superadmin)
+// delete hapus rekening
 export async function DELETE(request: Request) {
   try {
     const supabase = await createClient();

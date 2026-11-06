@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { createClient, createAdminClient } from "@/utils/supabase/server";
+import { USER_ROLES, isSuperadmin } from "@/constants/roles";
 
-// Helper verifikasi superadmin
+// helper verifikasi superadmin
 async function verifySuperadmin(supabase: Awaited<ReturnType<typeof createClient>>) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { error: "Unauthorized", status: 401 };
@@ -12,8 +13,8 @@ async function verifySuperadmin(supabase: Awaited<ReturnType<typeof createClient
     .eq("id", user.id)
     .maybeSingle();
 
-  const role = profile?.role || (user.email === "skillorastartup26@gmail.com" ? "superadmin" : null);
-  if (role !== "superadmin") return { error: "Akses ditolak. Khusus Superadmin.", status: 403 };
+  const role = profile?.role || (user.email === "skillorastartup26@gmail.com" ? USER_ROLES.SUPERADMIN : null);
+  if (!isSuperadmin(role)) return { error: "Akses ditolak. Khusus Superadmin.", status: 403 };
   return { user, role };
 }
 
@@ -57,7 +58,7 @@ export async function GET() {
   }
 }
 
-// POST — Buat user baru (tetap ada)
+// post buat user baru
 export async function POST(request: Request) {
   try {
     const supabase = await createClient();
@@ -65,14 +66,14 @@ export async function POST(request: Request) {
     if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
     const body = await request.json();
-    const { fullName, username, email, password, schoolOrigin, whatsappNumber, role = "student" } = body;
+    const { fullName, username, email, password, schoolOrigin, whatsappNumber, role = USER_ROLES.STUDENT } = body;
 
     if (!fullName?.trim()) return NextResponse.json({ error: "Nama lengkap wajib diisi." }, { status: 400 });
     if (!username?.trim()) return NextResponse.json({ error: "Username wajib diisi." }, { status: 400 });
     if (!email?.trim()) return NextResponse.json({ error: "Email wajib diisi." }, { status: 400 });
     if (!password || password.length < 6) return NextResponse.json({ error: "Kata sandi minimal 6 karakter." }, { status: 400 });
-    if (role === "superadmin") return NextResponse.json({ error: "Akun Superadmin bersifat tunggal." }, { status: 400 });
-    if (!["admin", "student"].includes(role)) return NextResponse.json({ error: "Role tidak valid." }, { status: 400 });
+    if (isSuperadmin(role)) return NextResponse.json({ error: "Akun Superadmin bersifat tunggal." }, { status: 400 });
+    if (![USER_ROLES.ADMIN, USER_ROLES.STUDENT].includes(role)) return NextResponse.json({ error: "Role tidak valid." }, { status: 400 });
 
     const cleanUsername = username.trim().toLowerCase().replace(/\s+/g, "");
     const adminClient = createAdminClient();
@@ -102,7 +103,7 @@ export async function POST(request: Request) {
 
     try {
       await adminClient.from("activity_logs").insert({
-        user_id: auth.user.id, user_email: auth.user.email, user_role: "superadmin",
+        user_id: auth.user.id, user_email: auth.user.email, user_role: USER_ROLES.SUPERADMIN,
         action: "CREATE_USER_MANUAL", table_name: "profiles", record_id: newUserId,
         details: { created_username: cleanUsername, created_email: email.trim().toLowerCase(), assigned_role: role },
       });
@@ -114,7 +115,7 @@ export async function POST(request: Request) {
   }
 }
 
-// PUT — Reset password user (superadmin only)
+// put reset password user
 export async function PUT(request: Request) {
   try {
     const supabase = await createClient();
@@ -129,12 +130,12 @@ export async function PUT(request: Request) {
 
     const adminClient = createAdminClient();
 
-    // Cegah superadmin ubah password dirinya sendiri via halaman ini
+    // cegah superadmin ubah password dirinya sendiri via halaman ini
     if (userId === auth.user.id) {
       return NextResponse.json({ error: "Gunakan fitur Edit Profil untuk mengubah password sendiri." }, { status: 400 });
     }
 
-    // Dapatkan info target user
+    // dapatkan info target user
     const { data: targetProfile } = await adminClient.from("profiles").select("full_name, username, role").eq("id", userId).maybeSingle();
     if (!targetProfile) return NextResponse.json({ error: "Pengguna tidak ditemukan." }, { status: 404 });
 
@@ -143,7 +144,7 @@ export async function PUT(request: Request) {
 
     try {
       await adminClient.from("activity_logs").insert({
-        user_id: auth.user.id, user_email: auth.user.email, user_role: "superadmin",
+        user_id: auth.user.id, user_email: auth.user.email, user_role: USER_ROLES.SUPERADMIN,
         action: "RESET_USER_PASSWORD", table_name: "auth.users", record_id: userId,
         details: { target_username: targetProfile.username, target_name: targetProfile.full_name },
       });
@@ -155,7 +156,7 @@ export async function PUT(request: Request) {
   }
 }
 
-// DELETE — Hapus akun user (superadmin only)
+// delete hapus akun user
 export async function DELETE(request: Request) {
   try {
     const supabase = await createClient();
@@ -167,31 +168,31 @@ export async function DELETE(request: Request) {
 
     if (!userId) return NextResponse.json({ error: "User ID wajib diisi." }, { status: 400 });
 
-    // Cegah superadmin hapus dirinya sendiri
+    // cegah superadmin hapus dirinya sendiri
     if (userId === auth.user.id) {
       return NextResponse.json({ error: "Tidak dapat menghapus akun sendiri." }, { status: 400 });
     }
 
     const adminClient = createAdminClient();
 
-    // Dapatkan info user sebelum dihapus
+    // dapatkan info user sebelum dihapus
     const { data: targetProfile } = await adminClient.from("profiles").select("full_name, username, role").eq("id", userId).maybeSingle();
 
-    // Proteksi: jangan hapus superadmin lain
-    if (targetProfile?.role === "superadmin") {
+    // proteksi jangan hapus superadmin lain
+    if (isSuperadmin(targetProfile?.role)) {
       return NextResponse.json({ error: "Akun Superadmin tidak dapat dihapus." }, { status: 400 });
     }
 
-    // Hapus dari auth (cascade hapus profile juga melalui trigger DB)
+    // hapus dari auth cascade hapus profile juga melalui trigger database
     const { error: deleteError } = await adminClient.auth.admin.deleteUser(userId);
     if (deleteError) return NextResponse.json({ error: deleteError.message }, { status: 500 });
 
-    // Hapus profile manual jika trigger tidak berjalan
+    // hapus profile manual jika trigger tidak berjalan
     await adminClient.from("profiles").delete().eq("id", userId).maybeSingle();
 
     try {
       await adminClient.from("activity_logs").insert({
-        user_id: auth.user.id, user_email: auth.user.email, user_role: "superadmin",
+        user_id: auth.user.id, user_email: auth.user.email, user_role: USER_ROLES.SUPERADMIN,
         action: "DELETE_USER", table_name: "auth.users", record_id: userId,
         details: { deleted_username: targetProfile?.username, deleted_name: targetProfile?.full_name, deleted_role: targetProfile?.role },
       });

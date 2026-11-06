@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient, createAdminClient } from "@/utils/supabase/server";
+import { USER_ROLES } from "@/constants/roles";
 
 export const dynamic = "force-dynamic";
 
@@ -71,7 +72,7 @@ export async function POST(request: Request) {
       .maybeSingle();
 
     const isSuperadmin =
-      profile?.role === "superadmin" ||
+      profile?.role === USER_ROLES.SUPERADMIN ||
       user.email === "skillorastartup26@gmail.com";
 
     if (!isSuperadmin) {
@@ -101,7 +102,7 @@ export async function POST(request: Request) {
     const { error: insertError } = await adminClient.from("activity_logs").insert({
       user_id: user.id,
       user_email: user.email,
-      user_role: "superadmin",
+      user_role: USER_ROLES.SUPERADMIN,
       action: maintenance_mode ? "ENABLE_MAINTENANCE_MODE" : "DISABLE_MAINTENANCE_MODE",
       table_name: "system_settings",
       record_id: "maintenance",

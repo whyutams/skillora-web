@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/Button";
 import { ConfirmModal } from "@/components/ui/ModalKonfirmasi";
 import { NavbarUserSkeleton } from "@/components/ui/Skeleton";
 import { SmoothImage } from "@/components/ui/SmoothImage";
-import { UserRole } from "@/types/database";
+import { UserRole, USER_ROLES } from "@/types/database";
 import {
   GraduationCap,
   LogOut,
@@ -27,7 +27,7 @@ export function Navbar() {
   const supabase = createClient();
 
   const [user, setUser] = React.useState<{ id: string; email?: string } | null>(null);
-  const [role, setRole] = React.useState<UserRole>("student");
+  const [role, setRole] = React.useState<UserRole>(USER_ROLES.STUDENT);
   const [fullName, setFullName] = React.useState<string>("");
   const [avatarUrl, setAvatarUrl] = React.useState<string | null>(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
@@ -40,7 +40,7 @@ export function Navbar() {
 
   // pantau status pemeliharaan untuk pengelola
   React.useEffect(() => {
-    if (role === "superadmin" || role === "admin") {
+    if (role === USER_ROLES.SUPERADMIN || role === USER_ROLES.ADMIN) {
       fetch("/api/system/maintenance")
         .then((res) => res.json())
         .then((data) => {
@@ -84,15 +84,15 @@ export function Navbar() {
             .maybeSingle();
 
           if (profile) {
-            setRole((profile.role as UserRole) || "student");
+            setRole((profile.role as UserRole) || USER_ROLES.STUDENT);
             setFullName(profile.full_name || "");
             setAvatarUrl(profile.avatar_url || null);
           } else if (session.user.email === "skillorastartup26@gmail.com") {
-            setRole("superadmin");
+            setRole(USER_ROLES.SUPERADMIN);
           }
         } else {
           setUser(null);
-          setRole("student");
+          setRole(USER_ROLES.STUDENT);
           setFullName("");
           setAvatarUrl(null);
         }
@@ -208,18 +208,18 @@ export function Navbar() {
     }
   };
 
-  // Navigasi tombol Dashboard yang andal
+  // navigasi tombol dashboard yang andal
   const handleDashboardClick = (_e: React.MouseEvent) => {
-    if (role === "superadmin") {
+    if (role === USER_ROLES.SUPERADMIN) {
       router.push("/superadmin/users");
       return;
     }
-    if (role === "admin") {
+    if (role === USER_ROLES.ADMIN) {
       router.push("/admin/dashboard");
       return;
     }
 
-    // Untuk Student → halaman Kursus Saya (di luar layout admin, pakai Navbar landing)
+    // untuk mahasiswa ke halaman kursus saya
     router.push("/kursus-saya");
   };
 
@@ -266,11 +266,11 @@ export function Navbar() {
 
   return (
     <>
-      {isMaintenanceActive && (role === "superadmin" || role === "admin") && (
+      {isMaintenanceActive && (role === USER_ROLES.SUPERADMIN || role === USER_ROLES.ADMIN) && (
         <div className="bg-amber-500 text-stone-950 px-4 py-2 text-xs font-bold text-center flex items-center justify-center gap-2 shadow-sm relative z-50">
           <ShieldAlert className="w-4 h-4 shrink-0" />
           <span>
-            Mode Pemeliharaan Aktif — Halaman publik saat ini ditutup untuk pengunjung. Anda dapat melihat halaman ini karena login sebagai {role === "superadmin" ? "Superadmin" : "Admin"}.
+            Mode Pemeliharaan Aktif — Halaman publik saat ini ditutup untuk pengunjung. Anda dapat melihat halaman ini karena login sebagai {role === USER_ROLES.SUPERADMIN ? "Superadmin" : "Admin"}.
           </span>
           <Link
             href="/superadmin/pengaturan"
@@ -401,12 +401,12 @@ export function Navbar() {
 
                     {/* Menu Options */}
                     <div className="space-y-1">
-                      {role === "superadmin" || role === "admin" ? (
+                      {role === USER_ROLES.SUPERADMIN || role === USER_ROLES.ADMIN ? (
                         <>
                           {/* 1. Dashboard / Main Area */}
                           <Link
                             href={
-                              role === "superadmin"
+                              role === USER_ROLES.SUPERADMIN
                                 ? "/superadmin/users"
                                 : "/admin/dashboard"
                             }
@@ -420,7 +420,7 @@ export function Navbar() {
                           {/* 2. Edit Profile Dashboard */}
                           <Link
                             href={
-                              role === "superadmin"
+                              role === USER_ROLES.SUPERADMIN
                                 ? "/superadmin/profile"
                                 : "/admin/profile"
                             }
@@ -579,14 +579,14 @@ export function Navbar() {
                     className="w-full justify-center gap-2"
                   >
                     <LayoutDashboard className="w-4 h-4 text-emerald-300" />
-                    <span>{role === "student" ? "Kursus Saya" : "Dashboard"}</span>
+                    <span>{role === USER_ROLES.STUDENT ? "Kursus Saya" : "Dashboard"}</span>
                   </Button>
 
                   <Link
                     href={
-                      role === "superadmin"
+                      role === USER_ROLES.SUPERADMIN
                         ? "/superadmin/profile"
-                        : role === "admin"
+                        : role === USER_ROLES.ADMIN
                         ? "/admin/profile"
                         : "/profile"
                     }
