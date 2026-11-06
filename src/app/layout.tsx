@@ -95,7 +95,7 @@ export default function RootLayout({
       <body className="min-h-screen flex flex-col bg-[#FAF9F6] text-stone-900 dark:bg-[#0C0A09] dark:text-stone-100 font-sans selection:bg-emerald-500/20 selection:text-emerald-900 dark:selection:text-emerald-200">
         <ThemeProvider
           attribute="class"
-          defaultTheme="system"
+          defaultTheme="light"
           enableSystem
           disableTransitionOnChange={false}
         >
