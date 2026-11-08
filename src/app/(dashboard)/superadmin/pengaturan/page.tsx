@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/Card";
+import { SettingsSkeleton } from "@/components/ui/Skeleton";
 import { Badge } from "@/components/ui/Badge";
 import { AlertModal } from "@/components/ui/ModalKonfirmasi";
 
@@ -157,10 +158,7 @@ export default function SuperadminPengaturanPage() {
       </div>
 
       {loading ? (
-        <div className="p-16 text-center text-xs text-stone-400 space-y-2">
-          <RefreshCw className="w-6 h-6 animate-spin mx-auto text-emerald-600" />
-          <p>Memuat konfigurasi pengaturan sistem...</p>
-        </div>
+        <SettingsSkeleton />
       ) : (
         <div className="space-y-6">
           {/* kartu kendali mode pemeliharaan */}

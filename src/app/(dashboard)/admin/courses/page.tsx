@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/Button";
 import { ConfirmModal, AlertModal } from "@/components/ui/ModalKonfirmasi";
 import { AnimatedCounter } from "@/components/AnimatedCounter";
 import { SmoothImage } from "@/components/ui/SmoothImage";
+import { TableRowsSkeleton, AdminCoursesSkeleton } from "@/components/ui/Skeleton";
 import { ImagePreviewModal } from "@/components/ui/ModalPreviewGambar";
 import {
   BookOpen,
@@ -189,6 +190,10 @@ export default function AdminCoursesPage() {
   const totalApprovedStudents = stats.totalApprovedStudents || courses.reduce((acc, c) => acc + (c.approved_count || 0), 0);
   const totalCourseViews = stats.totalViews || courses.reduce((acc, c) => acc + (c.views_count || 0), 0);
 
+  if (loading) {
+    return <AdminCoursesSkeleton />;
+  }
+
   return (
     <div className="space-y-8 w-full">
       {/* Header Panel Kursus */}
@@ -336,10 +341,7 @@ export default function AdminCoursesPage() {
 
         <CardContent className="p-0">
           {loading ? (
-            <div className="p-12 text-center text-xs text-stone-400 space-y-2">
-              <RefreshCw className="w-5 h-5 animate-spin mx-auto text-emerald-600" />
-              <p>Memuat data kursus...</p>
-            </div>
+            <TableRowsSkeleton rows={6} cols={4} />
           ) : paginatedCourses.length === 0 ? (
             <div className="p-12 text-center text-stone-400 text-xs space-y-3">
               <BookOpen className="w-8 h-8 mx-auto text-stone-300 dark:text-stone-600" />
@@ -424,7 +426,26 @@ export default function AdminCoursesPage() {
                         </td>
 
                         <td className="py-3.5 px-4 font-semibold text-stone-900 dark:text-stone-100 whitespace-nowrap">
-                          {course.price > 0 ? `Rp ${course.price.toLocaleString("id-ID")}` : "-"}
+                          {(() => {
+                            const rawPrice = Number(course.price || 0);
+                            const discountPercent = Number(course.discount_percent || 0);
+                            const hasDiscount = discountPercent > 0 && rawPrice > 0;
+                            const finalPrice = hasDiscount
+                              ? Math.round(rawPrice * (1 - discountPercent / 100))
+                              : rawPrice;
+
+                            if (rawPrice <= 0) return "-";
+                            if (!hasDiscount) return `Rp ${rawPrice.toLocaleString("id-ID")}`;
+
+                            return (
+                              <div className="flex flex-col">
+                                <span>{finalPrice === 0 ? "Gratis" : `Rp ${finalPrice.toLocaleString("id-ID")}`}</span>
+                                <span className="text-[11px] text-stone-400 line-through font-normal">
+                                  Rp {rawPrice.toLocaleString("id-ID")} (-{discountPercent}%)
+                                </span>
+                              </div>
+                            );
+                          })()}
                         </td>
 
                         <td className="py-3.5 px-4 whitespace-nowrap">
@@ -513,7 +534,7 @@ export default function AdminCoursesPage() {
                         <td className="py-3.5 px-4 text-right whitespace-nowrap">
                           <div className="flex items-center justify-end gap-1.5">
                             <Link
-                              href={`/admin/courses/${course.id}`}
+                              href={`/admin/courses/${course.slug || course.id}`}
                               className="px-2.5 py-1.5 rounded-lg border border-stone-200 dark:border-stone-800 text-stone-700 dark:text-stone-200 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors inline-flex items-center gap-1.5 text-xs font-semibold"
                               title="Detail Kursus & Kelola Silabus"
                             >
@@ -531,7 +552,7 @@ export default function AdminCoursesPage() {
                             </Link>
 
                             <Link
-                              href={`/admin/courses/${course.id}/edit`}
+                              href={`/admin/courses/${course.slug || course.id}/edit`}
                               className="p-1.5 rounded-lg border border-stone-200 dark:border-stone-800 text-stone-600 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors inline-flex"
                               title="Edit Kursus di Halaman Baru"
                             >

@@ -118,8 +118,21 @@ export function TabSilabusKursus({
         )}
       </div>
 
-      <div className="space-y-3">
-        {modules.map((mod) => {
+      {modules.length === 0 ? (
+        <div className="text-center py-14 px-6 rounded-3xl max-w-xl mx-auto space-y-3 bg-white/70 dark:bg-stone-900/50 border border-stone-200/80 dark:border-stone-800/80 backdrop-blur-sm">
+          <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 flex items-center justify-center mx-auto border border-emerald-500/20">
+            <BookOpen className="w-7 h-7" />
+          </div>
+          <h3 className="text-base sm:text-lg font-bold text-stone-900 dark:text-stone-100">
+            Modul Sedang Dipersiapkan
+          </h3>
+          <p className="text-xs sm:text-sm text-stone-500 dark:text-stone-400 max-w-sm mx-auto leading-relaxed">
+            Silabus dan materi modul untuk kursus ini sedang disusun oleh tim pengajar.
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {modules.map((mod) => {
           const canPreview = mod.isPreview || isEnrolled;
           const isOpen = canPreview && !!openModules[mod.moduleNumber];
 
@@ -233,9 +246,10 @@ export function TabSilabusKursus({
             </div>
           );
         })}
-      </div>
+        </div>
+      )}
 
-      {!isEnrolled && (
+      {!isEnrolled && modules.length > 0 && (
         <div className="p-5 sm:p-6 rounded-2xl bg-gradient-to-br from-[#0F3E2E] to-stone-900 text-white flex flex-col sm:flex-row items-center justify-between gap-4 shadow-md">
           <div className="space-y-1 text-center sm:text-left">
             <h3 className="text-base sm:text-lg font-bold flex items-center justify-center sm:justify-start gap-2">
@@ -243,7 +257,7 @@ export function TabSilabusKursus({
               <span>Siap Mempelajari Seluruh Silabus Ini?</span>
             </h3>
             <p className="text-xs sm:text-sm text-stone-300">
-              Daftar sekarang untuk membuka akses penuh 8 modul belajar mandiri, latihan praktik, dan sertifikat resmi.
+              Daftar sekarang untuk membuka akses penuh {modules.length} modul belajar mandiri, latihan praktik, dan sertifikat resmi.
             </p>
           </div>
 

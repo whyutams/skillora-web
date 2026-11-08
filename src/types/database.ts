@@ -55,6 +55,9 @@ export interface Course {
   syllabus?: any[];
   level?: string | null;
   category?: string | null;
+  discount_percent?: number | null;
+  average_rating?: number | null;
+  total_reviews?: number;
   created_at: string;
 }
 

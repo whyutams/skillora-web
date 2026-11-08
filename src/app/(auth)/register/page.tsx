@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
 import { Card, CardContent } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
@@ -23,8 +23,10 @@ import {
   Loader2,
 } from "lucide-react";
 
-export default function RegisterPage() {
+function RegisterForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectPath = searchParams.get("redirect") || searchParams.get("returnUrl") || "/dashboard";
   const supabase = createClient();
 
   const [fullName, setFullName] = React.useState("");
@@ -261,7 +263,7 @@ export default function RegisterPage() {
         throw new Error(resData.error || "Gagal mendaftarkan akun.");
       }
 
-      // Login otomatis setelah registrasi berhasil
+      // login otomatis setelah registrasi berhasil
       const { data: signInData, error: signInError } =
         await supabase.auth.signInWithPassword({
           email: cleanEmail,
@@ -269,7 +271,7 @@ export default function RegisterPage() {
         });
 
       if (!signInError && signInData.session) {
-        router.push("/dashboard");
+        router.push(redirectPath);
         router.refresh();
       } else {
         setSuccess(true);
@@ -315,7 +317,10 @@ export default function RegisterPage() {
                     Akun Anda telah terdaftar. Anda dapat langsung masuk menggunakan username <strong>{username}</strong> Anda.
                   </p>
                 </div>
-                <Link href="/login" className="block pt-2">
+                <Link
+                  href={redirectPath !== "/dashboard" ? `/login?redirect=${encodeURIComponent(redirectPath)}` : "/login"}
+                  className="block pt-2"
+                >
                   <Button variant="primary" size="md" className="w-full">
                     Menuju Halaman Masuk
                   </Button>
@@ -634,7 +639,7 @@ export default function RegisterPage() {
         <p className="text-center text-xs text-stone-500 dark:text-stone-400">
           Sudah memiliki akun?{" "}
           <Link
-            href="/login"
+            href={redirectPath !== "/dashboard" ? `/login?redirect=${encodeURIComponent(redirectPath)}` : "/login"}
             className="font-semibold text-[#0F3E2E] dark:text-emerald-400 hover:underline"
           >
             Masuk di sini
@@ -642,5 +647,19 @@ export default function RegisterPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <React.Suspense
+      fallback={
+        <div className="min-h-[85vh] flex items-center justify-center text-xs text-stone-400">
+          Memuat halaman pendaftaran...
+        </div>
+      }
+    >
+      <RegisterForm />
+    </React.Suspense>
   );
 }

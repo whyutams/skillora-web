@@ -22,6 +22,7 @@ function parseCourseDescription(rawDesc: string | null): {
   syllabus?: any[];
   level?: string | null;
   category?: string | null;
+  discount_percent: number;
 } {
   if (!rawDesc) {
     return {
@@ -34,10 +35,11 @@ function parseCourseDescription(rawDesc: string | null): {
       syllabus: [],
       level: null,
       category: null,
+      discount_percent: 0,
     };
   }
 
-  // Check JSON meta format
+  // periksa format json meta
   const metaMatch = rawDesc.match(/^<!--meta:(.*?)-->\s*/);
   if (metaMatch) {
     try {
@@ -55,13 +57,14 @@ function parseCourseDescription(rawDesc: string | null): {
         syllabus: Array.isArray(parsedMeta.syllabus) ? parsedMeta.syllabus : [],
         level: parsedMeta.level || null,
         category: parsedMeta.category || null,
+        discount_percent: typeof parsedMeta.discount_percent === "number" ? parsedMeta.discount_percent : 0,
       };
     } catch {
       // fallback
     }
   }
 
-  // Check legacy <!--image:...--> format
+  // periksa format warisan image
   const imgMatch = rawDesc.match(/^<!--image:(.*?)-->\s*/);
   if (imgMatch) {
     const htmlContent = rawDesc.replace(imgMatch[0], "").trim();
@@ -75,6 +78,7 @@ function parseCourseDescription(rawDesc: string | null): {
       syllabus: [],
       level: null,
       category: null,
+      discount_percent: 0,
     };
   }
 
@@ -88,6 +92,7 @@ function parseCourseDescription(rawDesc: string | null): {
     syllabus: [],
     level: null,
     category: null,
+    discount_percent: 0,
   };
 }
 
@@ -240,7 +245,7 @@ export default async function CourseDetailPage({ params }: CoursePageProps) {
           rating: Number(parsedMeta.review_rating),
           comment:
             parsedMeta.review_text ||
-            "Materi kursus mandiri sangat lengkap dan mudah dipahami.",
+            "Memberikan penilaian bintang.",
           date: parsedMeta.reviewed_at
             ? new Date(parsedMeta.reviewed_at).toLocaleDateString("id-ID")
             : "Baru saja",
@@ -261,6 +266,7 @@ export default async function CourseDetailPage({ params }: CoursePageProps) {
     syllabus: parsed.syllabus,
     level: parsed.level,
     category: parsed.category,
+    discount_percent: parsed.discount_percent,
   };
 
   return (

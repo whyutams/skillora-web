@@ -36,7 +36,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/com
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { SmoothImage } from "@/components/ui/SmoothImage";
-import { EnrollmentCardSkeleton } from "@/components/ui/Skeleton";
+import { EnrollmentCardSkeleton, DashboardPageSkeleton } from "@/components/ui/Skeleton";
 import { Profile, Course } from "@/types/database";
 
 export interface StudentEnrollmentItem {
@@ -279,6 +279,10 @@ export function DashboardPesertaClient() {
     );
   };
 
+  if (loading) {
+    return <DashboardPageSkeleton />;
+  }
+
   return (
     <div className="space-y-8 max-w-7xl mx-auto pb-12">
       <div className="p-6 sm:p-8 rounded-3xl border border-stone-200/80 dark:border-stone-800/80 bg-white/70 dark:bg-stone-900/60 backdrop-blur-md flex flex-col md:flex-row items-start md:items-center justify-between gap-6 shadow-xs">
@@ -475,7 +479,7 @@ export function DashboardPesertaClient() {
 
                   {/* Tombol Lihat Detail + Tombol Gabung Grup (approved) */}
                   <div className="flex items-center gap-2">
-                    <Link href={`/kursus-saya/${item.id}`} className="flex-1">
+                    <Link href={`/kursus-saya/${item.course?.slug || item.id}`} className="flex-1">
                       <Button
                         variant="outline"
                         size="sm"

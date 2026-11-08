@@ -32,7 +32,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/com
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { SmoothImage } from "@/components/ui/SmoothImage";
-import { EnrollmentCardSkeleton } from "@/components/ui/Skeleton";
+import { EnrollmentCardSkeleton, DashboardPageSkeleton } from "@/components/ui/Skeleton";
 import { Profile, Course } from "@/types/database";
 
 export interface StudentEnrollmentItem {
@@ -265,6 +265,10 @@ export function StudentDashboardClient() {
   const countApproved = enrollments.filter((e) => e.status === "approved").length;
   const countPending = enrollments.filter((e) => e.status === "pending_payment").length;
   const countRejected = enrollments.filter((e) => e.status === "rejected").length;
+
+  if (loading) {
+    return <DashboardPageSkeleton />;
+  }
 
   return (
     <div className="space-y-8 max-w-7xl mx-auto pb-12">

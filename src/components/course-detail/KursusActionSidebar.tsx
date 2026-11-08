@@ -49,7 +49,7 @@ export function KursusActionSidebar({
   course,
   totalModules,
   enrolledCount = 0,
-  averageRating = 4.9,
+  averageRating = 0,
   totalReviews = 0,
   views = 0,
   isEnrolled = false,
@@ -61,7 +61,12 @@ export function KursusActionSidebar({
   const [copiedLink, setCopiedLink] = React.useState(false);
   const adminPhone = process.env.NEXT_PUBLIC_ADMIN_WHATSAPP_NUMBER || "6281356578805";
 
-  const originalPrice = Math.round(Number(course.price) * 1.8);
+  const priceNum = Number(course.price || 0);
+  const discountPercent = Number(course.discount_percent || 0);
+  const hasDiscount = discountPercent > 0 && priceNum > 0;
+  const finalPrice = hasDiscount
+    ? Math.round(priceNum * (1 - discountPercent / 100))
+    : priceNum;
 
   const hasAvatar = Boolean(currentUser?.avatar_url && currentUser.avatar_url.trim().length > 0);
   const hasSchool = Boolean(
@@ -111,15 +116,17 @@ export function KursusActionSidebar({
         </div>
       )}
 
-      {/* Harga */}
+      {/* harga kursus */}
       <div className="space-y-2 pb-4 border-b border-stone-100 dark:border-stone-800/60">
         <div className="flex items-baseline gap-2.5">
           <span className="text-3xl sm:text-4xl font-black text-[#0F3E2E] dark:text-emerald-400 tracking-tight">
-            Rp {Number(course.price).toLocaleString("id-ID")}
+            {finalPrice === 0 ? "Gratis" : `Rp ${finalPrice.toLocaleString("id-ID")}`}
           </span>
-          <span className="text-xs sm:text-sm text-stone-400 line-through font-normal">
-            Rp {originalPrice.toLocaleString("id-ID")}
-          </span>
+          {hasDiscount && (
+            <span className="text-xs sm:text-sm text-stone-400 line-through font-normal">
+              Rp {priceNum.toLocaleString("id-ID")}
+            </span>
+          )}
         </div>
 
         <p className="text-[11px] text-stone-500 dark:text-stone-400 leading-relaxed">
@@ -178,7 +185,7 @@ export function KursusActionSidebar({
 
         {isEnrolled ? (
           <Link
-            href={userEnrollmentId ? `/kursus-saya/${userEnrollmentId}` : "/kursus-saya"}
+            href={userEnrollmentId ? `/kursus-saya/${course.slug || userEnrollmentId}` : "/kursus-saya"}
             className="block w-full"
           >
             <Button
@@ -235,7 +242,7 @@ export function KursusActionSidebar({
               <span>Total Modul</span>
             </span>
             <span className="font-semibold text-stone-800 dark:text-stone-200">
-              {totalModules} Modul
+              {totalModules > 0 ? `${totalModules} Modul` : "Segera Hadir"}
             </span>
           </div>
 
@@ -261,7 +268,7 @@ export function KursusActionSidebar({
               </span>
             ) : (
               <span className="font-semibold text-stone-800 dark:text-stone-200">
-                -
+                Belum ada ulasan
               </span>
             )}
           </div>

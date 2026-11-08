@@ -8,6 +8,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/com
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { AnimatedCounter } from "@/components/AnimatedCounter";
+import { TableRowsSkeleton, DashboardPageSkeleton } from "@/components/ui/Skeleton";
 import { UserRole, USER_ROLES } from "@/types/database";
 import {
   Users,
@@ -111,6 +112,10 @@ export default function SuperadminDashboardPage() {
     if (action.includes("DELETE")) return "rejected";
     return "neutral";
   };
+
+  if (loading) {
+    return <DashboardPageSkeleton />;
+  }
 
   return (
     <div className="space-y-8 w-full">
@@ -254,9 +259,7 @@ export default function SuperadminDashboardPage() {
           </CardHeader>
           <CardContent className="p-0">
             {loading ? (
-              <div className="p-8 text-center text-xs text-stone-400">
-                Memuat log aktivitas...
-              </div>
+              <TableRowsSkeleton rows={5} cols={3} />
             ) : recentLogs.length === 0 ? (
               <div className="p-8 text-center text-xs text-stone-400">
                 Belum ada aktivitas yang tercatat.
@@ -313,9 +316,7 @@ export default function SuperadminDashboardPage() {
           </CardHeader>
           <CardContent className="p-0">
             {loading ? (
-              <div className="p-8 text-center text-xs text-stone-400">
-                Memuat data pengguna...
-              </div>
+              <TableRowsSkeleton rows={5} cols={3} />
             ) : recentUsers.length === 0 ? (
               <div className="p-8 text-center text-xs text-stone-400">
                 Belum ada data pengguna.

@@ -38,11 +38,13 @@ import { Button } from "@/components/ui/Button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { SmoothImage } from "@/components/ui/SmoothImage";
+import { AdminCourseDetailSkeleton } from "@/components/ui/Skeleton";
 import { ConfirmModal, AlertModal } from "@/components/ui/ModalKonfirmasi";
 import {
   CourseLessonItem,
   CourseModuleItem,
 } from "@/utils/courseCurriculumParser";
+import { useBreadcrumb } from "@/context/BreadcrumbContext";
 
 interface CourseParticipant {
   id: string;
@@ -70,6 +72,14 @@ export default function AdminCourseDetailPage() {
   const params = useParams();
   const router = useRouter();
   const courseId = params?.id as string;
+  const { setCustomTitle } = useBreadcrumb();
+
+  // reset judul breadcrumb saat unmount
+  React.useEffect(() => {
+    return () => {
+      setCustomTitle(null);
+    };
+  }, [setCustomTitle]);
 
   const [loading, setLoading] = React.useState(true);
   const [course, setCourse] = React.useState<any>(null);
@@ -140,12 +150,16 @@ export default function AdminCourseDetailPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Gagal memuat data kursus.");
 
-      const found = (data.courses || []).find((c: { id: string }) => c.id === courseId);
+      const found = (data.courses || []).find(
+        (c: { id: string; slug?: string }) => c.slug === courseId || c.id === courseId
+      );
       if (!found) {
-        throw new Error("Kursus dengan ID tersebut tidak ditemukan.");
+        throw new Error("Kursus dengan slug atau ID tersebut tidak ditemukan.");
       }
 
       setCourse(found);
+      setCustomTitle(found.title || null);
+      loadParticipants(found.id);
       setTargetLearning(Array.isArray(found.target_learning) ? found.target_learning : []);
 
       if (Array.isArray(found.syllabus) && found.syllabus.length > 0) {
@@ -157,16 +171,16 @@ export default function AdminCourseDetailPage() {
             duration: m.duration || "45 Menit",
             lessons: Array.isArray(m.lessons)
               ? m.lessons.map((l: any) => ({
-                  title: l.title || "Topik Tanpa Judul",
-                  type: l.type || "reading",
-                  duration: l.duration || "15 Menit",
-                  content: l.content || "",
-                  video_url: l.video_url || "",
-                  starter_code: l.starter_code || "",
-                  instructions: l.instructions || "",
-                  quiz_data: l.quiz_data || null,
-                  project_data: l.project_data || null,
-                }))
+                title: l.title || "Topik Tanpa Judul",
+                type: l.type || "reading",
+                duration: l.duration || "15 Menit",
+                content: l.content || "",
+                video_url: l.video_url || "",
+                starter_code: l.starter_code || "",
+                instructions: l.instructions || "",
+                quiz_data: l.quiz_data || null,
+                project_data: l.project_data || null,
+              }))
               : [],
             isPreview: typeof m.isPreview === "boolean" ? m.isPreview : idx < 2,
           }))
@@ -188,10 +202,11 @@ export default function AdminCourseDetailPage() {
   }, [courseId]);
 
   // muat daftar peserta kursus yang telah disetujui
-  const loadParticipants = React.useCallback(async () => {
+  const loadParticipants = React.useCallback(async (targetCourseId?: string) => {
+    const idToUse = targetCourseId || courseId;
     setLoadingParticipants(true);
     try {
-      const res = await fetch(`/api/admin/enrollments?course_id=${courseId}&status=approved`);
+      const res = await fetch(`/api/admin/enrollments?course_id=${idToUse}&status=approved`);
       const data = await res.json();
       if (res.ok && Array.isArray(data.enrollments)) {
         setParticipants(data.enrollments);
@@ -206,9 +221,8 @@ export default function AdminCourseDetailPage() {
   React.useEffect(() => {
     if (courseId) {
       loadCourseData();
-      loadParticipants();
     }
-  }, [courseId, loadCourseData, loadParticipants]);
+  }, [courseId, loadCourseData]);
 
   // simpan silabus ke database
   const handleSaveSyllabus = async (customSyllabus?: CourseModuleItem[]) => {
@@ -219,7 +233,7 @@ export default function AdminCourseDetailPage() {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          id: courseId,
+          id: course?.id || courseId,
           syllabus: listToSave.map((m, idx) => ({
             moduleNumber: idx + 1,
             title: m.title,
@@ -453,12 +467,7 @@ export default function AdminCourseDetailPage() {
     : null;
 
   if (loading) {
-    return (
-      <div className="p-16 text-center text-xs text-stone-400 space-y-2">
-        <RefreshCw className="w-6 h-6 animate-spin mx-auto text-emerald-600" />
-        <p>Memuat rincian kursus...</p>
-      </div>
-    );
+    return <AdminCourseDetailSkeleton />;
   }
 
   if (!course) {
@@ -525,7 +534,7 @@ export default function AdminCourseDetailPage() {
           </Link>
 
           <Link
-            href={`/admin/courses/${course.id}/edit`}
+            href={`/admin/courses/${course.slug || course.id}/edit`}
             className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#0F3E2E] hover:bg-[#15523d] text-white text-xs font-bold transition-all shadow-xs"
           >
             <Edit2 className="w-3.5 h-3.5" />
@@ -540,10 +549,31 @@ export default function AdminCourseDetailPage() {
             <span>Harga Kursus</span>
             <div className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-600 font-bold">Rp</div>
           </div>
-          <div className="text-xl font-black text-stone-900 dark:text-stone-100 mt-2">
-            Rp {Number(course.price || 0).toLocaleString("id-ID")}
-          </div>
-          <p className="text-[11px] text-stone-400 mt-0.5">Biaya belajar mandiri</p>
+          {(() => {
+            const rawPrice = Number(course.price || 0);
+            const discountPercent = Number(course.discount_percent || 0);
+            const hasDiscount = discountPercent > 0 && rawPrice > 0;
+            const finalPrice = hasDiscount
+              ? Math.round(rawPrice * (1 - discountPercent / 100))
+              : rawPrice;
+
+            return (
+              <>
+                <div className="text-xl font-black text-stone-900 dark:text-stone-100 mt-2">
+                  {finalPrice === 0 ? "Gratis" : `Rp ${finalPrice.toLocaleString("id-ID")}`}
+                </div>
+                <p className="text-[11px] text-stone-400 mt-0.5">
+                  {hasDiscount ? (
+                    <span>
+                      Diskon {discountPercent}% dari Rp {rawPrice.toLocaleString("id-ID")}
+                    </span>
+                  ) : (
+                    "Biaya belajar mandiri"
+                  )}
+                </p>
+              </>
+            );
+          })()}
         </Card>
 
         <Card className="p-4 border-stone-200/80 dark:border-stone-800/80">
@@ -659,7 +689,7 @@ export default function AdminCourseDetailPage() {
             </div>
 
             <Link
-              href={`/admin/courses/${course.id}/edit`}
+              href={`/admin/courses/${course.slug || course.id}/edit`}
               className="text-xs text-emerald-700 dark:text-emerald-400 hover:underline font-semibold"
             >
               Ubah di Edit Kursus
@@ -885,7 +915,7 @@ export default function AdminCourseDetailPage() {
                             </div>
 
                             <Link
-                              href={`/admin/courses/${course.id}/topics/${idx}/${lIdx}`}
+                              href={`/admin/courses/${course.slug || course.id}/topics/${idx}/${lIdx}`}
                               className="px-2.5 py-1.5 rounded-lg border border-stone-200 dark:border-stone-800 text-stone-700 dark:text-stone-200 hover:bg-stone-100 dark:hover:bg-stone-800 text-xs font-semibold flex items-center gap-1.5 cursor-pointer shrink-0 transition-colors bg-white dark:bg-stone-900 shadow-2xs"
                               title="Buka Halaman Edit Konten Topik"
                             >
@@ -972,9 +1002,6 @@ export default function AdminCourseDetailPage() {
                 <h4 className="text-sm font-bold text-stone-900 dark:text-stone-100">
                   Belum Ada Peserta Terdaftar
                 </h4>
-                <p className="text-xs text-stone-500 max-w-md mx-auto">
-                  Belum ada peserta yang pendaftarannya disetujui untuk kursus ini. Peserta yang baru mendaftar atau sedang dalam tahap pembayaran dapat diverifikasi di menu Pendaftaran.
-                </p>
               </div>
               <div className="pt-2 flex justify-center">
                 <Link href="/admin/pendaftaran">
@@ -1082,10 +1109,10 @@ export default function AdminCourseDetailPage() {
                             <span>
                               {p.created_at
                                 ? new Date(p.created_at).toLocaleDateString("id-ID", {
-                                    day: "numeric",
-                                    month: "short",
-                                    year: "numeric",
-                                  })
+                                  day: "numeric",
+                                  month: "short",
+                                  year: "numeric",
+                                })
                                 : "-"}
                             </span>
                           </div>
@@ -1195,9 +1222,6 @@ export default function AdminCourseDetailPage() {
                 <h4 className="text-sm font-bold text-stone-900 dark:text-stone-100">
                   Belum Ada Testimoni dari Peserta
                 </h4>
-                <p className="text-xs text-stone-500 max-w-md mx-auto">
-                  Belum ada ulasan atau rating yang diberikan oleh peserta untuk kursus ini. Ulasan peserta yang telah menyelesaikan materi akan otomatis tampil di sini.
-                </p>
               </div>
             </div>
           ) : (
@@ -1217,11 +1241,10 @@ export default function AdminCourseDetailPage() {
                           {[1, 2, 3, 4, 5].map((s) => (
                             <Star
                               key={s}
-                              className={`w-3.5 h-3.5 ${
-                                s <= starRating
+                              className={`w-3.5 h-3.5 ${s <= starRating
                                   ? "fill-amber-500 text-amber-500"
                                   : "text-stone-300 dark:text-stone-700"
-                              }`}
+                                }`}
                             />
                           ))}
                           <span className="font-bold text-xs text-stone-800 dark:text-stone-200 ml-1">
@@ -1406,7 +1429,7 @@ export default function AdminCourseDetailPage() {
                       <div className="flex items-center gap-1 shrink-0">
                         {moduleModal.moduleIndex !== null && (
                           <Link
-                            href={`/admin/courses/${course.id}/topics/${moduleModal.moduleIndex}/${lIdx}`}
+                            href={`/admin/courses/${course.slug || course.id}/topics/${moduleModal.moduleIndex}/${lIdx}`}
                             className="text-stone-400 hover:text-emerald-600 transition-colors p-1 cursor-pointer"
                             title="Buka Halaman Edit Konten Topik"
                           >

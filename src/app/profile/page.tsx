@@ -25,6 +25,10 @@ import {
   AlertCircle,
   Loader2,
   ArrowLeft,
+  Lock,
+  KeyRound,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 
 export default function ProfilePage() {
@@ -48,6 +52,14 @@ export default function ProfilePage() {
   const [cropModalOpen, setCropModalOpen] = React.useState(false);
   const [selectedCropFile, setSelectedCropFile] = React.useState<File | null>(null);
   const [isSavingCrop, setIsSavingCrop] = React.useState(false);
+
+  // states ganti kata sandi
+  const [newPassword, setNewPassword] = React.useState("");
+  const [confirmNewPassword, setConfirmNewPassword] = React.useState("");
+  const [showNewPassword, setShowNewPassword] = React.useState(false);
+  const [isUpdatingPassword, setIsUpdatingPassword] = React.useState(false);
+  const [passwordErrorMsg, setPasswordErrorMsg] = React.useState<string | null>(null);
+  const [passwordSuccessMsg, setPasswordSuccessMsg] = React.useState<string | null>(null);
 
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
@@ -198,6 +210,44 @@ export default function ProfilePage() {
       }
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handlePasswordChange = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPasswordErrorMsg(null);
+    setPasswordSuccessMsg(null);
+
+    if (newPassword.length < 6) {
+      setPasswordErrorMsg("Kata sandi baru minimal terdiri dari 6 karakter.");
+      return;
+    }
+
+    if (newPassword !== confirmNewPassword) {
+      setPasswordErrorMsg("Konfirmasi kata sandi baru tidak cocok.");
+      return;
+    }
+
+    setIsUpdatingPassword(true);
+
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword,
+      });
+
+      if (error) {
+        throw new Error(error.message || "Gagal memperbarui kata sandi.");
+      }
+
+      setPasswordSuccessMsg("Kata sandi akun Anda telah berhasil diperbarui!");
+      setNewPassword("");
+      setConfirmNewPassword("");
+    } catch (err: unknown) {
+      setPasswordErrorMsg(
+        err instanceof Error ? err.message : "Terjadi kesalahan saat mengganti kata sandi."
+      );
+    } finally {
+      setIsUpdatingPassword(false);
     }
   };
 
@@ -426,6 +476,91 @@ export default function ProfilePage() {
                   >
                     <Save className="w-4 h-4" />
                     <span>Simpan Perubahan Profil</span>
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+
+          {/* card ganti kata sandi */}
+          <Card className="border border-stone-200/80 dark:border-stone-800/80 shadow-xs">
+            <CardHeader className="border-b border-stone-100 dark:border-stone-800 p-6">
+              <CardTitle className="text-base font-bold flex items-center gap-2">
+                <KeyRound className="w-4 h-4 text-emerald-600" />
+                <span>Keamanan & Kata Sandi</span>
+              </CardTitle>
+              <CardDescription className="text-xs">
+                Perbarui kata sandi akun Anda secara berkala untuk menjaga keamanan akses.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-6">
+              <form onSubmit={handlePasswordChange} className="space-y-4">
+                {passwordErrorMsg && (
+                  <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-700 dark:text-rose-400 text-xs flex items-center gap-2">
+                    <AlertCircle className="w-4 h-4 shrink-0" />
+                    <span>{passwordErrorMsg}</span>
+                  </div>
+                )}
+
+                {passwordSuccessMsg && (
+                  <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-700 dark:text-emerald-400 text-xs flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 shrink-0" />
+                    <span>{passwordSuccessMsg}</span>
+                  </div>
+                )}
+
+                <div>
+                  <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300 mb-1.5">
+                    Kata Sandi Baru <span className="text-rose-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <Lock className="w-4 h-4 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                    <input
+                      type={showNewPassword ? "text" : "password"}
+                      required
+                      placeholder="Minimal 6 karakter"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      className="w-full pl-9 pr-9 py-2 text-xs sm:text-sm rounded-lg border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-950 text-stone-900 dark:text-stone-100 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-[#0F3E2E]"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowNewPassword(!showNewPassword)}
+                      aria-label={showNewPassword ? "Sembunyikan sandi" : "Lihat sandi"}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-700 dark:hover:text-stone-200"
+                    >
+                      {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300 mb-1.5">
+                    Konfirmasi Kata Sandi Baru <span className="text-rose-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <Lock className="w-4 h-4 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                    <input
+                      type={showNewPassword ? "text" : "password"}
+                      required
+                      placeholder="Ketik ulang kata sandi baru"
+                      value={confirmNewPassword}
+                      onChange={(e) => setConfirmNewPassword(e.target.value)}
+                      className="w-full pl-9 pr-3.5 py-2 text-xs sm:text-sm rounded-lg border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-950 text-stone-900 dark:text-stone-100 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-[#0F3E2E]"
+                    />
+                  </div>
+                </div>
+
+                <div className="pt-3 border-t border-stone-100 dark:border-stone-800 flex justify-end">
+                  <Button
+                    type="submit"
+                    variant="primary"
+                    size="sm"
+                    isLoading={isUpdatingPassword}
+                    className="gap-2 bg-[#0F3E2E] hover:bg-[#165640] text-white"
+                  >
+                    <KeyRound className="w-4 h-4" />
+                    <span>Perbarui Kata Sandi</span>
                   </Button>
                 </div>
               </form>

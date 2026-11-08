@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { AnimatedCounter } from "@/components/AnimatedCounter";
 import { SmoothImage } from "@/components/ui/SmoothImage";
+import { TableRowsSkeleton, DashboardPageSkeleton } from "@/components/ui/Skeleton";
 import {
   BookOpen,
   ShieldCheck,
@@ -120,6 +121,10 @@ export default function AdminDashboardPage() {
 
   const recentEnrollments = enrollments.slice(0, 5);
   const recentCourses = courses.slice(0, 5);
+
+  if (loading) {
+    return <DashboardPageSkeleton />;
+  }
 
   return (
     <div className="space-y-8 w-full">
@@ -263,9 +268,7 @@ export default function AdminDashboardPage() {
           </CardHeader>
           <CardContent className="p-0">
             {loading ? (
-              <div className="p-8 text-center text-xs text-stone-400">
-                Memuat data pendaftaran...
-              </div>
+              <TableRowsSkeleton rows={5} cols={2} />
             ) : recentEnrollments.length === 0 ? (
               <div className="p-8 text-center text-xs text-stone-400">
                 Belum ada data pendaftaran.
@@ -328,9 +331,7 @@ export default function AdminDashboardPage() {
           </CardHeader>
           <CardContent className="p-0">
             {loading ? (
-              <div className="p-8 text-center text-xs text-stone-400">
-                Memuat data kursus...
-              </div>
+              <TableRowsSkeleton rows={5} cols={2} />
             ) : recentCourses.length === 0 ? (
               <div className="p-8 text-center text-xs text-stone-400">
                 Belum ada data kursus.

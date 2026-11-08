@@ -26,6 +26,22 @@ export function TabUlasanKursus({
     return reviews.filter((r) => Math.round(r.rating) === selectedStarFilter);
   }, [reviews, selectedStarFilter]);
 
+  if (totalReviews === 0) {
+    return (
+      <div className="text-center py-14 px-6 rounded-3xl max-w-xl mx-auto space-y-3 bg-white/70 dark:bg-stone-900/50 border border-stone-200/80 dark:border-stone-800/80 backdrop-blur-sm">
+        <div className="w-14 h-14 rounded-2xl bg-amber-500/10 text-amber-500 flex items-center justify-center mx-auto border border-amber-500/20">
+          <Star className="w-7 h-7" />
+        </div>
+        <h3 className="text-base sm:text-lg font-bold text-stone-900 dark:text-stone-100">
+          Belum Ada Ulasan
+        </h3>
+        <p className="text-xs sm:text-sm text-stone-500 dark:text-stone-400 max-w-sm mx-auto leading-relaxed">
+          Kursus ini belum memiliki ulasan dari peserta. Ulasan dan rating akan muncul setelah peserta menyelesaikan proses pembelajaran.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-8">
       <div className="p-6 sm:p-7 rounded-3xl border border-stone-200/80 dark:border-stone-800/80 bg-white/70 dark:bg-stone-900/60 backdrop-blur-md shadow-xs">

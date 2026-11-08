@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { ConfirmModal, AlertModal } from "@/components/ui/ModalKonfirmasi";
 import { SmoothImage } from "@/components/ui/SmoothImage";
+import { TableRowsSkeleton, DataTableSkeleton } from "@/components/ui/Skeleton";
 import { ImagePreviewModal } from "@/components/ui/ModalPreviewGambar";
 import {
   Users,
@@ -168,6 +169,10 @@ export default function SuperadminUsersPage() {
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
   const paginatedUsers = filteredUsers.slice(startIndex, startIndex + ITEMS_PER_PAGE);
 
+  if (loading) {
+    return <DataTableSkeleton rows={8} />;
+  }
+
   return (
     <div className="space-y-6 w-full">
       {/* Header Panel Users */}
@@ -222,10 +227,7 @@ export default function SuperadminUsersPage() {
 
         <CardContent className="p-0">
           {loading ? (
-            <div className="p-12 text-center text-xs text-stone-400 space-y-2">
-              <RefreshCw className="w-5 h-5 animate-spin mx-auto text-stone-400" />
-              <span>Memuat data seluruh pengguna...</span>
-            </div>
+            <TableRowsSkeleton rows={8} cols={4} />
           ) : error ? (
             <div className="p-8 text-center text-xs text-rose-600 flex items-center justify-center gap-2">
               <AlertCircle className="w-4 h-4" /> <span>{error}</span>

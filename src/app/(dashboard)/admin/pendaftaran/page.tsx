@@ -7,6 +7,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/com
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { ConfirmModal, AlertModal } from "@/components/ui/ModalKonfirmasi";
+import { TableRowsSkeleton, AdminPendaftaranSkeleton } from "@/components/ui/Skeleton";
 import { AnimatedCounter } from "@/components/AnimatedCounter";
 import {
   ShieldCheck,
@@ -581,6 +582,10 @@ export default function AdminPendaftaranPage() {
     }
   };
 
+  if (loading) {
+    return <AdminPendaftaranSkeleton />;
+  }
+
   return (
     <div className="space-y-8 w-full pb-12 max-w-7xl mx-auto">
       {/* Header Panel */}
@@ -851,10 +856,7 @@ export default function AdminPendaftaranPage() {
 
             <CardContent className="p-0">
               {loading ? (
-                <div className="p-12 text-center text-xs text-stone-400 space-y-2">
-                  <RefreshCw className="w-5 h-5 animate-spin mx-auto text-emerald-600" />
-                  <p>Memuat data peserta...</p>
-                </div>
+                <TableRowsSkeleton rows={8} cols={4} />
               ) : filteredEnrollments.length === 0 ? (
                 <div className="p-12 text-center text-stone-400 text-xs">
                   Tidak ada data peserta pada kursus ini yang sesuai dengan filter.

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { AlertModal } from "@/components/ui/ModalKonfirmasi";
 import { SmoothImage } from "@/components/ui/SmoothImage";
 import { HtmlEditor } from "@/components/ui/HtmlEditor";
+import { AdminCourseFormSkeleton } from "@/components/ui/Skeleton";
 import {
   BookOpen,
   ArrowLeft,
@@ -24,7 +25,9 @@ import {
   Settings,
   Target,
   Plus,
+  Percent,
 } from "lucide-react";
+import { useBreadcrumb } from "@/context/BreadcrumbContext";
 
 function slugify(text: string): string {
   return text
@@ -42,12 +45,21 @@ export default function EditCoursePage() {
   const params = useParams();
   const router = useRouter();
   const courseId = params?.id as string;
+  const { setCustomTitle } = useBreadcrumb();
+
+  // reset judul saat unmount
+  React.useEffect(() => {
+    return () => {
+      setCustomTitle(null);
+    };
+  }, [setCustomTitle]);
 
   const [loading, setLoading] = React.useState(true);
   const [title, setTitle] = React.useState("");
   const [description, setDescription] = React.useState("");
   const [content, setContent] = React.useState("");
   const [price, setPrice] = React.useState<number>(0);
+  const [discountPercent, setDiscountPercent] = React.useState<number>(0);
   const [whatsappGroupUrl, setWhatsappGroupUrl] = React.useState("");
   const [imageUrl, setImageUrl] = React.useState<string>("");
   const [registrationStart, setRegistrationStart] = React.useState<string>("");
@@ -90,13 +102,16 @@ export default function EditCoursePage() {
     type: "info",
   });
 
+  const [actualCourseId, setActualCourseId] = React.useState("");
+  const [currentCourseSlug, setCurrentCourseSlug] = React.useState("");
+
   const bannerInputRef = React.useRef<HTMLInputElement>(null);
 
   const generatedSlug = React.useMemo(() => {
     return slugify(title);
   }, [title]);
 
-  // Load data kursus
+  // load data kursus
   React.useEffect(() => {
     async function loadCourse() {
       setLoading(true);
@@ -106,16 +121,20 @@ export default function EditCoursePage() {
         if (!res.ok) throw new Error(data.error || "Gagal memuat data kursus.");
 
         const found = (data.courses || []).find(
-          (c: { id: string }) => c.id === courseId
+          (c: { id: string; slug?: string }) => c.slug === courseId || c.id === courseId
         );
         if (!found) {
-          throw new Error("Kursus dengan ID tersebut tidak ditemukan.");
+          throw new Error("Kursus dengan slug atau ID tersebut tidak ditemukan.");
         }
 
+        setActualCourseId(found.id);
+        setCurrentCourseSlug(found.slug || "");
+        setCustomTitle(found.title || null);
         setTitle(found.title || "");
         setDescription(found.description || "");
         setContent(found.content || found.description || "");
         setPrice(found.price || 0);
+        setDiscountPercent(found.discount_percent || 0);
         setWhatsappGroupUrl(found.whatsapp_group_url || "");
         setImageUrl(found.image_url || "");
         setRegistrationStart(found.registration_start ? found.registration_start.slice(0, 10) : "");
@@ -195,12 +214,13 @@ export default function EditCoursePage() {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          id: courseId,
+          id: actualCourseId || courseId,
           title: title.trim(),
           slug: generatedSlug,
           description: description.trim(),
           content,
           price,
+          discount_percent: discountPercent,
           whatsapp_group_url: whatsappGroupUrl.trim() || null,
           image_url: imageUrl ? imageUrl.trim() : "",
           registration_start: registrationStart || null,
@@ -233,12 +253,7 @@ export default function EditCoursePage() {
   };
 
   if (loading) {
-    return (
-      <div className="p-16 text-center text-xs text-stone-400 space-y-2">
-        <RefreshCw className="w-5 h-5 animate-spin mx-auto text-emerald-600" />
-        <p>Memuat data kursus...</p>
-      </div>
-    );
+    return <AdminCourseFormSkeleton />;
   }
 
   return (
@@ -246,7 +261,7 @@ export default function EditCoursePage() {
       {/* Header Panel */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-2xl border border-stone-200/80 dark:border-stone-800/80 bg-white/70 dark:bg-stone-900/60 backdrop-blur-sm">
         <div className="flex items-center gap-3">
-          <Link href="/admin/courses">
+          <Link href={currentCourseSlug ? `/admin/courses/${currentCourseSlug}` : `/admin/courses/${courseId}`}>
             <Button variant="outline" size="sm" className="gap-1 text-xs">
               <ArrowLeft className="w-3.5 h-3.5" />
               <span>Kembali</span>
@@ -507,7 +522,7 @@ export default function EditCoursePage() {
               </h2>
             </div>
 
-            {/* Biaya Pendaftaran */}
+            {/* biaya pendaftaran */}
             <div className="space-y-1.5">
               <label className="text-xs font-semibold text-stone-700 dark:text-stone-300 flex items-center gap-1.5">
                 <DollarSign className="w-3.5 h-3.5 text-emerald-600" />
@@ -523,6 +538,31 @@ export default function EditCoursePage() {
                 onChange={(e) => setPrice(Number(e.target.value) || 0)}
                 className="w-full px-3.5 py-2 text-sm rounded-xl border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-950 text-stone-900 dark:text-stone-100 focus:outline-none focus:ring-2 focus:ring-[#0F3E2E] dark:focus:ring-emerald-500"
               />
+            </div>
+
+            {/* diskon kursus */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-stone-700 dark:text-stone-300 flex items-center gap-1.5">
+                <Percent className="w-3.5 h-3.5 text-emerald-600" />
+                <span>Diskon Kursus</span>
+              </label>
+              <select
+                value={discountPercent}
+                onChange={(e) => setDiscountPercent(Number(e.target.value) || 0)}
+                className="w-full px-3.5 py-2 text-sm rounded-xl border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-950 text-stone-900 dark:text-stone-100 focus:outline-none focus:ring-2 focus:ring-[#0F3E2E] dark:focus:ring-emerald-500"
+              >
+                {Array.from({ length: 21 }, (_, i) => i * 5).map((pct) => {
+                  const finalPrice = Math.max(0, Math.round(price * (1 - pct / 100)));
+                  return (
+                    <option key={pct} value={pct}>
+                      {pct}% (Rp {finalPrice.toLocaleString("id-ID")})
+                    </option>
+                  );
+                })}
+              </select>
+              <p className="text-[11px] text-stone-400">
+                Pilih persentase diskon dari 0% hingga 100% dalam kelipatan 5.
+              </p>
             </div>
 
             {/* Tautan Grup WhatsApp */}

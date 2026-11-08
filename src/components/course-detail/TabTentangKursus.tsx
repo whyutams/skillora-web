@@ -47,36 +47,38 @@ export function TabTentangKursus({
         )}
       </section>
 
-      <section className="space-y-4 pt-6 border-t border-stone-200/80 dark:border-stone-800/80">
-        <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
-          <Target className="w-4 h-4" />
-          <span>Hasil Pembelajaran</span>
-        </div>
+      {targetLearning && targetLearning.length > 0 && (
+        <section className="space-y-4 pt-6 border-t border-stone-200/80 dark:border-stone-800/80">
+          <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
+            <Target className="w-4 h-4" />
+            <span>Hasil Pembelajaran</span>
+          </div>
 
-        <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-stone-900 dark:text-stone-100">
-          Target Pembelajaran
-        </h2>
+          <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-stone-900 dark:text-stone-100">
+            Target Pembelajaran
+          </h2>
 
-        <p className="text-xs sm:text-sm text-stone-500 dark:text-stone-400">
-          Setelah menyelesaikan seluruh rangkaian modul pada kursus ini, Anda diharapkan mampu:
-        </p>
+          <p className="text-xs sm:text-sm text-stone-500 dark:text-stone-400">
+            Setelah menyelesaikan seluruh rangkaian modul pada kursus ini, Anda diharapkan mampu:
+          </p>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-2">
-          {targetLearning.map((outcome, idx) => (
-            <div
-              key={idx}
-              className="flex items-start gap-3 p-3.5 rounded-2xl bg-white/80 dark:bg-stone-900/80 border border-stone-200/80 dark:border-stone-800/80 shadow-2xs hover:border-emerald-500/40 dark:hover:border-emerald-500/40 transition-colors"
-            >
-              <div className="p-1 rounded-lg bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 shrink-0 mt-0.5">
-                <CheckCircle2 className="w-4 h-4" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-2">
+            {targetLearning.map((outcome, idx) => (
+              <div
+                key={idx}
+                className="flex items-start gap-3 p-3.5 rounded-2xl bg-white/80 dark:bg-stone-900/80 border border-stone-200/80 dark:border-stone-800/80 shadow-2xs hover:border-emerald-500/40 dark:hover:border-emerald-500/40 transition-colors"
+              >
+                <div className="p-1 rounded-lg bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 shrink-0 mt-0.5">
+                  <CheckCircle2 className="w-4 h-4" />
+                </div>
+                <p className="text-xs sm:text-sm font-medium text-stone-700 dark:text-stone-200 leading-snug">
+                  {outcome}
+                </p>
               </div>
-              <p className="text-xs sm:text-sm font-medium text-stone-700 dark:text-stone-200 leading-snug">
-                {outcome}
-              </p>
-            </div>
-          ))}
-        </div>
-      </section>
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   );
 }

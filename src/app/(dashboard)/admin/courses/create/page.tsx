@@ -24,6 +24,7 @@ import {
   Settings,
   Target,
   Plus,
+  Percent,
 } from "lucide-react";
 
 function slugify(text: string): string {
@@ -47,6 +48,7 @@ export default function CreateCoursePage() {
     "<p>Kuasai materi kursus ini melalui bimbingan praktis dan modul terstruktur...</p>"
   );
   const [price, setPrice] = React.useState<number>(49000);
+  const [discountPercent, setDiscountPercent] = React.useState<number>(0);
   const [whatsappGroupUrl, setWhatsappGroupUrl] = React.useState("");
   const [imageUrl, setImageUrl] = React.useState<string>("");
   const [registrationStart, setRegistrationStart] = React.useState<string>("");
@@ -154,6 +156,7 @@ export default function CreateCoursePage() {
           description: description.trim(),
           content,
           price,
+          discount_percent: discountPercent,
           whatsapp_group_url: whatsappGroupUrl.trim() || null,
           image_url: imageUrl ? imageUrl.trim() : null,
           registration_start: registrationStart || null,
@@ -451,7 +454,7 @@ export default function CreateCoursePage() {
               </h2>
             </div>
 
-            {/* Biaya Pendaftaran */}
+            {/* biaya pendaftaran */}
             <div className="space-y-1.5">
               <label className="text-xs font-semibold text-stone-700 dark:text-stone-300 flex items-center gap-1.5">
                 <DollarSign className="w-3.5 h-3.5 text-emerald-600" />
@@ -467,6 +470,31 @@ export default function CreateCoursePage() {
                 onChange={(e) => setPrice(Number(e.target.value) || 0)}
                 className="w-full px-3.5 py-2 text-sm rounded-xl border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-950 text-stone-900 dark:text-stone-100 focus:outline-none focus:ring-2 focus:ring-[#0F3E2E] dark:focus:ring-emerald-500"
               />
+            </div>
+
+            {/* diskon kursus */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-stone-700 dark:text-stone-300 flex items-center gap-1.5">
+                <Percent className="w-3.5 h-3.5 text-emerald-600" />
+                <span>Diskon Kursus</span>
+              </label>
+              <select
+                value={discountPercent}
+                onChange={(e) => setDiscountPercent(Number(e.target.value) || 0)}
+                className="w-full px-3.5 py-2 text-sm rounded-xl border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-950 text-stone-900 dark:text-stone-100 focus:outline-none focus:ring-2 focus:ring-[#0F3E2E] dark:focus:ring-emerald-500"
+              >
+                {Array.from({ length: 21 }, (_, i) => i * 5).map((pct) => {
+                  const finalPrice = Math.max(0, Math.round(price * (1 - pct / 100)));
+                  return (
+                    <option key={pct} value={pct}>
+                      {pct}% (Rp {finalPrice.toLocaleString("id-ID")})
+                    </option>
+                  );
+                })}
+              </select>
+              <p className="text-[11px] text-stone-400">
+                Pilih persentase diskon dari 0% hingga 100% dalam kelipatan 5.
+              </p>
             </div>
 
             {/* Tautan Grup WhatsApp */}

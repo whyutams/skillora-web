@@ -88,16 +88,32 @@ export default function KatalogKursusClient({
 
                 {/* Konten Kursus */}
                 <div className="p-5 sm:p-6 space-y-3">
-                  {/* Rating & Silabus Module Badge */}
+                  {/* rating dan modul belajar */}
                   <div className="flex items-center gap-3 text-xs text-stone-500 dark:text-stone-400">
-                    <div className="flex items-center gap-1 text-amber-500 font-bold">
-                      <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-                      <span>4.9</span>
-                    </div>
+                    {course.average_rating ? (
+                      <div className="flex items-center gap-1 text-amber-500 font-bold">
+                        <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                        <span>{course.average_rating}</span>
+                        {course.total_reviews ? (
+                          <span className="text-[11px] text-stone-400 font-normal">
+                            ({course.total_reviews})
+                          </span>
+                        ) : null}
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-semibold">
+                        <Sparkles className="w-3.5 h-3.5" />
+                        <span>Kursus Baru</span>
+                      </div>
+                    )}
                     <span className="text-stone-300 dark:text-stone-700">•</span>
                     <span className="flex items-center gap-1">
                       <BookOpen className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                      <span>8 Modul Belajar</span>
+                      <span>
+                        {Array.isArray(course.syllabus) && course.syllabus.length > 0
+                          ? `${course.syllabus.length} Modul Belajar`
+                          : "Materi Terstruktur"}
+                      </span>
                     </span>
                   </div>
 
@@ -111,15 +127,42 @@ export default function KatalogKursusClient({
                 </div>
               </div>
 
-              {/* Footer Card: Harga Pelajar & Tombol CTA */}
+              {/* footer card harga dan tombol cta */}
               <div className="p-5 sm:p-6 border-t border-stone-100 dark:border-stone-800/60 mt-auto flex items-center justify-between">
                 <div>
                   <span className="text-[10px] text-stone-400 uppercase tracking-wider block font-semibold">
-                    Biaya Kursus Mandiri
+                    Biaya Kursus
                   </span>
-                  <span className="text-sm sm:text-base font-extrabold text-[#0F3E2E] dark:text-emerald-400">
-                    Rp {Number(course.price).toLocaleString("id-ID")}
-                  </span>
+                  {(() => {
+                    const originalPrice = Number(course.price || 0);
+                    const discountPercent = Number(course.discount_percent || 0);
+                    const hasDiscount = discountPercent > 0 && originalPrice > 0;
+                    const discountedPrice = hasDiscount
+                      ? Math.round(originalPrice * (1 - discountPercent / 100))
+                      : originalPrice;
+
+                    if (hasDiscount) {
+                      return (
+                        <div className="flex items-baseline gap-1.5 flex-wrap">
+                          <span className="text-sm sm:text-base font-extrabold text-[#0F3E2E] dark:text-emerald-400">
+                            {discountedPrice === 0 ? "Gratis" : `Rp ${discountedPrice.toLocaleString("id-ID")}`}
+                          </span>
+                          <span className="text-xs text-stone-400 dark:text-stone-500 font-normal">
+                            /
+                          </span>
+                          <span className="text-xs text-stone-400 dark:text-stone-500 line-through font-normal">
+                            Rp {originalPrice.toLocaleString("id-ID")}
+                          </span>
+                        </div>
+                      );
+                    }
+
+                    return (
+                      <span className="text-sm sm:text-base font-extrabold text-[#0F3E2E] dark:text-emerald-400">
+                        {originalPrice === 0 ? "Gratis" : `Rp ${originalPrice.toLocaleString("id-ID")}`}
+                      </span>
+                    );
+                  })()}
                 </div>
 
                 <Link href={`/courses/${course.slug}`}>

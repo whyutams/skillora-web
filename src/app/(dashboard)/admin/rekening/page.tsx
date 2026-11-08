@@ -5,6 +5,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/com
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { ConfirmModal, AlertModal } from "@/components/ui/ModalKonfirmasi";
+import { TableRowsSkeleton, AdminRekeningSkeleton } from "@/components/ui/Skeleton";
 import {
   CreditCard,
   Plus,
@@ -153,6 +154,10 @@ export default function AdminRekeningPage() {
     }
   };
 
+  if (loading) {
+    return <AdminRekeningSkeleton />;
+  }
+
   return (
     <div className="space-y-6 w-full">
       {/* Header */}
@@ -204,10 +209,7 @@ export default function AdminRekeningPage() {
         </CardHeader>
         <CardContent className="p-0">
           {loading ? (
-            <div className="p-12 text-center text-xs text-stone-400 space-y-2">
-              <RefreshCw className="w-5 h-5 animate-spin mx-auto" />
-              <span>Memuat data rekening...</span>
-            </div>
+            <TableRowsSkeleton rows={4} cols={3} />
           ) : accounts.length === 0 ? (
             <div className="p-12 text-center space-y-3">
               <Banknote className="w-10 h-10 text-stone-300 mx-auto" />

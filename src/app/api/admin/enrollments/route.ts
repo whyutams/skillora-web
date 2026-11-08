@@ -66,7 +66,18 @@ export async function GET(request: Request) {
       .order("created_at", { ascending: false });
 
     if (courseId) {
-      query = query.eq("course_id", courseId);
+      // jika parameter berupa slug cari id kursus terlebih dahulu
+      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(courseId);
+      if (!isUUID) {
+        const { data: c } = await adminClient.from("courses").select("id").eq("slug", courseId).maybeSingle();
+        if (c?.id) {
+          query = query.eq("course_id", c.id);
+        } else {
+          query = query.eq("course_id", courseId);
+        }
+      } else {
+        query = query.eq("course_id", courseId);
+      }
     }
 
     if (statusParam) {

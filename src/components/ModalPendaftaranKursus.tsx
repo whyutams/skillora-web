@@ -43,6 +43,7 @@ export function ModalPendaftaranKursus({
   const [isLoading, setIsLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [success, setSuccess] = React.useState(false);
+  const [autoApproved, setAutoApproved] = React.useState(false);
 
   React.useEffect(() => {
     async function fetchWhatsapp() {
@@ -81,6 +82,7 @@ export function ModalPendaftaranKursus({
     if (isOpen) {
       setError(null);
       setSuccess(false);
+      setAutoApproved(false);
       fetchWhatsapp();
     }
   }, [isOpen, userId, userWhatsapp]);
@@ -139,19 +141,23 @@ export function ModalPendaftaranKursus({
       }
 
       setSuccess(true);
+      const isAuto = Boolean(data.isAutoApproved);
+      setAutoApproved(isAuto);
 
-      // Siapkan pesan WhatsApp terformat untuk konfirmasi
-      const message = encodeURIComponent(
-        `Halo Admin Skillora, saya sudah mendaftar kursus "${course.title}" dengan email ${userEmail}. Mohon info instruksi pembayaran dan verifikasinya.`
-      );
-      const waUrl = `https://wa.me/${adminPhone}?text=${message}`;
+      if (!isAuto) {
+        // siapkan pesan whatsapp terformat untuk konfirmasi pembayaran kursus berbayar
+        const message = encodeURIComponent(
+          `Halo Admin Skillora, saya sudah mendaftar kursus "${course.title}" dengan email ${userEmail}. Mohon info instruksi pembayaran dan verifikasinya.`
+        );
+        const waUrl = `https://wa.me/${adminPhone}?text=${message}`;
 
-      // Buka otomatis WhatsApp Admin di tab baru
-      window.open(waUrl, "_blank", "noopener,noreferrer");
+        // buka otomatis whatsapp admin di tab baru
+        window.open(waUrl, "_blank", "noopener,noreferrer");
+      }
 
-      // Redirect ke menu Kursus Saya
+      // redirect ke menu kursus saya atau detail kursus
       setTimeout(() => {
-        router.push("/kursus-saya");
+        router.push(isAuto ? `/kursus-saya/${course.slug}` : "/kursus-saya");
         router.refresh();
       }, 1200);
     } catch (err: unknown) {
@@ -203,14 +209,18 @@ export function ModalPendaftaranKursus({
           </div>
           <div>
             <h4 className="text-base font-bold text-stone-900 dark:text-stone-100">
-              Pendaftaran Berhasil Dicatat!
+              {autoApproved
+                ? "Pendaftaran Berhasil & Langsung Aktif!"
+                : "Pendaftaran Berhasil Dicatat!"}
             </h4>
             <p className="text-xs sm:text-sm text-stone-600 dark:text-stone-400 mt-1 max-w-sm mx-auto">
-              WhatsApp Admin telah dibuka di tab baru. Anda juga dapat mengunggah bukti transfer langsung di menu Kursus Saya.
+              {autoApproved
+                ? "Kursus gratis ini telah langsung aktif. Anda dapat langsung membuka materi dan kurikulum pembelajaran."
+                : "WhatsApp Admin telah dibuka di tab baru. Anda juga dapat mengunggah bukti transfer langsung di menu Kursus Saya."}
             </p>
           </div>
           <p className="text-xs text-stone-400">
-            Mengarahkan ke Halaman Kursus Saya...
+            {autoApproved ? "Membuka Ruang Belajar Kursus..." : "Mengarahkan ke Halaman Kursus Saya..."}
           </p>
         </div>
       ) : (
@@ -230,12 +240,30 @@ export function ModalPendaftaranKursus({
                 {course.title}
               </span>
             </div>
-            <div className="flex justify-between items-center text-xs sm:text-sm">
-              <span className="text-stone-500 dark:text-stone-400">Biaya Pendaftaran:</span>
-              <span className="font-extrabold text-[#0F3E2E] dark:text-emerald-400 text-base">
-                Rp {Number(course.price).toLocaleString("id-ID")}
-              </span>
-            </div>
+            {(() => {
+              const rawPrice = Number(course.price || 0);
+              const discountPercent = Number(course.discount_percent || 0);
+              const hasDiscount = discountPercent > 0 && rawPrice > 0;
+              const finalPrice = hasDiscount
+                ? Math.round(rawPrice * (1 - discountPercent / 100))
+                : rawPrice;
+
+              return (
+                <div className="flex justify-between items-center text-xs sm:text-sm">
+                  <span className="text-stone-500 dark:text-stone-400">Biaya Pendaftaran:</span>
+                  <div className="flex items-baseline gap-2 text-right">
+                    <span className="font-extrabold text-[#0F3E2E] dark:text-emerald-400 text-base">
+                      {finalPrice === 0 ? "Gratis" : `Rp ${finalPrice.toLocaleString("id-ID")}`}
+                    </span>
+                    {hasDiscount && (
+                      <span className="text-xs text-stone-400 line-through">
+                        Rp {rawPrice.toLocaleString("id-ID")}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
             {userEmail && (
               <div className="flex justify-between items-center text-xs pt-2 border-t border-stone-200/60 dark:border-stone-800/60">
                 <span className="text-stone-500 dark:text-stone-400">Email Terdaftar:</span>
@@ -314,7 +342,11 @@ export function ModalPendaftaranKursus({
               className="gap-2 bg-[#0F3E2E] hover:bg-[#15523d] text-white font-semibold"
             >
               <MessageCircle className="w-4 h-4" />
-              <span>Daftar Sekarang & Lanjut ke WA</span>
+              <span>
+                {Number(course.price || 0) <= 0
+                  ? "Daftar & Mulai Belajar Gratis"
+                  : "Daftar Sekarang & Lanjut ke WA"}
+              </span>
               <ArrowRight className="w-3.5 h-3.5" />
             </Button>
           </div>

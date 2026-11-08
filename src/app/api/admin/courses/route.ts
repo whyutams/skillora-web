@@ -28,6 +28,7 @@ interface ParsedCourseMeta {
   syllabus: any[];
   level: string | null;
   category: string | null;
+  discount_percent: number;
   raw_meta: Record<string, unknown>;
 }
 
@@ -45,11 +46,12 @@ function parseCourseDescription(rawDesc: string | null): ParsedCourseMeta {
       syllabus: [],
       level: null,
       category: null,
+      discount_percent: 0,
       raw_meta: {},
     };
   }
 
-  // Check JSON meta format
+  // periksa format json meta
   const metaMatch = rawDesc.match(/^<!--meta:(.*?)-->\s*/);
   if (metaMatch) {
     try {
@@ -67,6 +69,7 @@ function parseCourseDescription(rawDesc: string | null): ParsedCourseMeta {
         syllabus: Array.isArray(parsedMeta.syllabus) ? parsedMeta.syllabus : [],
         level: parsedMeta.level || null,
         category: parsedMeta.category || null,
+        discount_percent: typeof parsedMeta.discount_percent === "number" ? parsedMeta.discount_percent : 0,
         raw_meta: parsedMeta,
       };
     } catch {
@@ -90,6 +93,7 @@ function parseCourseDescription(rawDesc: string | null): ParsedCourseMeta {
       syllabus: [],
       level: null,
       category: null,
+      discount_percent: 0,
       raw_meta: {},
     };
   }
@@ -106,6 +110,7 @@ function parseCourseDescription(rawDesc: string | null): ParsedCourseMeta {
     syllabus: [],
     level: null,
     category: null,
+    discount_percent: 0,
     raw_meta: {},
   };
 }
@@ -122,7 +127,8 @@ function encodeCourseDescription(
   syllabus?: any[] | null,
   level?: string | null,
   category?: string | null,
-  existingMeta?: Record<string, unknown>
+  existingMeta?: Record<string, unknown>,
+  discountPercent?: number | null
 ): string {
   const cleanDesc = (description || "").trim();
   const cleanContent = (content || "").trim();
@@ -192,6 +198,14 @@ function encodeCourseDescription(
       meta.category = category.trim();
     } else {
       delete meta.category;
+    }
+  }
+
+  if (discountPercent !== undefined) {
+    if (typeof discountPercent === "number" && discountPercent > 0) {
+      meta.discount_percent = Math.min(100, Math.max(0, discountPercent));
+    } else {
+      delete meta.discount_percent;
     }
   }
 
@@ -302,6 +316,7 @@ export async function GET() {
         syllabus: parsed.syllabus,
         level: parsed.level,
         category: parsed.category,
+        discount_percent: parsed.discount_percent,
         enrolled_count: stats.total,
         approved_count: stats.approved,
         pending_count: stats.pending,
@@ -372,6 +387,7 @@ export async function POST(request: NextRequest) {
       syllabus,
       level,
       category,
+      discount_percent,
     } = body;
 
     if (!title || !title.trim()) {
@@ -407,7 +423,9 @@ export async function POST(request: NextRequest) {
       target_learning || [],
       syllabus || [],
       level || null,
-      category || null
+      category || null,
+      undefined,
+      discount_percent !== undefined ? Number(discount_percent) || 0 : 0
     );
     const numPrice = Math.max(0, parseInt(String(price), 10) || 0);
 
@@ -460,6 +478,7 @@ export async function POST(request: NextRequest) {
         syllabus: parsed.syllabus,
         level: parsed.level,
         category: parsed.category,
+        discount_percent: parsed.discount_percent,
       },
       message: `Kursus "${newCourse.title}" berhasil ditambahkan.`,
     });
@@ -509,6 +528,7 @@ export async function PATCH(request: NextRequest) {
       syllabus,
       level,
       category,
+      discount_percent,
     } = body;
 
     if (!id) {
@@ -517,16 +537,21 @@ export async function PATCH(request: NextRequest) {
 
     const adminClient = createAdminClient();
 
-    // Cek kursus lama
-    const { data: existing, error: fetchErr } = await adminClient
-      .from("courses")
-      .select("*")
-      .eq("id", id)
-      .single();
+    // cari kursus berdasarkan id uuid atau slug
+    const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+    let existingQuery = adminClient.from("courses").select("*");
+    if (isUUID) {
+      existingQuery = existingQuery.eq("id", id);
+    } else {
+      existingQuery = existingQuery.eq("slug", id);
+    }
+    const { data: existing, error: fetchErr } = await existingQuery.maybeSingle();
 
     if (fetchErr || !existing) {
       return NextResponse.json({ error: "Kursus tidak ditemukan." }, { status: 404 });
     }
+
+    const actualCourseId = existing.id;
 
     const updatePayload: Record<string, unknown> = {};
 
@@ -541,7 +566,7 @@ export async function PATCH(request: NextRequest) {
         .from("courses")
         .select("id")
         .eq("slug", candidateSlug)
-        .neq("id", id)
+        .neq("id", actualCourseId)
         .maybeSingle();
 
       if (slugDup) {
@@ -561,12 +586,13 @@ export async function PATCH(request: NextRequest) {
       target_learning !== undefined ||
       syllabus !== undefined ||
       level !== undefined ||
-      category !== undefined
+      category !== undefined ||
+      discount_percent !== undefined
     ) {
       const currentParsed = parseCourseDescription(existing.description);
       const newDesc = description !== undefined ? description : currentParsed.description;
       const newContent = content !== undefined ? content : currentParsed.content;
-      // Jika image_url dikirimkan (termasuk string kosong atau null), jadikan null agar benar-benar terhapus
+      // jika image_url dikirimkan jadikan null agar benar-benar terhapus
       const newImg = image_url !== undefined ? (image_url ? String(image_url).trim() : null) : currentParsed.image_url;
       const newRegStart = registration_start !== undefined ? (registration_start ? String(registration_start).trim() : null) : currentParsed.registration_start;
       const newRegEnd = registration_end !== undefined ? (registration_end ? String(registration_end).trim() : null) : currentParsed.registration_end;
@@ -576,6 +602,7 @@ export async function PATCH(request: NextRequest) {
       const newSyllabus = syllabus !== undefined ? syllabus : currentParsed.syllabus;
       const newLevel = level !== undefined ? level : currentParsed.level;
       const newCat = category !== undefined ? category : currentParsed.category;
+      const newDiscount = discount_percent !== undefined ? Number(discount_percent) || 0 : currentParsed.discount_percent;
 
       updatePayload.description = encodeCourseDescription(
         newDesc,
@@ -589,14 +616,15 @@ export async function PATCH(request: NextRequest) {
         newSyllabus,
         newLevel,
         newCat,
-        currentParsed.raw_meta
+        currentParsed.raw_meta,
+        newDiscount
       );
     }
 
     const { data: updated, error: updateErr } = await adminClient
       .from("courses")
       .update(updatePayload)
-      .eq("id", id)
+      .eq("id", actualCourseId)
       .select()
       .single();
 
@@ -604,14 +632,14 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: updateErr.message }, { status: 500 });
     }
 
-    // Catat ke Activity Log
+    // catat ke activity log
     await logActivity({
       userId: user.id,
       userEmail: user.email,
       userRole: role,
       action: "UPDATE_COURSE",
       tableName: "courses",
-      recordId: id,
+      recordId: actualCourseId,
       details: {
         title: updated.title,
         updated_fields: Object.keys(updatePayload),
@@ -634,6 +662,7 @@ export async function PATCH(request: NextRequest) {
         syllabus: parsed.syllabus,
         level: parsed.level,
         category: parsed.category,
+        discount_percent: parsed.discount_percent,
       },
       message: `Kursus "${updated.title}" berhasil diperbarui.`,
     });
@@ -675,11 +704,27 @@ export async function DELETE(request: NextRequest) {
 
     const adminClient = createAdminClient();
 
-    // Cek apakah ada enrollment untuk kursus ini
+    // cari kursus terlebih dahulu berdasarkan id atau slug
+    const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+    let targetQuery = adminClient.from("courses").select("id, title, slug");
+    if (isUUID) {
+      targetQuery = targetQuery.eq("id", id);
+    } else {
+      targetQuery = targetQuery.eq("slug", id);
+    }
+    const { data: toDelete } = await targetQuery.maybeSingle();
+
+    if (!toDelete) {
+      return NextResponse.json({ error: "Kursus tidak ditemukan." }, { status: 404 });
+    }
+
+    const actualCourseId = toDelete.id;
+
+    // cek apakah ada enrollment untuk kursus ini
     const { data: enrollments } = await adminClient
       .from("enrollments")
       .select("id")
-      .eq("course_id", id)
+      .eq("course_id", actualCourseId)
       .limit(1);
 
     if (enrollments && enrollments.length > 0) {
@@ -692,29 +737,22 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    // Ambil info kursus sebelum dihapus untuk log
-    const { data: toDelete } = await adminClient
-      .from("courses")
-      .select("title, slug")
-      .eq("id", id)
-      .single();
-
-    const { error: delErr } = await adminClient.from("courses").delete().eq("id", id);
+    const { error: delErr } = await adminClient.from("courses").delete().eq("id", actualCourseId);
 
     if (delErr) {
       return NextResponse.json({ error: delErr.message }, { status: 500 });
     }
 
-    // Catat ke Activity Log
+    // catat ke activity log
     await logActivity({
       userId: user.id,
       userEmail: user.email,
       userRole: role,
       action: "DELETE_COURSE",
       tableName: "courses",
-      recordId: id,
+      recordId: actualCourseId,
       details: {
-        title: toDelete?.title || id,
+        title: toDelete?.title || actualCourseId,
         slug: toDelete?.slug || null,
       },
     });

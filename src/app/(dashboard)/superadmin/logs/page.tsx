@@ -6,6 +6,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/com
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
+import { TableRowsSkeleton } from "@/components/ui/Skeleton";
 
 import {
   ScrollText,
@@ -229,10 +230,7 @@ export default function SuperadminLogsPage() {
 
         <CardContent className="p-0">
           {loading ? (
-            <div className="p-12 text-center text-xs text-stone-400 space-y-2">
-              <RefreshCw className="w-5 h-5 animate-spin mx-auto text-stone-400" />
-              <span>Memuat log aktivitas sistem...</span>
-            </div>
+            <TableRowsSkeleton rows={10} cols={4} />
           ) : logs.length === 0 ? (
             <div className="p-12 text-center space-y-2">
               <ScrollText className="w-8 h-8 text-stone-300 dark:text-stone-700 mx-auto" />

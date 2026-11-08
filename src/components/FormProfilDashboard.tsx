@@ -10,6 +10,7 @@ import { AlertModal } from "@/components/ui/ModalKonfirmasi";
 import { Profile, USER_ROLES } from "@/types/database";
 import { SmoothImage } from "@/components/ui/SmoothImage";
 import { ImageCropModal } from "@/components/ui/ModalCropGambar";
+import { ProfileSkeleton } from "@/components/ui/Skeleton";
 
 import {
   User,
@@ -199,12 +200,7 @@ export function FormProfilDashboard({ roleTitle }: { roleTitle: string }) {
   };
 
   if (loading) {
-    return (
-      <div className="flex flex-col items-center justify-center py-24 text-stone-400 space-y-3">
-        <Loader2 className="w-8 h-8 animate-spin text-[#0F3E2E] dark:text-emerald-400" />
-        <p className="text-xs font-medium">Memuat data profil {roleTitle}...</p>
-      </div>
-    );
+    return <ProfileSkeleton />;
   }
 
   return (

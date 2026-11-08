@@ -23,6 +23,8 @@ import { Button } from "@/components/ui/Button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { AlertModal } from "@/components/ui/ModalKonfirmasi";
+import { AdminTopicEditSkeleton } from "@/components/ui/Skeleton";
+import { useBreadcrumb } from "@/context/BreadcrumbContext";
 import {
   CourseLessonItem,
   CourseModuleItem,
@@ -49,6 +51,15 @@ export default function HalamanEditTopikClient({
   topicIndexStr,
 }: HalamanEditTopikClientProps) {
   const router = useRouter();
+  const { setCustomTitle } = useBreadcrumb();
+
+  // reset judul saat unmount
+  React.useEffect(() => {
+    return () => {
+      setCustomTitle(null);
+    };
+  }, [setCustomTitle]);
+
   const moduleIndex = parseInt(moduleIndexStr, 10);
   const topicIndex = parseInt(topicIndexStr, 10);
 
@@ -105,10 +116,13 @@ export default function HalamanEditTopikClient({
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Gagal memuat data kursus.");
 
-      const found = (data.courses || []).find((c: { id: string }) => c.id === courseId);
+      const found = (data.courses || []).find(
+        (c: { id: string; slug?: string }) => c.slug === courseId || c.id === courseId
+      );
       if (!found) throw new Error("Kursus tidak ditemukan.");
 
       setCourse(found);
+      setCustomTitle(found.title || null);
 
       const parsedSyllabus: CourseModuleItem[] = Array.isArray(found.syllabus)
         ? found.syllabus
@@ -250,7 +264,12 @@ export default function HalamanEditTopikClient({
     }
 
     if (type === "quiz") {
-      const emptyQ = quizQuestions.find((q) => !q.question.trim());
+      const emptyQ = quizQuestions.find((q) => {
+        // bersihkan tag html untuk memeriksa ketiadaan teks dan gambar
+        const textOnly = (q.question || "").replace(/<[^>]*>/g, "").trim();
+        const hasImg = /<img[^>]*>/i.test(q.question || "");
+        return !textOnly && !hasImg;
+      });
       if (emptyQ) {
         setAlertData({
           isOpen: true,
@@ -337,7 +356,7 @@ export default function HalamanEditTopikClient({
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          id: courseId,
+          id: course?.id || courseId,
           syllabus: updatedSyllabus,
         }),
       });
@@ -378,19 +397,14 @@ export default function HalamanEditTopikClient({
   };
 
   if (loading) {
-    return (
-      <div className="p-16 text-center text-xs text-stone-400 space-y-2">
-        <RefreshCw className="w-6 h-6 animate-spin mx-auto text-emerald-600" />
-        <p>Memuat editor topik materi...</p>
-      </div>
-    );
+    return <AdminTopicEditSkeleton />;
   }
 
   if (!course || !currentModule) {
     return (
       <div className="p-12 text-center text-stone-500 space-y-3">
         <p>Topik materi tidak ditemukan.</p>
-        <Link href={`/admin/courses/${courseId}`}>
+        <Link href={`/admin/courses/${course?.slug || courseId}`}>
           <Button variant="outline" size="sm">
             Kembali ke Detail Kursus
           </Button>
@@ -405,7 +419,7 @@ export default function HalamanEditTopikClient({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-stone-200/80 dark:border-stone-800/80">
         <div className="space-y-2">
           <Link
-            href={`/admin/courses/${courseId}`}
+            href={`/admin/courses/${course?.slug || courseId}`}
             className="inline-flex items-center gap-1.5 text-xs font-semibold text-stone-600 dark:text-stone-300 hover:text-stone-900 dark:hover:text-white px-3 py-1.5 rounded-xl border border-stone-200 dark:border-stone-800 bg-white/80 dark:bg-stone-900/80 shadow-2xs transition-all w-fit"
           >
             <ChevronLeft className="w-4 h-4 text-stone-500" />
@@ -423,7 +437,7 @@ export default function HalamanEditTopikClient({
         </div>
 
         <div className="flex items-center gap-2">
-          <Link href={`/admin/courses/${courseId}`}>
+          <Link href={`/admin/courses/${course?.slug || courseId}`}>
             <Button variant="outline" size="sm" className="text-xs">
               Batal
             </Button>
@@ -658,15 +672,19 @@ export default function HalamanEditTopikClient({
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-stone-700 dark:text-stone-300 block">
-                    Kalimat Pertanyaan Soal <span className="text-rose-500">*</span>
-                  </label>
-                  <textarea
-                    rows={2}
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-semibold text-stone-700 dark:text-stone-300 block">
+                      Pertanyaan Soal (HTML Editor & Gambar) <span className="text-rose-500">*</span>
+                    </label>
+                    <span className="text-[11px] text-stone-400">
+                      Mendukung format teks, daftar, kode, dan unggah gambar soal
+                    </span>
+                  </div>
+                  <HtmlEditor
                     value={q.question}
-                    onChange={(e) => handleQuestionChange(qIdx, "question", e.target.value)}
-                    placeholder={`Tuliskan pertanyaan untuk soal nomor ${qIdx + 1}...`}
-                    className="w-full px-4 py-2.5 text-xs sm:text-sm rounded-xl border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-950 text-stone-900 dark:text-stone-100 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-[#0F3E2E] resize-none"
+                    onChange={(val) => handleQuestionChange(qIdx, "question", val)}
+                    placeholder={`Tuliskan pertanyaan dan sisipkan gambar soal nomor ${qIdx + 1} di sini...`}
+                    minHeight="140px"
                   />
                 </div>
 
@@ -816,7 +834,7 @@ export default function HalamanEditTopikClient({
       {/* Floating / Bottom Action Bar */}
       <div className="sticky bottom-6 z-20 p-4 rounded-2xl bg-white/95 dark:bg-stone-900/95 backdrop-blur-md border border-stone-200 dark:border-stone-800 shadow-xl flex items-center justify-between gap-4">
         <Link
-          href={`/admin/courses/${courseId}`}
+          href={`/admin/courses/${course?.slug || courseId}`}
           className="text-xs font-semibold text-stone-600 dark:text-stone-300 hover:text-stone-900 dark:hover:text-white"
         >
           ← Batalkan & Kembali ke Detail Kursus
@@ -841,7 +859,7 @@ export default function HalamanEditTopikClient({
         onClose={() => {
           setAlertData((prev) => ({ ...prev, isOpen: false }));
           if (alertData.redirectOnClose) {
-            router.push(`/admin/courses/${courseId}`);
+            router.push(`/admin/courses/${course?.slug || courseId}`);
           }
         }}
         title={alertData.title}

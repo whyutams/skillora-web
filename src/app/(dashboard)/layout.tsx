@@ -28,8 +28,121 @@ import {
   Settings,
 } from "lucide-react";
 import { APP_VERSION } from "@/config/app";
+import { BreadcrumbProvider, useBreadcrumb } from "@/context/BreadcrumbContext";
 
-export default function DashboardLayout({
+function formatSlugToTitle(slug: string): string {
+  const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slug);
+  if (isUUID) return "Detail Kursus";
+  return slug
+    .split("-")
+    .filter(Boolean)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+}
+
+function DashboardBreadcrumbs() {
+  const pathname = usePathname();
+  const { customTitle } = useBreadcrumb();
+
+  const dashboardHomeHref = pathname.startsWith("/superadmin")
+    ? "/superadmin/dashboard"
+    : pathname.startsWith("/admin")
+    ? "/admin/dashboard"
+    : "/dashboard";
+
+  const isDashboardHome = pathname === dashboardHomeHref;
+
+  // jika berada tepat di beranda dashboard
+  if (isDashboardHome) {
+    return (
+      <span className="font-semibold text-stone-800 dark:text-stone-200">
+        Dashboard
+      </span>
+    );
+  }
+
+  // untuk halaman selain beranda dashboard posisi pertama selalu dashboard
+  const breadcrumbs: { label: string; href?: string }[] = [
+    { label: "Dashboard", href: dashboardHomeHref },
+  ];
+
+  if (pathname.startsWith("/admin/courses")) {
+    if (pathname === "/admin/courses") {
+      breadcrumbs.push({ label: "Kursus" });
+    } else if (pathname === "/admin/courses/create") {
+      breadcrumbs.push({ label: "Kursus", href: "/admin/courses" });
+      breadcrumbs.push({ label: "Tambah Kursus" });
+    } else if (pathname.includes("/edit")) {
+      const courseSegment = pathname.split("/")[3] || "";
+      const displayTitle = customTitle || formatSlugToTitle(courseSegment);
+      breadcrumbs.push({ label: "Kursus", href: "/admin/courses" });
+      if (courseSegment) {
+        breadcrumbs.push({ label: displayTitle, href: `/admin/courses/${courseSegment}` });
+      }
+      breadcrumbs.push({ label: "Edit Kursus" });
+    } else if (pathname.includes("/topics")) {
+      const courseSegment = pathname.split("/")[3] || "";
+      const displayTitle = customTitle || formatSlugToTitle(courseSegment);
+      breadcrumbs.push({ label: "Kursus", href: "/admin/courses" });
+      if (courseSegment) {
+        breadcrumbs.push({ label: displayTitle, href: `/admin/courses/${courseSegment}` });
+      }
+      breadcrumbs.push({ label: "Kurikulum Kursus" });
+    } else {
+      // halaman detail kursus
+      const courseSegment = pathname.split("/")[3] || "";
+      const displayTitle = customTitle || formatSlugToTitle(courseSegment);
+      breadcrumbs.push({ label: "Kursus", href: "/admin/courses" });
+      breadcrumbs.push({ label: displayTitle });
+    }
+  } else if (pathname.startsWith("/admin/pendaftaran")) {
+    breadcrumbs.push({ label: "Pendaftaran" });
+  } else if (pathname.startsWith("/admin/rekening")) {
+    breadcrumbs.push({ label: "Rekening" });
+  } else if (pathname.startsWith("/superadmin/users")) {
+    if (pathname === "/superadmin/users/create") {
+      breadcrumbs.push({ label: "Users", href: "/superadmin/users" });
+      breadcrumbs.push({ label: "Tambah Pengguna" });
+    } else {
+      breadcrumbs.push({ label: "Users Management" });
+    }
+  } else if (pathname.startsWith("/superadmin/logs")) {
+    breadcrumbs.push({ label: "Activity Logs" });
+  } else if (pathname.startsWith("/superadmin/pengaturan")) {
+    breadcrumbs.push({ label: "Pengaturan Sistem" });
+  } else if (pathname.includes("/profile")) {
+    breadcrumbs.push({ label: "Pengaturan Profil" });
+  } else {
+    breadcrumbs.push({ label: "Halaman" });
+  }
+
+  return (
+    <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-xs text-stone-500">
+      {breadcrumbs.map((item, index) => {
+        const isLast = index === breadcrumbs.length - 1;
+        return (
+          <React.Fragment key={index}>
+            {index > 0 && <span>/</span>}
+            {item.href && !isLast ? (
+              <Link
+                href={item.href}
+                className="hover:text-stone-900 dark:hover:text-stone-100 transition-colors"
+              >
+                {item.label}
+              </Link>
+            ) : (
+              <span className="font-semibold text-stone-800 dark:text-stone-200">
+                {item.label}
+              </span>
+            )}
+          </React.Fragment>
+        );
+      })}
+    </nav>
+  );
+}
+
+function DashboardLayoutContent({
   children,
 }: {
   children: React.ReactNode;
@@ -149,22 +262,22 @@ export default function DashboardLayout({
         {
           label: "Dashboard",
           href: "/superadmin/dashboard",
-          icon: <LayoutDashboard className="w-4 h-4 text-emerald-500" />,
+          icon: LayoutDashboard,
         },
         {
           label: "Users",
           href: "/superadmin/users",
-          icon: <Users className="w-4 h-4 text-blue-500" />,
+          icon: Users,
         },
         {
           label: "Logs",
           href: "/superadmin/logs",
-          icon: <ScrollText className="w-4 h-4 text-amber-500" />,
+          icon: ScrollText,
         },
         {
           label: "Pengaturan",
           href: "/superadmin/pengaturan",
-          icon: <Settings className="w-4 h-4 text-rose-500" />,
+          icon: Settings,
         },
       ];
     }
@@ -174,22 +287,22 @@ export default function DashboardLayout({
         {
           label: "Dashboard",
           href: "/admin/dashboard",
-          icon: <LayoutDashboard className="w-4 h-4 text-emerald-500" />,
+          icon: LayoutDashboard,
         },
         {
           label: "Pendaftaran",
           href: "/admin/pendaftaran",
-          icon: <ShieldCheck className="w-4 h-4 text-purple-500" />,
+          icon: ShieldCheck,
         },
         {
           label: "Kursus",
           href: "/admin/courses",
-          icon: <BookOpen className="w-4 h-4 text-emerald-500" />,
+          icon: BookOpen,
         },
         {
           label: "Rekening",
           href: "/admin/rekening",
-          icon: <CreditCard className="w-4 h-4 text-blue-500" />,
+          icon: CreditCard,
         },
       ];
     }
@@ -199,7 +312,7 @@ export default function DashboardLayout({
       {
         label: "Dashboard",
         href: "/dashboard",
-        icon: <LayoutDashboard className="w-4 h-4 text-emerald-500" />,
+        icon: LayoutDashboard,
       },
     ];
   };
@@ -212,6 +325,8 @@ export default function DashboardLayout({
       : role === USER_ROLES.ADMIN
       ? "/admin/profile"
       : "/profile";
+
+
 
   return (
     <div className="min-h-screen flex bg-[#FAF9F6] dark:bg-[#0C0A09] text-stone-900 dark:text-stone-100">
@@ -248,31 +363,48 @@ export default function DashboardLayout({
             </button>
           </div>
 
-          {/* Navigation Links */}
-          <nav className="p-4 space-y-1.5">
-            <span className="text-[10px] uppercase font-bold tracking-wider text-stone-400 dark:text-stone-500 px-3 block mb-2">
+          {/* tautan navigasi */}
+          <nav className="p-4 space-y-2">
+            <span className="text-[11px] uppercase font-bold tracking-wider text-stone-400 dark:text-stone-500 px-3.5 block mb-2">
               Menu Navigasi
             </span>
 
             {navLinks.map((link) => {
-              const isActive = pathname === link.href;
+              // menu dashboard utama hanya aktif saat berada tepat di rutenya
+              const isDashboardHome =
+                link.href === "/admin/dashboard" ||
+                link.href === "/superadmin/dashboard" ||
+                link.href === "/dashboard";
+
+              // menu lainnya tetap aktif meskipun berada di sub halaman atau detail
+              const isActive = isDashboardHome
+                ? pathname === link.href
+                : pathname === link.href || pathname.startsWith(`${link.href}/`);
+
+              const Icon = link.icon;
 
               return (
                 <Link
                   key={link.href}
                   href={link.href}
                   onClick={() => setIsSidebarOpen(false)}
-                  className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-medium transition-all ${
+                  className={`group flex items-center justify-between px-4 py-3 rounded-xl text-sm transition-all ${
                     isActive
                       ? "bg-[#0F3E2E] text-white shadow-xs font-semibold"
-                      : "text-stone-600 dark:text-stone-400 hover:bg-stone-200/60 dark:hover:bg-stone-900 hover:text-stone-900 dark:hover:text-stone-100"
+                      : "text-stone-600 dark:text-stone-400 hover:bg-stone-200/60 dark:hover:bg-stone-900 hover:text-stone-900 dark:hover:text-stone-100 font-medium"
                   }`}
                 >
-                  <div className="flex items-center gap-2.5">
-                    {link.icon}
+                  <div className="flex items-center gap-3">
+                    <Icon
+                      className={`w-5 h-5 shrink-0 transition-colors ${
+                        isActive
+                          ? "text-white"
+                          : "text-stone-500 dark:text-stone-400 group-hover:text-stone-900 dark:group-hover:text-stone-100"
+                      }`}
+                    />
                     <span>{link.label}</span>
                   </div>
-                  {isActive && <ChevronRight className="w-3.5 h-3.5 opacity-80" />}
+                  {isActive && <ChevronRight className="w-4 h-4 opacity-80 shrink-0" />}
                 </Link>
               );
             })}
@@ -293,31 +425,7 @@ export default function DashboardLayout({
               <Menu className="w-5 h-5" />
             </button>
 
-            <div className="flex items-center gap-2 text-xs text-stone-500">
-              <Link href="/" className="hover:text-stone-900 dark:hover:text-stone-100">
-                Skillora
-              </Link>
-              <span>/</span>
-              <span className="font-semibold text-stone-800 dark:text-stone-200 capitalize">
-                {pathname.includes("/superadmin/pengaturan")
-                  ? "Pengaturan Sistem"
-                  : pathname.includes("/superadmin/logs")
-                  ? "Activity Logs"
-                  : pathname.includes("/superadmin/users")
-                  ? "Users Management"
-                  : pathname.includes("/admin/courses")
-                  ? "Manajemen Kursus"
-                  : pathname.includes("/admin/dashboard")
-                  ? "Pendaftaran"
-                  : pathname.includes("/superadmin/profile") || pathname.includes("/admin/profile")
-                  ? "Pengaturan Profil"
-                  : pathname.includes("/superadmin")
-                  ? "Superadmin"
-                  : pathname.includes("/admin")
-                  ? "Pendaftaran"
-                  : "Dashboard"}
-              </span>
-            </div>
+            <DashboardBreadcrumbs />
           </div>
 
           <div className="flex items-center gap-3">
@@ -466,5 +574,17 @@ export default function DashboardLayout({
         variant="danger"
       />
     </div>
+  );
+}
+
+export default function DashboardLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <BreadcrumbProvider>
+      <DashboardLayoutContent>{children}</DashboardLayoutContent>
+    </BreadcrumbProvider>
   );
 }

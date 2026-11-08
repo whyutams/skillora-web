@@ -87,9 +87,10 @@ export async function POST(request: Request) {
       );
     }
 
-    // Validasi Waktu Pendaftaran Kursus
+    // validasi waktu pendaftaran kursus dan diskon
     let regStart: string | null = null;
     let regEnd: string | null = null;
+    let discountPercent = 0;
 
     if (course.description) {
       const metaMatch = course.description.match(/^<!--meta:(.*?)-->\s*/);
@@ -98,8 +99,11 @@ export async function POST(request: Request) {
           const parsed = JSON.parse(metaMatch[1]);
           regStart = parsed.registration_start || null;
           regEnd = parsed.registration_end || null;
+          if (typeof parsed.discount_percent === "number") {
+            discountPercent = parsed.discount_percent;
+          }
         } catch {
-          // ignore
+          // abaikan error parsing
         }
       }
     }
@@ -135,14 +139,20 @@ export async function POST(request: Request) {
       }
     }
 
-    // Insert pendaftaran baru
+    // jika kursus gratis status otomatis disetujui
+    const rawPrice = Number(course.price || 0);
+    const effectivePrice = discountPercent > 0 ? Math.round(rawPrice * (1 - discountPercent / 100)) : rawPrice;
+    const isFree = effectivePrice <= 0;
+    const initialStatus = isFree ? "approved" : "pending_payment";
+
+    // insert pendaftaran baru
     const { data: enrollment, error: enrollErr } = await supabase
       .from("enrollments")
       .insert({
         user_id: user.id,
         course_id: courseId,
         whatsapp_number: whatsappNumber,
-        status: "pending_payment",
+        status: initialStatus,
       })
       .select()
       .single();
@@ -183,6 +193,10 @@ export async function POST(request: Request) {
     return NextResponse.json({
       success: true,
       enrollment,
+      isAutoApproved: isFree,
+      message: isFree
+        ? "Pendaftaran kursus gratis berhasil dan langsung aktif. Selamat belajar!"
+        : "Pendaftaran berhasil disimpan. Silakan lakukan pembayaran dan unggah bukti transfer.",
     });
   } catch (err: unknown) {
     const errorMessage =

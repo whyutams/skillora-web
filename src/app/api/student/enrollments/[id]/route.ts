@@ -20,30 +20,59 @@ export async function GET(
 
     const adminClient = createAdminClient();
 
-    // 1. Ambil data enrollment berdasarkan id dan user_id
-    const { data: enrollment, error } = await adminClient
-      .from("enrollments")
-      .select(`
+    // 1. ambil data enrollment berdasarkan id pendaftaran atau slug kursus
+    const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+    let enrollment = null;
+    let error = null;
+
+    const enrollmentSelectQuery = `
+      id,
+      user_id,
+      course_id,
+      status,
+      whatsapp_number,
+      created_at,
+      courses (
         id,
-        user_id,
-        course_id,
-        status,
-        whatsapp_number,
-        created_at,
-        courses (
-          id,
-          title,
-          slug,
-          description,
-          price,
-          is_published,
-          whatsapp_group_url,
-          created_at
-        )
-      `)
-      .eq("id", id)
-      .eq("user_id", user.id)
-      .single();
+        title,
+        slug,
+        description,
+        content,
+        image_url,
+        price,
+        is_published,
+        whatsapp_group_url,
+        target_learning,
+        syllabus,
+        created_at
+      )
+    `;
+
+    if (isUUID) {
+      const res = await adminClient
+        .from("enrollments")
+        .select(enrollmentSelectQuery)
+        .eq("id", id)
+        .eq("user_id", user.id)
+        .maybeSingle();
+      enrollment = res.data;
+      error = res.error;
+    } else {
+      // jika parameter berupa slug kursus cari pendaftaran kursus milik pengguna
+      const { data: c } = await adminClient.from("courses").select("id").eq("slug", id).maybeSingle();
+      if (c?.id) {
+        const res = await adminClient
+          .from("enrollments")
+          .select(enrollmentSelectQuery)
+          .eq("course_id", c.id)
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        enrollment = res.data;
+        error = res.error;
+      }
+    }
 
     if (error || !enrollment) {
       return NextResponse.json(

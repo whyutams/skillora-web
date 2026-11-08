@@ -61,7 +61,7 @@ function LoginForm() {
         const lookupData = await lookupRes.json();
         if (!lookupRes.ok || !lookupData.email) {
           // Selalu gunakan pesan umum yang sama
-          throw new Error("Username atau kata sandi salah. Silakan periksa kembali kredensial Anda.");
+          throw new Error("Usernme atau Password salah");
         }
         loginEmail = lookupData.email;
       }
@@ -73,7 +73,7 @@ function LoginForm() {
       });
 
       if (signInError) {
-        throw new Error("Username atau kata sandi salah. Silakan periksa kembali kredensial Anda.");
+        throw new Error("Usernme atau Password salah");
       }
 
       if (data.user) {
@@ -121,7 +121,7 @@ function LoginForm() {
       if (err instanceof Error) {
         setError(err.message);
       } else {
-        setError("Username atau kata sandi salah. Silakan periksa kembali kredensial Anda.");
+        setError("Usernme atau Password salah");
       }
     } finally {
       setIsLoading(false);
@@ -177,12 +177,20 @@ function LoginForm() {
               </div>
 
               <div>
-                <label
-                  htmlFor="password"
-                  className="block text-xs font-semibold text-stone-700 dark:text-stone-300 mb-1.5"
-                >
-                  Kata Sandi <span className="text-rose-500">*</span>
-                </label>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label
+                    htmlFor="password"
+                    className="block text-xs font-semibold text-stone-700 dark:text-stone-300"
+                  >
+                    Kata Sandi <span className="text-rose-500">*</span>
+                  </label>
+                  <Link
+                    href="/forgot-password"
+                    className="text-[11px] font-semibold text-emerald-700 dark:text-emerald-400 hover:underline"
+                  >
+                    Lupa Kata Sandi?
+                  </Link>
+                </div>
                 <div className="relative">
                   <Lock className="w-4 h-4 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2" />
                   <input
@@ -235,7 +243,7 @@ function LoginForm() {
         <p className="text-center text-xs text-stone-500 dark:text-stone-400">
           Belum punya akun?{" "}
           <Link
-            href="/register"
+            href={redirectPath !== "/dashboard" ? `/register?redirect=${encodeURIComponent(redirectPath)}` : "/register"}
             className="font-semibold text-[#0F3E2E] dark:text-emerald-400 hover:underline"
           >
             Daftar Akun Baru

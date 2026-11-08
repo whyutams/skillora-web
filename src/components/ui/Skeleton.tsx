@@ -218,3 +218,456 @@ export function ProfileSkeleton() {
     </div>
   );
 }
+
+// skeleton halaman utama dashboard
+export function DashboardPageSkeleton() {
+  return (
+    <div className="space-y-6 w-full animate-in fade-in duration-150">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-2xl border border-stone-200/80 dark:border-stone-800/80 bg-white/70 dark:bg-stone-900/60">
+        <div className="space-y-2">
+          <Skeleton className="w-48 h-7 rounded-xl" />
+          <Skeleton className="w-72 h-4 rounded-lg" />
+        </div>
+        <div className="flex items-center gap-2">
+          <Skeleton className="w-24 h-9 rounded-xl" />
+          <Skeleton className="w-32 h-9 rounded-xl" />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {[1, 2, 3, 4].map((i) => (
+          <div
+            key={i}
+            className="p-5 rounded-2xl border border-stone-200/80 dark:border-stone-800/80 bg-white/70 dark:bg-stone-900/60 space-y-3"
+          >
+            <div className="flex items-center justify-between">
+              <Skeleton className="w-24 h-4 rounded" />
+              <Skeleton className="w-8 h-8 rounded-xl" />
+            </div>
+            <Skeleton className="w-20 h-7 rounded-lg" />
+            <Skeleton className="w-28 h-3 rounded" />
+          </div>
+        ))}
+      </div>
+
+      <div className="p-6 rounded-2xl border border-stone-200/80 dark:border-stone-800/80 bg-white/70 dark:bg-stone-900/60 space-y-4">
+        <div className="flex items-center justify-between pb-3 border-b border-stone-100 dark:border-stone-800">
+          <Skeleton className="w-36 h-5 rounded-lg" />
+          <Skeleton className="w-24 h-8 rounded-xl" />
+        </div>
+        <div className="space-y-3">
+          {[1, 2, 3, 4, 5].map((i) => (
+            <div key={i} className="flex items-center justify-between py-2.5">
+              <div className="flex items-center gap-3">
+                <Skeleton className="w-10 h-10 rounded-xl" />
+                <div className="space-y-1.5">
+                  <Skeleton className="w-40 h-4 rounded" />
+                  <Skeleton className="w-24 h-3 rounded" />
+                </div>
+              </div>
+              <Skeleton className="w-20 h-6 rounded-full" />
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// skeleton halaman detail kursus admin
+export function AdminCourseDetailSkeleton() {
+  return (
+    <div className="space-y-6 w-full animate-in fade-in duration-150">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-2xl border border-stone-200/80 dark:border-stone-800/80 bg-white/70 dark:bg-stone-900/60">
+        <div className="space-y-3">
+          <Skeleton className="w-36 h-7 rounded-xl" />
+          <div className="flex items-center gap-3">
+            <Skeleton className="w-64 h-8 rounded-xl" />
+            <Skeleton className="w-16 h-6 rounded-full" />
+          </div>
+          <Skeleton className="w-44 h-4 rounded-md" />
+        </div>
+        <div className="flex items-center gap-2">
+          <Skeleton className="w-28 h-9 rounded-xl" />
+          <Skeleton className="w-36 h-9 rounded-xl" />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {[1, 2, 3, 4].map((i) => (
+          <div
+            key={i}
+            className="p-4 rounded-2xl border border-stone-200/80 dark:border-stone-800/80 bg-white/70 dark:bg-stone-900/60 space-y-2"
+          >
+            <div className="flex items-center justify-between">
+              <Skeleton className="w-20 h-3.5 rounded" />
+              <Skeleton className="w-6 h-6 rounded-lg" />
+            </div>
+            <Skeleton className="w-24 h-6 rounded-md" />
+            <Skeleton className="w-28 h-3 rounded" />
+          </div>
+        ))}
+      </div>
+
+      <div className="flex items-center gap-2 border-b border-stone-200/80 dark:border-stone-800/80 pb-3">
+        <Skeleton className="w-32 h-9 rounded-xl" />
+        <Skeleton className="w-28 h-9 rounded-xl" />
+        <Skeleton className="w-28 h-9 rounded-xl" />
+      </div>
+
+      <div className="space-y-4">
+        {[1, 2, 3].map((i) => (
+          <div
+            key={i}
+            className="p-5 rounded-2xl border border-stone-200/80 dark:border-stone-800/80 bg-white/70 dark:bg-stone-900/60 space-y-3"
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Skeleton className="w-8 h-8 rounded-xl" />
+                <div className="space-y-1">
+                  <Skeleton className="w-48 h-5 rounded-md" />
+                  <Skeleton className="w-32 h-3.5 rounded" />
+                </div>
+              </div>
+              <Skeleton className="w-20 h-7 rounded-lg" />
+            </div>
+            <div className="pt-2 border-t border-stone-100 dark:border-stone-800/60 space-y-2">
+              <Skeleton className="w-full h-8 rounded-xl" />
+              <Skeleton className="w-full h-8 rounded-xl" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// skeleton formulir edit atau buat kursus
+export function AdminCourseFormSkeleton() {
+  return (
+    <div className="space-y-6 w-full animate-in fade-in duration-150">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-2xl border border-stone-200/80 dark:border-stone-800/80 bg-white/70 dark:bg-stone-900/60">
+        <div className="flex items-center gap-3">
+          <Skeleton className="w-20 h-8 rounded-xl" />
+          <div className="space-y-1.5">
+            <Skeleton className="w-40 h-6 rounded-lg" />
+            <Skeleton className="w-64 h-3.5 rounded" />
+          </div>
+        </div>
+      </div>
+
+      <div className="p-6 rounded-2xl border border-stone-200/80 dark:border-stone-800/80 bg-white/70 dark:bg-stone-900/60 space-y-6">
+        <div className="space-y-2">
+          <Skeleton className="w-28 h-4 rounded" />
+          <Skeleton className="w-full h-10 rounded-xl" />
+        </div>
+        <div className="space-y-2">
+          <Skeleton className="w-32 h-4 rounded" />
+          <Skeleton className="w-full h-20 rounded-xl" />
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Skeleton className="w-24 h-4 rounded" />
+            <Skeleton className="w-full h-10 rounded-xl" />
+          </div>
+          <div className="space-y-2">
+            <Skeleton className="w-28 h-4 rounded" />
+            <Skeleton className="w-full h-10 rounded-xl" />
+          </div>
+        </div>
+        <div className="space-y-2">
+          <Skeleton className="w-36 h-4 rounded" />
+          <Skeleton className="w-full h-44 rounded-xl" />
+        </div>
+        <div className="flex justify-end gap-3 pt-4 border-t border-stone-100 dark:border-stone-800">
+          <Skeleton className="w-24 h-9 rounded-xl" />
+          <Skeleton className="w-36 h-9 rounded-xl" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// skeleton formulir edit topik
+export function AdminTopicEditSkeleton() {
+  return (
+    <div className="space-y-8 max-w-5xl mx-auto pb-16 animate-in fade-in duration-150">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-stone-200/80 dark:border-stone-800/80">
+        <div className="space-y-2">
+          <Skeleton className="w-40 h-7 rounded-xl" />
+          <Skeleton className="w-64 h-7 rounded-xl" />
+          <Skeleton className="w-48 h-4 rounded" />
+        </div>
+        <div className="flex items-center gap-2">
+          <Skeleton className="w-20 h-8 rounded-xl" />
+          <Skeleton className="w-36 h-8 rounded-xl" />
+        </div>
+      </div>
+
+      <div className="p-6 rounded-2xl border border-stone-200/80 dark:border-stone-800/80 bg-white/70 dark:bg-stone-900/60 space-y-6">
+        <div className="space-y-2">
+          <Skeleton className="w-28 h-4 rounded" />
+          <Skeleton className="w-full h-10 rounded-xl" />
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {[1, 2, 3, 4].map((i) => (
+            <Skeleton key={i} className="h-10 rounded-xl" />
+          ))}
+        </div>
+        <div className="space-y-2">
+          <Skeleton className="w-36 h-4 rounded" />
+          <Skeleton className="w-full h-56 rounded-xl" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// skeleton tabel data admin
+export function DataTableSkeleton({ rows = 6 }: { rows?: number }) {
+  return (
+    <div className="space-y-4 w-full animate-in fade-in duration-150">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-2xl border border-stone-200/80 dark:border-stone-800/80 bg-white/70 dark:bg-stone-900/60">
+        <Skeleton className="w-full sm:w-72 h-9 rounded-xl" />
+        <div className="flex items-center gap-2">
+          <Skeleton className="w-24 h-9 rounded-xl" />
+          <Skeleton className="w-28 h-9 rounded-xl" />
+        </div>
+      </div>
+
+      <div className="rounded-2xl border border-stone-200/80 dark:border-stone-800/80 bg-white/70 dark:bg-stone-900/60 overflow-hidden">
+        <div className="p-4 border-b border-stone-100 dark:border-stone-800/60 flex items-center justify-between">
+          <Skeleton className="w-32 h-4 rounded" />
+          <Skeleton className="w-20 h-4 rounded" />
+        </div>
+        <div className="divide-y divide-stone-100 dark:divide-stone-800/60">
+          {Array.from({ length: rows }).map((_, i) => (
+            <div key={i} className="p-4 flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3 flex-1">
+                <Skeleton className="w-9 h-9 rounded-xl shrink-0" />
+                <div className="space-y-1.5 flex-1">
+                  <Skeleton className="w-48 h-4 rounded" />
+                  <Skeleton className="w-32 h-3 rounded" />
+                </div>
+              </div>
+              <Skeleton className="w-24 h-6 rounded-full shrink-0" />
+              <Skeleton className="w-20 h-8 rounded-xl shrink-0" />
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// skeleton baris tabel
+export function TableRowsSkeleton({ rows = 5, cols = 4 }: { rows?: number; cols?: number }) {
+  return (
+    <div className="divide-y divide-stone-100 dark:divide-stone-800/60 animate-in fade-in duration-150">
+      {Array.from({ length: rows }).map((_, r) => (
+        <div key={r} className="p-4 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3 flex-1">
+            <Skeleton className="w-8 h-8 rounded-xl shrink-0" />
+            <div className="space-y-1.5 flex-1">
+              <Skeleton className="w-48 h-4 rounded" />
+              <Skeleton className="w-32 h-3 rounded" />
+            </div>
+          </div>
+          {cols >= 3 && <Skeleton className="w-24 h-5 rounded-full shrink-0" />}
+          {cols >= 4 && <Skeleton className="w-20 h-7 rounded-lg shrink-0" />}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// skeleton halaman pengaturan sistem
+export function SettingsSkeleton() {
+  return (
+    <div className="space-y-6 animate-in fade-in duration-150">
+      {[1, 2].map((i) => (
+        <div
+          key={i}
+          className="p-6 rounded-2xl border border-stone-200/80 dark:border-stone-800/80 bg-white/70 dark:bg-stone-900/60 space-y-4"
+        >
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-stone-100 dark:border-stone-800">
+            <div className="space-y-2">
+              <Skeleton className="w-56 h-6 rounded-lg" />
+              <Skeleton className="w-72 h-3.5 rounded" />
+            </div>
+            <Skeleton className="w-14 h-8 rounded-full" />
+          </div>
+          <Skeleton className="w-full h-16 rounded-xl" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// skeleton halaman pendaftaran admin
+export function AdminPendaftaranSkeleton() {
+  return (
+    <div className="space-y-8 w-full pb-12 max-w-7xl mx-auto animate-in fade-in duration-150">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-6 sm:p-8 rounded-3xl border border-stone-200/80 dark:border-stone-800/80 bg-white/70 dark:bg-stone-900/60 shadow-xs">
+        <div className="flex items-center gap-4">
+          <Skeleton className="w-14 h-14 rounded-2xl shrink-0" />
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <Skeleton className="w-64 h-7 rounded-xl" />
+              <Skeleton className="w-32 h-6 rounded-full" />
+            </div>
+            <Skeleton className="w-96 max-w-full h-4 rounded-md" />
+          </div>
+        </div>
+        <div className="flex items-center gap-2.5 shrink-0 w-full sm:w-auto">
+          <Skeleton className="w-28 h-9 rounded-xl" />
+          <Skeleton className="w-44 h-9 rounded-xl" />
+        </div>
+      </div>
+
+      <div className="flex items-center justify-between">
+        <div className="space-y-1.5">
+          <Skeleton className="w-72 h-6 rounded-lg" />
+          <Skeleton className="w-96 max-w-full h-3.5 rounded-md" />
+        </div>
+        <Skeleton className="w-48 h-4 rounded" />
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {[1, 2, 3, 4, 5, 6].map((i) => (
+          <div
+            key={i}
+            className="p-6 rounded-3xl border border-stone-200/80 dark:border-stone-800/80 bg-white/70 dark:bg-stone-900/60 space-y-4 shadow-xs"
+          >
+            <div className="flex items-start justify-between gap-2">
+              <Skeleton className="w-3/4 h-5 rounded-md" />
+              <Skeleton className="w-16 h-5 rounded-md" />
+            </div>
+            <Skeleton className="w-48 h-3.5 rounded" />
+            <div className="grid grid-cols-4 gap-2 p-3 rounded-2xl bg-stone-100/70 dark:bg-stone-800/60">
+              {[1, 2, 3, 4].map((c) => (
+                <div key={c} className="space-y-1 text-center">
+                  <Skeleton className="w-8 h-2.5 mx-auto rounded" />
+                  <Skeleton className="w-6 h-4 mx-auto rounded" />
+                </div>
+              ))}
+            </div>
+            <div className="grid grid-cols-2 gap-2 pt-1">
+              <Skeleton className="h-9 rounded-xl" />
+              <Skeleton className="h-9 rounded-xl" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// skeleton halaman katalog kursus admin
+export function AdminCoursesSkeleton() {
+  return (
+    <div className="space-y-8 w-full pb-12 max-w-7xl mx-auto animate-in fade-in duration-150">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-6 sm:p-8 rounded-3xl border border-stone-200/80 dark:border-stone-800/80 bg-white/70 dark:bg-stone-900/60 shadow-xs">
+        <div className="flex items-center gap-4">
+          <Skeleton className="w-14 h-14 rounded-2xl shrink-0" />
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <Skeleton className="w-56 h-7 rounded-xl" />
+              <Skeleton className="w-28 h-6 rounded-full" />
+            </div>
+            <Skeleton className="w-96 max-w-full h-4 rounded-md" />
+          </div>
+        </div>
+        <div className="flex items-center gap-2.5 shrink-0 w-full sm:w-auto">
+          <Skeleton className="w-24 h-9 rounded-xl" />
+          <Skeleton className="w-36 h-9 rounded-xl" />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        {[1, 2, 3, 4].map((i) => (
+          <div
+            key={i}
+            className="p-4 rounded-xl border border-stone-200/80 dark:border-stone-800/80 bg-white/50 dark:bg-stone-900/40 space-y-2"
+          >
+            <Skeleton className="w-24 h-3.5 rounded" />
+            <Skeleton className="w-16 h-7 rounded-md" />
+          </div>
+        ))}
+      </div>
+
+      <div className="rounded-2xl border border-stone-200/80 dark:border-stone-800/80 bg-white/70 dark:bg-stone-900/60 overflow-hidden shadow-xs">
+        <div className="p-5 border-b border-stone-200/80 dark:border-stone-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <Skeleton className="w-48 h-6 rounded-lg" />
+          <div className="flex items-center gap-2">
+            <Skeleton className="w-64 h-9 rounded-xl" />
+            <Skeleton className="w-28 h-9 rounded-xl" />
+          </div>
+        </div>
+        <div className="divide-y divide-stone-100 dark:divide-stone-800/60">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <div key={i} className="p-4 flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3 flex-1">
+                <Skeleton className="w-14 h-10 rounded-lg shrink-0" />
+                <div className="space-y-1.5 flex-1">
+                  <Skeleton className="w-48 h-4 rounded" />
+                  <Skeleton className="w-32 h-3 rounded" />
+                </div>
+              </div>
+              <Skeleton className="w-20 h-4 rounded" />
+              <Skeleton className="w-16 h-6 rounded-full" />
+              <Skeleton className="w-28 h-8 rounded-xl" />
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// skeleton halaman rekening pembayaran admin
+export function AdminRekeningSkeleton() {
+  return (
+    <div className="space-y-6 w-full max-w-5xl mx-auto pb-12 animate-in fade-in duration-150">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-6 rounded-2xl border border-stone-200/80 dark:border-stone-800/80 bg-white/70 dark:bg-stone-900/60">
+        <div className="flex items-center gap-3.5">
+          <Skeleton className="w-12 h-12 rounded-xl shrink-0" />
+          <div className="space-y-1.5">
+            <Skeleton className="w-56 h-7 rounded-xl" />
+            <Skeleton className="w-96 max-w-full h-3.5 rounded-md" />
+          </div>
+        </div>
+        <div className="flex items-center gap-2 shrink-0">
+          <Skeleton className="w-24 h-9 rounded-xl" />
+          <Skeleton className="w-36 h-9 rounded-xl" />
+        </div>
+      </div>
+
+      <Skeleton className="w-full h-12 rounded-xl" />
+
+      <div className="rounded-2xl border border-stone-200/80 dark:border-stone-800/80 bg-white/70 dark:bg-stone-900/60 overflow-hidden">
+        <div className="p-5 border-b border-stone-200/80 dark:border-stone-800/80 flex items-center justify-between">
+          <Skeleton className="w-48 h-5 rounded-md" />
+          <Skeleton className="w-32 h-4 rounded" />
+        </div>
+        <div className="divide-y divide-stone-100 dark:divide-stone-800/60 p-4 space-y-3">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="flex items-center justify-between py-2">
+              <div className="flex items-center gap-3">
+                <Skeleton className="w-10 h-10 rounded-xl" />
+                <div className="space-y-1.5">
+                  <Skeleton className="w-40 h-4 rounded" />
+                  <Skeleton className="w-28 h-3 rounded" />
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <Skeleton className="w-16 h-6 rounded-full" />
+                <Skeleton className="w-16 h-8 rounded-lg" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
