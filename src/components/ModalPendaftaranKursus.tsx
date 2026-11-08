@@ -282,7 +282,7 @@ export function ModalPendaftaranKursus({
                     : hasValidWhatsapp
                     ? whatsappNumber.startsWith("+")
                       ? whatsappNumber
-                      : `+${whatsappNumber}`
+                      : `${whatsappNumber}`
                     : "(Belum Diisi di Profil)"}
                 </span>
               </span>
@@ -293,7 +293,7 @@ export function ModalPendaftaranKursus({
           <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-900 dark:text-amber-200 text-xs flex items-start gap-2.5">
             <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
             <p className="leading-relaxed">
-              <strong>Pemberitahuan:</strong> Pastikan nomor WhatsApp pada profil Anda benar-benar aktif karena akan divalidasi oleh admin untuk konfirmasi verifikasi dan pembagian akses kelas.
+              <strong>Pemberitahuan:</strong> Pastikan nomor WhatsApp pada profil Anda benar-benar aktif.
             </p>
           </div>
 
