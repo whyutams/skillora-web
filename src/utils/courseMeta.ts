@@ -6,6 +6,11 @@ export interface CourseParsedMeta {
   registrationEnd: string | null;
   eventStart: string | null;
   eventEnd: string | null;
+  discountPercent: number;
+  level: string | null;
+  category: string | null;
+  targetLearning: string[] | string | null;
+  syllabus: unknown[] | string | null;
 }
 
 export interface CourseEncodeParams {
@@ -16,6 +21,11 @@ export interface CourseEncodeParams {
   registrationEnd?: string | null;
   eventStart?: string | null;
   eventEnd?: string | null;
+  discountPercent?: number;
+  level?: string | null;
+  category?: string | null;
+  targetLearning?: string[] | string | null;
+  syllabus?: unknown[] | string | null;
 }
 
 export function parseCourseDescription(rawDesc: string | null | undefined): CourseParsedMeta {
@@ -28,10 +38,15 @@ export function parseCourseDescription(rawDesc: string | null | undefined): Cour
       registrationEnd: null,
       eventStart: null,
       eventEnd: null,
+      discountPercent: 0,
+      level: null,
+      category: null,
+      targetLearning: null,
+      syllabus: null,
     };
   }
 
-  // Check JSON meta format <!--meta:...-->
+  // periksa format json meta
   const metaMatch = rawDesc.match(/^<!--meta:(.*?)-->\s*/);
   if (metaMatch) {
     try {
@@ -45,13 +60,18 @@ export function parseCourseDescription(rawDesc: string | null | undefined): Cour
         registrationEnd: parsedMeta.registration_end || null,
         eventStart: parsedMeta.event_start || null,
         eventEnd: parsedMeta.event_end || null,
+        discountPercent: Number(parsedMeta.discount_percent || 0),
+        level: parsedMeta.level || null,
+        category: parsedMeta.category || null,
+        targetLearning: parsedMeta.target_learning || null,
+        syllabus: parsedMeta.syllabus || null,
       };
     } catch {
-      // fallback
+      // pengembalian aman jika json gagal diurai
     }
   }
 
-  // Check legacy <!--image:...--> format
+  // periksa format legacy image
   const imgMatch = rawDesc.match(/^<!--image:(.*?)-->\s*/);
   if (imgMatch) {
     const imgUrl = imgMatch[1];
@@ -64,6 +84,11 @@ export function parseCourseDescription(rawDesc: string | null | undefined): Cour
       registrationEnd: null,
       eventStart: null,
       eventEnd: null,
+      discountPercent: 0,
+      level: null,
+      category: null,
+      targetLearning: null,
+      syllabus: null,
     };
   }
 
@@ -75,6 +100,11 @@ export function parseCourseDescription(rawDesc: string | null | undefined): Cour
     registrationEnd: null,
     eventStart: null,
     eventEnd: null,
+    discountPercent: 0,
+    level: null,
+    category: null,
+    targetLearning: null,
+    syllabus: null,
   };
 }
 
@@ -98,6 +128,21 @@ export function encodeCourseDescription(params: CourseEncodeParams): string {
   }
   if (params.eventEnd && params.eventEnd.trim()) {
     metaObj.event_end = params.eventEnd.trim();
+  }
+  if (params.discountPercent !== undefined && params.discountPercent !== null) {
+    metaObj.discount_percent = params.discountPercent;
+  }
+  if (params.level && params.level.trim()) {
+    metaObj.level = params.level.trim();
+  }
+  if (params.category && params.category.trim()) {
+    metaObj.category = params.category.trim();
+  }
+  if (params.targetLearning) {
+    metaObj.target_learning = params.targetLearning;
+  }
+  if (params.syllabus) {
+    metaObj.syllabus = params.syllabus;
   }
 
   const content = (params.content || "").trim();

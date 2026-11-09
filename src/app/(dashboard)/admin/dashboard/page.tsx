@@ -30,6 +30,7 @@ interface OverviewCourse {
   title: string;
   slug: string;
   price: number;
+  discount_percent?: number;
   is_published: boolean;
   image_url?: string | null;
   enrolled_count?: number;
@@ -50,6 +51,7 @@ interface OverviewEnrollment {
   courses: {
     title: string;
     price: number;
+    discount_percent?: number;
   } | null;
 }
 
@@ -117,7 +119,12 @@ export default function AdminDashboardPage() {
 
   const totalRevenue = enrollments
     .filter((e) => e.status === "approved")
-    .reduce((acc, curr) => acc + (curr.courses?.price || 0), 0);
+    .reduce((acc, curr) => {
+      const p = Number(curr.courses?.price || 0);
+      const d = Number((curr.courses as { discount_percent?: number } | null)?.discount_percent || 0);
+      const finalP = d > 0 && p > 0 ? Math.round(p * (1 - d / 100)) : p;
+      return acc + finalP;
+    }, 0);
 
   const recentEnrollments = enrollments.slice(0, 5);
   const recentCourses = courses.slice(0, 5);
@@ -347,9 +354,35 @@ export default function AdminDashboardPage() {
                       <p className="text-xs font-bold text-stone-900 dark:text-stone-100 truncate">
                         {c.title}
                       </p>
-                      <p className="text-[11px] text-stone-500 dark:text-stone-400">
-                        {c.price > 0 ? `Rp ${c.price.toLocaleString("id-ID")}` : "Gratis"} • {c.enrolled_count || 0} Peserta
-                      </p>
+                      <div className="text-[11px] text-stone-500 dark:text-stone-400 flex items-center gap-1.5 flex-wrap">
+                        {(() => {
+                          const p = Number(c.price || 0);
+                          const d = Number(c.discount_percent || 0);
+                          const hasD = d > 0 && p > 0;
+                          const finalP = hasD ? Math.round(p * (1 - d / 100)) : p;
+
+                          if (hasD) {
+                            return (
+                              <span className="inline-flex items-baseline gap-1">
+                                <span className="font-semibold text-emerald-700 dark:text-emerald-400">
+                                  {finalP === 0 ? "Gratis" : `Rp ${finalP.toLocaleString("id-ID")}`}
+                                </span>
+                                <span className="text-stone-400 line-through">
+                                  Rp {p.toLocaleString("id-ID")}
+                                </span>
+                              </span>
+                            );
+                          }
+
+                          return (
+                            <span>
+                              {p > 0 ? `Rp ${p.toLocaleString("id-ID")}` : "Gratis"}
+                            </span>
+                          );
+                        })()}
+                        <span>•</span>
+                        <span>{c.enrolled_count || 0} Peserta</span>
+                      </div>
                     </div>
 
                     <div className="shrink-0">

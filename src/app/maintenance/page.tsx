@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import Link from "next/link";
 import {
   Wrench,
@@ -10,6 +11,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { createAdminClient } from "@/utils/supabase/server";
+import { recordSiteVisitServer } from "@/utils/visitorTracker";
 
 export const dynamic = "force-dynamic";
 
@@ -53,6 +55,21 @@ async function getMaintenanceData() {
 }
 
 export default async function MaintenancePage() {
+  // catat kunjungan pengunjung saat halaman pemeliharaan dimuat di server
+  try {
+    const headerList = await headers();
+    const cfIp = headerList.get("cf-connecting-ip");
+    const forwarded = headerList.get("x-forwarded-for");
+    const realIp = headerList.get("x-real-ip");
+    const ip = cfIp || (forwarded ? forwarded.split(",")[0].trim() : (realIp || "127.0.0.1"));
+    const userAgent = headerList.get("user-agent") || "unknown";
+    const referer = headerList.get("referer") || null;
+
+    await recordSiteVisitServer(ip, userAgent, referer);
+  } catch {
+    // non blocking jika gagal mencatat
+  }
+
   const { message, estimated_finish } = await getMaintenanceData();
   const adminPhone =
     process.env.NEXT_PUBLIC_ADMIN_WHATSAPP_NUMBER || "6281234567890";

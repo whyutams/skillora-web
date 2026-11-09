@@ -262,7 +262,7 @@ export default function SuperadminUsersPage() {
                             <button
                               type="button"
                               onClick={() => setPreviewImage({ isOpen: true, url: avatarSrc, title: u.full_name || "Pengguna", description: `@${u.username || "-"} • ${u.role}` })}
-                              className="relative w-9 h-9 rounded-xl overflow-hidden shrink-0 border border-stone-200 dark:border-stone-800 group hover:ring-2 hover:ring-blue-500 transition-all cursor-pointer"
+                              className="relative w-9 h-9 rounded-full overflow-hidden shrink-0 border border-stone-200 dark:border-stone-800 group hover:ring-2 hover:ring-blue-500 transition-all cursor-pointer"
                               title="Klik untuk melihat foto profil"
                             >
                               <SmoothImage src={avatarSrc} alt={u.full_name || "Avatar"} className="w-full h-full object-cover group-hover:scale-105 transition-transform" containerClassName="w-full h-full" />

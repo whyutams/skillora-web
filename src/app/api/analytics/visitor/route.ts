@@ -9,21 +9,21 @@ export async function GET() {
     const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
 
-    // 1. Pengunjung Harian (Hari Ini) langsung dari tabel database
+    // pengunjung harian hari ini langsung dari tabel database
     const { count: dbDaily } = await adminClient
       .from("activity_logs")
       .select("*", { count: "exact", head: true })
       .eq("action", "SITE_VISIT")
       .gte("created_at", startOfDay);
 
-    // 2. Pengunjung Bulanan (Bulan Ini) langsung dari tabel database
+    // pengunjung bulanan bulan ini langsung dari tabel database
     const { count: dbMonthly } = await adminClient
       .from("activity_logs")
       .select("*", { count: "exact", head: true })
       .eq("action", "SITE_VISIT")
       .gte("created_at", startOfMonth);
 
-    // 3. Total Keseluruhan Pengunjung langsung dari tabel database
+    // total keseluruhan pengunjung langsung dari tabel database
     const { count: dbTotal } = await adminClient
       .from("activity_logs")
       .select("*", { count: "exact", head: true })
@@ -54,13 +54,15 @@ export async function POST(request: NextRequest) {
     let ip = body.ip;
 
     if (!ip) {
+      const cfIp = request.headers.get("cf-connecting-ip");
       const forwarded = request.headers.get("x-forwarded-for");
-      ip = forwarded ? forwarded.split(",")[0].trim() : "127.0.0.1";
+      const realIp = request.headers.get("x-real-ip");
+      ip = cfIp || (forwarded ? forwarded.split(",")[0].trim() : (realIp || "127.0.0.1"));
     }
 
     const adminClient = createAdminClient();
 
-    // Cek apakah IP ini sudah berkunjung hari ini (mencegah duplikasi log dalam satu hari)
+    // cek apakah ip ini sudah berkunjung hari ini untuk mencegah duplikasi
     const now = new Date();
     const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
@@ -94,7 +96,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Ambil statistik real-time dari tabel
+    // ambil statistik waktu nyata dari tabel log aktivitas
     const { count: dbDaily } = await adminClient
       .from("activity_logs")
       .select("*", { count: "exact", head: true })

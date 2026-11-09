@@ -68,6 +68,7 @@ interface AdminEnrollmentItem {
     registration_end?: string | null;
     event_start?: string | null;
     event_end?: string | null;
+    discount_percent?: number;
   }) | null;
 }
 
@@ -76,6 +77,7 @@ interface CourseWithEnrollments {
   title: string;
   slug: string;
   price: number;
+  discount_percent?: number;
   image_url?: string | null;
   event_start?: string | null;
   event_end?: string | null;
@@ -206,13 +208,15 @@ export default function AdminPendaftaranPage() {
   const coursesGrouped: CourseWithEnrollments[] = React.useMemo(() => {
     const map = new Map<string, CourseWithEnrollments>();
 
-    // Masukkan semua kursus yang terdaftar
+    // masukkan semua kursus yang terdaftar
     coursesList.forEach((c) => {
+      const discountVal = (c as Course & { discount_percent?: number }).discount_percent || 0;
       map.set(c.id, {
         id: c.id,
         title: c.title,
         slug: c.slug,
         price: c.price,
+        discount_percent: discountVal,
         image_url: c.image_url,
         event_start: c.event_start,
         event_end: c.event_end,
@@ -226,7 +230,7 @@ export default function AdminPendaftaranPage() {
       });
     });
 
-    // Petakan setiap pendaftaran ke kursusnya
+    // petakan setiap pendaftaran ke kursusnya
     enrollments.forEach((item) => {
       const courseId = item.course_id;
       if (!map.has(courseId)) {
@@ -235,6 +239,7 @@ export default function AdminPendaftaranPage() {
           title: item.courses?.title || "Kursus Tidak Diketahui",
           slug: item.courses?.slug || "",
           price: item.courses?.price || 0,
+          discount_percent: item.courses?.discount_percent || 0,
           image_url: item.courses?.image_url,
           event_start: item.courses?.event_start,
           event_end: item.courses?.event_end,
@@ -246,6 +251,11 @@ export default function AdminPendaftaranPage() {
           rejected: 0,
           enrollments: [],
         });
+      } else {
+        const entry = map.get(courseId)!;
+        if (!entry.discount_percent && item.courses?.discount_percent) {
+          entry.discount_percent = item.courses.discount_percent;
+        }
       }
 
       const entry = map.get(courseId)!;
@@ -471,6 +481,12 @@ export default function AdminPendaftaranPage() {
 
         const certStatus = item.certificate_url ? "Sudah Diupload" : "Belum";
 
+        const rawPrice = Number(course?.price || 0);
+        const discountPercent = Number(course?.discount_percent || 0);
+        const finalPrice = discountPercent > 0 && rawPrice > 0
+          ? Math.round(rawPrice * (1 - discountPercent / 100))
+          : rawPrice;
+
         return {
           "No": index + 1,
           "Nama Lengkap": student?.full_name || "-",
@@ -478,7 +494,7 @@ export default function AdminPendaftaranPage() {
           "Asal Kampus": student?.school_origin || "-",
           "No WhatsApp": item.whatsapp_number || "-",
           "Kursus": course?.title || "-",
-          "Harga Kursus (Rp)": Number(course?.price || 0),
+          "Harga Kursus (Rp)": finalPrice,
           "Tanggal Pendaftaran": new Date(item.created_at).toLocaleDateString("id-ID"),
           "Status Pembayaran": statusIndo,
           "Link Bukti Transfer": item.payment_proof_url || "-",
@@ -664,9 +680,36 @@ export default function AdminPendaftaranPage() {
                       <CardTitle className="text-base font-bold text-stone-900 dark:text-stone-100 group-hover:text-emerald-700 dark:group-hover:text-emerald-400 transition-colors">
                         {cg.title}
                       </CardTitle>
-                      <span className="text-xs font-bold px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 shrink-0">
-                        {cg.price > 0 ? `Rp ${cg.price.toLocaleString("id-ID")}` : "Gratis"}
-                      </span>
+                      {(() => {
+                        const priceNum = Number(cg.price || 0);
+                        const discountPercent = Number(cg.discount_percent || 0);
+                        const hasDiscount = discountPercent > 0 && priceNum > 0;
+                        const finalPrice = hasDiscount
+                          ? Math.round(priceNum * (1 - discountPercent / 100))
+                          : priceNum;
+
+                        if (hasDiscount) {
+                          return (
+                            <div className="flex items-baseline gap-1.5 flex-wrap shrink-0 justify-end">
+                              <span className="text-xs font-bold px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-800 dark:text-emerald-300">
+                                {finalPrice === 0 ? "Gratis" : `Rp ${finalPrice.toLocaleString("id-ID")}`}
+                              </span>
+                              <span className="text-[11px] text-stone-400 dark:text-stone-500 font-normal">
+                                /
+                              </span>
+                              <span className="text-[11px] text-stone-400 dark:text-stone-500 line-through font-normal">
+                                Rp {priceNum.toLocaleString("id-ID")}
+                              </span>
+                            </div>
+                          );
+                        }
+
+                        return (
+                          <span className="text-xs font-bold px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 shrink-0">
+                            {priceNum > 0 ? `Rp ${priceNum.toLocaleString("id-ID")}` : "Gratis"}
+                          </span>
+                        );
+                      })()}
                     </div>
 
                     {/* Pelaksanaan Dates */}
@@ -760,11 +803,47 @@ export default function AdminPendaftaranPage() {
                     : `Peserta Kursus: ${selectedCourseGroup?.title}`}
                 </h2>
                 {selectedCourseGroup && (
-                  <p className="text-xs text-stone-500">
-                    Jadwal: {formatDateIndo(selectedCourseGroup.event_start)} &ndash;{" "}
-                    {formatDateIndo(selectedCourseGroup.event_end)} • Total Peserta:{" "}
-                    <strong>{selectedCourseGroup.total}</strong>
-                  </p>
+                  <div className="flex items-center gap-2 flex-wrap text-xs text-stone-500 dark:text-stone-400 mt-1">
+                    <span>
+                      Jadwal: {formatDateIndo(selectedCourseGroup.event_start)} &ndash;{" "}
+                      {formatDateIndo(selectedCourseGroup.event_end)}
+                    </span>
+                    <span>•</span>
+                    <span>
+                      Total Peserta: <strong>{selectedCourseGroup.total}</strong>
+                    </span>
+                    <span>•</span>
+                    <span>
+                      Biaya:{" "}
+                      {(() => {
+                        const priceNum = Number(selectedCourseGroup.price || 0);
+                        const discountPercent = Number(selectedCourseGroup.discount_percent || 0);
+                        const hasDiscount = discountPercent > 0 && priceNum > 0;
+                        const finalPrice = hasDiscount
+                          ? Math.round(priceNum * (1 - discountPercent / 100))
+                          : priceNum;
+
+                        if (hasDiscount) {
+                          return (
+                            <span className="inline-flex items-baseline gap-1">
+                              <strong className="text-emerald-700 dark:text-emerald-400">
+                                {finalPrice === 0 ? "Gratis" : `Rp ${finalPrice.toLocaleString("id-ID")}`}
+                              </strong>
+                              <span className="text-[10px] text-stone-400 line-through">
+                                Rp {priceNum.toLocaleString("id-ID")}
+                              </span>
+                            </span>
+                          );
+                        }
+
+                        return (
+                          <strong className="text-emerald-700 dark:text-emerald-400">
+                            {priceNum > 0 ? `Rp ${priceNum.toLocaleString("id-ID")}` : "Gratis"}
+                          </strong>
+                        );
+                      })()}
+                    </span>
+                  </div>
                 )}
               </div>
             </div>

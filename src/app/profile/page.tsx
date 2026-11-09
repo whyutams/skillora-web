@@ -293,7 +293,7 @@ export default function ProfilePage() {
         <Card className="p-6 text-center space-y-5 h-fit">
           <div className="relative inline-block mx-auto">
             {avatarUrl ? (
-              <div className="w-28 h-28 mx-auto rounded-2xl overflow-hidden border-2 border-emerald-500/40 shadow-sm">
+              <div className="w-28 h-28 mx-auto rounded-full overflow-hidden border-2 border-emerald-500/40 shadow-sm">
                 <SmoothImage
                   src={avatarUrl}
                   alt="Foto Profil"
@@ -301,7 +301,7 @@ export default function ProfilePage() {
                 />
               </div>
             ) : (
-              <div className="w-28 h-28 rounded-2xl bg-[#0F3E2E] text-emerald-300 flex items-center justify-center font-extrabold text-3xl mx-auto shadow-sm border border-emerald-600/30">
+              <div className="w-28 h-28 rounded-full bg-[#0F3E2E] text-emerald-300 flex items-center justify-center font-extrabold text-3xl mx-auto shadow-sm border border-emerald-600/30">
                 {fullName ? fullName.charAt(0).toUpperCase() : "U"}
               </div>
             )}
@@ -311,7 +311,7 @@ export default function ProfilePage() {
               onClick={() => fileInputRef.current?.click()}
               disabled={uploadingAvatar}
               aria-label="Ubah Foto Profil"
-              className="absolute -bottom-2 -right-2 p-2 rounded-xl bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 shadow-md text-stone-700 dark:text-stone-300 hover:text-emerald-600 dark:hover:text-emerald-400 transition-transform active:scale-95"
+              className="absolute bottom-0 right-0 p-2 rounded-full bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 shadow-md text-stone-700 dark:text-stone-300 hover:text-emerald-600 dark:hover:text-emerald-400 transition-transform active:scale-95"
             >
               {uploadingAvatar ? (
                 <Loader2 className="w-4 h-4 animate-spin text-emerald-600" />

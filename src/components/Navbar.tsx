@@ -339,7 +339,7 @@ export function Navbar() {
                   aria-haspopup="true"
                 >
                   {avatarUrl ? (
-                    <div className="w-7 h-7 rounded-lg overflow-hidden border border-emerald-500/30 shrink-0">
+                    <div className="w-7 h-7 rounded-full overflow-hidden border border-emerald-500/30 shrink-0">
                       <SmoothImage
                         src={avatarUrl}
                         alt="Avatar"
@@ -347,7 +347,7 @@ export function Navbar() {
                       />
                     </div>
                   ) : (
-                    <div className="w-7 h-7 rounded-lg bg-[#0F3E2E] text-emerald-300 font-bold text-xs flex items-center justify-center">
+                    <div className="w-7 h-7 rounded-full bg-[#0F3E2E] text-emerald-300 font-bold text-xs flex items-center justify-center">
                       {fullName ? fullName.charAt(0).toUpperCase() : "U"}
                     </div>
                   )}
@@ -372,7 +372,7 @@ export function Navbar() {
                     {/* Header Profil */}
                     <div className="p-3 rounded-xl bg-stone-50 dark:bg-stone-900/70 border border-stone-100 dark:border-stone-800 mb-2 flex items-start gap-3">
                       {avatarUrl ? (
-                        <div className="w-10 h-10 rounded-xl overflow-hidden border border-emerald-500/30 shrink-0 mt-0.5">
+                        <div className="w-10 h-10 rounded-full overflow-hidden border border-emerald-500/30 shrink-0 mt-0.5">
                           <SmoothImage
                             src={avatarUrl}
                             alt="Foto Profil"
@@ -380,7 +380,7 @@ export function Navbar() {
                           />
                         </div>
                       ) : (
-                        <div className="w-10 h-10 rounded-xl bg-[#0F3E2E] text-emerald-300 font-extrabold text-sm flex items-center justify-center shrink-0 mt-0.5">
+                        <div className="w-10 h-10 rounded-full bg-[#0F3E2E] text-emerald-300 font-extrabold text-sm flex items-center justify-center shrink-0 mt-0.5">
                           {fullName ? fullName.charAt(0).toUpperCase() : "U"}
                         </div>
                       )}
@@ -549,7 +549,7 @@ export function Navbar() {
                 <>
                   <div className="p-3 rounded-xl bg-stone-100 dark:bg-stone-900 flex items-center gap-3">
                     {avatarUrl ? (
-                      <div className="w-10 h-10 rounded-xl overflow-hidden shrink-0">
+                      <div className="w-10 h-10 rounded-full overflow-hidden shrink-0">
                         <SmoothImage
                           src={avatarUrl}
                           alt="Avatar"
@@ -557,7 +557,7 @@ export function Navbar() {
                         />
                       </div>
                     ) : (
-                      <div className="w-10 h-10 rounded-xl bg-[#0F3E2E] text-emerald-300 font-bold text-xs flex items-center justify-center shrink-0">
+                      <div className="w-10 h-10 rounded-full bg-[#0F3E2E] text-emerald-300 font-bold text-xs flex items-center justify-center shrink-0">
                         {fullName ? fullName.charAt(0).toUpperCase() : "U"}
                       </div>
                     )}

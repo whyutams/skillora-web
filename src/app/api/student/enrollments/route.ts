@@ -16,7 +16,7 @@ export async function GET() {
 
     const adminClient = createAdminClient();
 
-    // Ambil data profil
+    // ambil data profil
     const { data: profile } = await adminClient
       .from("profiles")
       .select("*")
@@ -51,7 +51,7 @@ export async function GET() {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    // Parse metadata untuk setiap enrollment dan course
+    // parse metadata untuk setiap enrollment dan course
     const formattedEnrollments = (enrollmentsData || []).map((item) => {
       const parsedMeta = parseEnrollmentMeta(item.whatsapp_number);
 
@@ -65,11 +65,16 @@ export async function GET() {
           ...rawCourse,
           description: courseParsed.description || rawCourse.description,
           content: courseParsed.content,
-          image_url: courseParsed.imageUrl,
+          image_url: courseParsed.imageUrl || rawCourse.image_url,
           registration_start: courseParsed.registrationStart,
           registration_end: courseParsed.registrationEnd,
           event_start: courseParsed.eventStart,
           event_end: courseParsed.eventEnd,
+          discount_percent: rawCourse.discount_percent ?? courseParsed.discountPercent ?? 0,
+          level: rawCourse.level || courseParsed.level || "Tingkat Pemula",
+          category: rawCourse.category || courseParsed.category || "Kursus Mandiri",
+          target_learning: rawCourse.target_learning || courseParsed.targetLearning || null,
+          syllabus: rawCourse.syllabus || courseParsed.syllabus || null,
         };
       }
 
@@ -101,7 +106,7 @@ export async function GET() {
   }
 }
 
-// POST: Unggah / kirim bukti transfer pembayaran
+// post -  unggah / kirim bukti transfer pembayaran
 export async function POST(request: Request) {
   try {
     const supabase = await createClient();
@@ -125,7 +130,7 @@ export async function POST(request: Request) {
 
     const adminClient = createAdminClient();
 
-    // Verifikasi enrollment milik user
+    // verifikasi enrollment milik user
     const { data: enrollment, error: fetchErr } = await adminClient
       .from("enrollments")
       .select("id, user_id, whatsapp_number, status")
@@ -143,13 +148,13 @@ export async function POST(request: Request) {
     const updatedWhatsapp = encodeEnrollmentMeta(parsed.phone, {
       ...parsed,
       payment_proof_url: payment_proof_url.trim(),
-      rejection_reason: null, // Reset alasan penolakan saat upload ulang
+      rejection_reason: null, // reset alasan penolakan saat upload ulang
     });
 
     const { error: updateErr } = await adminClient
       .from("enrollments")
       .update({
-        status: "pending_payment", // Reset status menjadi pending_payment agar admin dapat meninjau kembali
+        status: "pending_payment", // reset status menjadi pending_payment agar admin dapat meninjau kembali
         whatsapp_number: updatedWhatsapp,
       })
       .eq("id", enrollmentId);
@@ -158,7 +163,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: updateErr.message }, { status: 500 });
     }
 
-    // Catat activity log
+    // catat activity log
     try {
       await adminClient.from("activity_logs").insert({
         user_id: user.id,
@@ -186,7 +191,7 @@ export async function POST(request: Request) {
   }
 }
 
-// PATCH: Kirim ulasan dan rating kursus oleh peserta (setelah tanggal pelaksanaan kursus selesai)
+// patch -  kirim ulasan dan rating kursus oleh peserta (setelah tanggal pelaksanaan kursus selesai)
 export async function PATCH(request: Request) {
   try {
     const supabase = await createClient();
@@ -218,7 +223,7 @@ export async function PATCH(request: Request) {
 
     const adminClient = createAdminClient();
 
-    // Verifikasi enrollment milik user
+    // verifikasi enrollment milik user
     const { data: enrollment, error: fetchErr } = await adminClient
       .from("enrollments")
       .select(`
@@ -249,14 +254,14 @@ export async function PATCH(request: Request) {
       );
     }
 
-    // Periksa apakah kursus sudah selesai pelaksanaan (event_end)
+    // periksa apakah kursus sudah selesai pelaksanaan (event_end)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const rawCourse = enrollment.courses as any;
     if (rawCourse?.description) {
       const parsedCourse = parseCourseDescription(rawCourse.description);
       if (parsedCourse.eventEnd) {
         const eventEndDate = new Date(parsedCourse.eventEnd);
-        // Validasi jika saat ini belum melewati tanggal pelaksanaan
+        // validasi jika saat ini belum melewati tanggal pelaksanaan
         if (new Date() < eventEndDate) {
           return NextResponse.json(
             {
@@ -287,7 +292,7 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: updateErr.message }, { status: 500 });
     }
 
-    // Catat activity log
+    // catat activity log
     try {
       await adminClient.from("activity_logs").insert({
         user_id: user.id,

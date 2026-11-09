@@ -50,6 +50,7 @@ export async function middleware(request: NextRequest) {
   const isMaintenancePath = pathname.startsWith("/maintenance");
   const isExcludedApi =
     pathname.startsWith("/api/auth") ||
+    pathname.startsWith("/api/analytics") ||
     pathname.startsWith("/api/system/maintenance") ||
     pathname.startsWith("/api/superadmin/settings");
 

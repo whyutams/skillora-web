@@ -14,9 +14,10 @@ export function SectionStatistikPengunjung() {
   React.useEffect(() => {
     async function trackVisitor() {
       try {
-        const storedIp = localStorage.getItem("skillora_visitor_ip");
+        const todayKey = `skillora_visitor_${new Date().toISOString().slice(0, 10)}`;
+        const alreadyTrackedToday = localStorage.getItem(todayKey);
 
-        if (storedIp) {
+        if (alreadyTrackedToday) {
           const res = await fetch("/api/analytics/visitor");
           const data = await res.json();
           if (typeof data.dailyVisitors === "number") setDailyCount(data.dailyVisitors);
@@ -25,32 +26,29 @@ export function SectionStatistikPengunjung() {
           return;
         }
 
-        // cek ip pengunjung untuk mencegah duplikasi
-        const ipRes = await fetch("https://api.ipify.org/?format=json");
-        const ipData = await ipRes.json();
-        const clientIp = ipData?.ip;
+        // catat kunjungan baru hari ini ke server
+        const apiRes = await fetch("/api/analytics/visitor", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({}),
+        });
 
-        if (clientIp) {
-          localStorage.setItem("skillora_visitor_ip", clientIp);
-
-          const apiRes = await fetch("/api/analytics/visitor", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ ip: clientIp }),
-          });
-
-          if (apiRes.ok) {
-            const contentType = apiRes.headers.get("content-type");
-            if (contentType && contentType.includes("application/json")) {
-              const apiData = await apiRes.json();
-              if (typeof apiData.dailyVisitors === "number") setDailyCount(apiData.dailyVisitors);
-              if (typeof apiData.monthlyVisitors === "number") setMonthlyCount(apiData.monthlyVisitors);
-              if (typeof apiData.totalVisitors === "number") setTotalCount(apiData.totalVisitors);
-            }
+        if (apiRes.ok) {
+          try {
+            localStorage.setItem(todayKey, "1");
+          } catch {
+            // abaikan
+          }
+          const contentType = apiRes.headers.get("content-type");
+          if (contentType && contentType.includes("application/json")) {
+            const apiData = await apiRes.json();
+            if (typeof apiData.dailyVisitors === "number") setDailyCount(apiData.dailyVisitors);
+            if (typeof apiData.monthlyVisitors === "number") setMonthlyCount(apiData.monthlyVisitors);
+            if (typeof apiData.totalVisitors === "number") setTotalCount(apiData.totalVisitors);
           }
         }
       } catch (err) {
-        console.error("Error tracking visitor stats:", err);
+        console.error("gagal memperbarui statistik pengunjung", err);
       } finally {
         setLoading(false);
       }

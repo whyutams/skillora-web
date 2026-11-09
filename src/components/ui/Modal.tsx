@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 
 interface ModalProps {
@@ -20,6 +21,12 @@ export function Modal({
   children,
   maxWidth = "md",
 }: ModalProps) {
+  const [mounted, setMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
@@ -34,7 +41,7 @@ export function Modal({
     };
   }, [isOpen, onClose]);
 
-  if (!isOpen) return null;
+  if (!isOpen || !mounted) return null;
 
   const maxWidthStyles = {
     sm: "max-w-sm",
@@ -46,20 +53,20 @@ export function Modal({
     "4xl": "max-w-4xl",
   }[maxWidth];
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
-      {/* Backdrop */}
+  const modalElement = (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6">
+      {/* latar belakang gelap penuh layar */}
       <div
         onClick={onClose}
-        className="fixed inset-0 bg-stone-950/60 backdrop-blur-sm transition-opacity duration-200"
+        className="fixed inset-0 bg-stone-950/70 backdrop-blur-sm transition-opacity duration-200"
       />
 
-      {/* Dialog box */}
+      {/* kotak dialog modal */}
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="modal-title"
-        className={`relative w-full ${maxWidthStyles} rounded-xl border border-stone-200 dark:border-stone-800 bg-[#FAF9F6] dark:bg-[#0C0A09] text-stone-900 dark:text-stone-100 shadow-xl overflow-hidden transition-all duration-200 animate-in fade-in-0 zoom-in-95`}
+        className={`relative z-10 w-full ${maxWidthStyles} rounded-xl border border-stone-200 dark:border-stone-800 bg-[#FAF9F6] dark:bg-[#0C0A09] text-stone-900 dark:text-stone-100 shadow-xl overflow-hidden transition-all duration-200 animate-in fade-in-0 zoom-in-95`}
       >
         <div className="flex items-center justify-between p-5 border-b border-stone-200/80 dark:border-stone-800/80">
           <div>
@@ -86,4 +93,6 @@ export function Modal({
       </div>
     </div>
   );
+
+  return createPortal(modalElement, document.body);
 }

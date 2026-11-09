@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import {
   GraduationCap,
@@ -59,6 +60,12 @@ export interface StudentEnrollmentItem {
     registration_end?: string | null;
     event_start?: string | null;
     event_end?: string | null;
+    participant_count?: number;
+    discount_percent?: number;
+    level?: string | null;
+    category?: string | null;
+    target_learning?: string[] | string | null;
+    syllabus?: unknown[] | string | null;
   }) | null;
 }
 
@@ -76,7 +83,7 @@ export function DashboardPesertaClient() {
   const [loading, setLoading] = React.useState(true);
   const [activeTab, setActiveTab] = React.useState<"all" | "approved" | "pending_payment" | "rejected">("all");
 
-  // Modal Upload Bukti Transfer
+  // modal upload bukti transfer
   const [isProofModalOpen, setIsProofModalOpen] = React.useState(false);
   const [selectedEnrollmentForProof, setSelectedEnrollmentForProof] = React.useState<StudentEnrollmentItem | null>(null);
   const [proofFile, setProofFile] = React.useState<File | null>(null);
@@ -85,7 +92,7 @@ export function DashboardPesertaClient() {
   const [proofError, setProofError] = React.useState<string | null>(null);
   const [paymentAccounts, setPaymentAccounts] = React.useState<PaymentAccount[]>([]);
 
-  // Modal Review & Rating
+  // modal review & rating
   const [isReviewModalOpen, setIsReviewModalOpen] = React.useState(false);
   const [selectedEnrollmentForReview, setSelectedEnrollmentForReview] = React.useState<StudentEnrollmentItem | null>(null);
   const [ratingValue, setRatingValue] = React.useState<number>(5);
@@ -94,8 +101,27 @@ export function DashboardPesertaClient() {
   const [isSubmittingReview, setIsSubmittingReview] = React.useState(false);
   const [reviewError, setReviewError] = React.useState<string | null>(null);
 
-  // Preview gambar bukti
+  // preview gambar bukti
   const [previewImageUrl, setPreviewImageUrl] = React.useState<string | null>(null);
+
+  // status mount komponen peramban
+  const [mounted, setMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // kunci scroll halaman saat modal aktif
+  React.useEffect(() => {
+    if (isProofModalOpen || isReviewModalOpen || previewImageUrl) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [isProofModalOpen, isReviewModalOpen, previewImageUrl]);
 
   const adminPhone = process.env.NEXT_PUBLIC_ADMIN_WHATSAPP_NUMBER || "6281234567890";
 
@@ -117,7 +143,7 @@ export function DashboardPesertaClient() {
 
   React.useEffect(() => { fetchStudentData(); }, [fetchStudentData]);
 
-  // Fetch rekening pembayaran saat modal proof dibuka
+  // fetch rekening pembayaran saat modal proof dibuka
   const fetchPaymentAccounts = React.useCallback(async () => {
     try {
       const res = await fetch("/api/admin/payment-accounts");
@@ -126,7 +152,7 @@ export function DashboardPesertaClient() {
     } catch { /* silent */ }
   }, []);
 
-  // Handler Upload Bukti Transfer
+  // handler upload bukti transfer
   const handleOpenProofModal = (item: StudentEnrollmentItem) => {
     setSelectedEnrollmentForProof(item);
     setProofFile(null);
@@ -180,7 +206,7 @@ export function DashboardPesertaClient() {
     }
   };
 
-  // Handler Review
+  // handler review
   const handleOpenReviewModal = (item: StudentEnrollmentItem) => {
     setSelectedEnrollmentForReview(item);
     setRatingValue(item.review_rating || 5);
@@ -228,7 +254,7 @@ export function DashboardPesertaClient() {
   const countPending = enrollments.filter((e) => e.status === "pending_payment").length;
   const countRejected = enrollments.filter((e) => e.status === "rejected").length;
 
-  // Helper: timeline strip untuk card
+  // helper -  timeline strip untuk card
   const TimelineStrip = ({ item }: { item: StudentEnrollmentItem }) => {
     const course = item.course;
     const hasReg = course?.registration_start || course?.registration_end;
@@ -302,20 +328,8 @@ export function DashboardPesertaClient() {
               )}
             </div>
             <p className="text-xs sm:text-sm text-stone-500 dark:text-stone-400">
-              Selamat datang di Kursus Saya. Kelola pendaftaran, bukti pembayaran, grup kelas, dan e-sertifikat Anda.
+              Selamat datang di Kursus Saya. 
             </p>
-            <div className="flex flex-wrap items-center gap-4 text-xs text-stone-600 dark:text-stone-400 pt-1 font-medium">
-              {profile?.school_origin && (
-                <span className="flex items-center gap-1.5">
-                  <Building2 className="w-3.5 h-3.5 text-stone-400" />{profile.school_origin}
-                </span>
-              )}
-              {profile?.whatsapp_number && profile.whatsapp_number !== "-" && (
-                <span className="flex items-center gap-1.5 text-emerald-700 dark:text-emerald-400">
-                  <Phone className="w-3.5 h-3.5" />+{profile.whatsapp_number}
-                </span>
-              )}
-            </div>
           </div>
         </div>
         <div className="flex items-center gap-3 shrink-0 w-full md:w-auto">
@@ -331,7 +345,7 @@ export function DashboardPesertaClient() {
         </div>
       </div>
 
-      {/* Metric Quick Stats */}
+      {/* metric quick stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="p-5 rounded-2xl border border-stone-200/80 dark:border-stone-800/80 bg-white/60 dark:bg-stone-900/40 backdrop-blur-sm">
           <span className="text-xs font-semibold text-stone-500 dark:text-stone-400 block">Total Didaftarkan</span>
@@ -363,7 +377,7 @@ export function DashboardPesertaClient() {
         </div>
       </div>
 
-      {/* Filter Tabs */}
+      {/* filter tabs */}
       <div className="flex items-center gap-2 overflow-x-auto pb-1 border-b border-stone-200 dark:border-stone-800">
         {[
           { tab: "all", label: `Semua (${enrollments.length})`, active: "bg-[#0F3E2E] text-white" },
@@ -383,7 +397,7 @@ export function DashboardPesertaClient() {
         ))}
       </div>
 
-      {/* Daftar Kursus — Card Compact */}
+      {/* daftar kursus — card compact */}
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <EnrollmentCardSkeleton /><EnrollmentCardSkeleton />
@@ -415,6 +429,12 @@ export function DashboardPesertaClient() {
             const isPending = item.status === "pending_payment";
             const isRejected = item.status === "rejected";
             const finished = isCourseFinished(course);
+            const priceNum = Number(course?.price || 0);
+            const discountPercent = Number(course?.discount_percent || 0);
+            const hasDiscount = discountPercent > 0 && priceNum > 0;
+            const finalPrice = hasDiscount
+              ? Math.round(priceNum * (1 - discountPercent / 100))
+              : priceNum;
 
             return (
               <Card
@@ -422,7 +442,30 @@ export function DashboardPesertaClient() {
                 className="flex flex-col border-stone-200/90 dark:border-stone-800/90 hover:border-stone-300 dark:hover:border-stone-700 transition-all shadow-sm overflow-hidden"
               >
                 <CardHeader className="pb-3 space-y-3">
-                  {/* Status + Judul */}
+                  {/* kategori tingkat dan harga diskon */}
+                  <div className="flex items-center justify-between gap-2 flex-wrap">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-300">
+                        {course?.category || "Kursus Mandiri"}
+                      </span>
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-300">
+                        {course?.level || "Tingkat Pemula"}
+                      </span>
+                    </div>
+
+                    <div className="flex items-baseline gap-1.5 ml-auto">
+                      <span className="text-xs font-black text-[#0F3E2E] dark:text-emerald-400">
+                        {finalPrice === 0 ? "Gratis" : `Rp ${finalPrice.toLocaleString("id-ID")}`}
+                      </span>
+                      {hasDiscount && (
+                        <span className="text-[10px] text-stone-400 line-through">
+                          Rp {priceNum.toLocaleString("id-ID")}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* status dan judul */}
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex-1 min-w-0">
                       <CardTitle className="text-base font-bold leading-snug line-clamp-1">{course?.title || "Kursus Skillora"}</CardTitle>
@@ -433,17 +476,17 @@ export function DashboardPesertaClient() {
                     {isRejected && <Badge variant="rejected" className="shrink-0 gap-1 py-1 px-2"><AlertCircle className="w-3 h-3 text-rose-600" />Ditolak</Badge>}
                   </div>
 
-                  {/* Deskripsi singkat */}
+                  {/* deskripsi singkat */}
                   {course?.description && (
                     <CardDescription className="text-xs leading-relaxed line-clamp-2">{course.description}</CardDescription>
                   )}
 
-                  {/* Timeline Strip */}
+                  {/* timeline strip */}
                   <TimelineStrip item={item} />
                 </CardHeader>
 
                 <CardContent className="pt-0 pb-4 space-y-3">
-                  {/* Status khusus rejected — singkat */}
+                  {/* status khusus rejected — singkat */}
                   {isRejected && item.rejection_reason && (
                     <div className="p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-xs text-rose-800 dark:text-rose-300 flex items-start gap-1.5">
                       <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5 text-rose-500" />
@@ -451,7 +494,7 @@ export function DashboardPesertaClient() {
                     </div>
                   )}
 
-                  {/* Upload Bukti Pembayaran (semua status, kecuali approved yg sudah oke) */}
+                  {/* upload bukti pembayaran (semua status, kecuali approved yg sudah oke) */}
                   {!isApproved && (
                     <div className="flex items-center justify-between gap-2 p-2.5 rounded-xl bg-stone-50 dark:bg-stone-800/50 border border-stone-200/60 dark:border-stone-700/60">
                       <div className="flex items-center gap-2 text-xs">
@@ -477,7 +520,7 @@ export function DashboardPesertaClient() {
                     </div>
                   )}
 
-                  {/* Tombol Lihat Detail + Tombol Gabung Grup (approved) */}
+                  {/* tombol lihat detail + tombol gabung grup (approved) */}
                   <div className="flex items-center gap-2">
                     <Link href={`/kursus-saya/${item.course?.slug || item.id}`} className="flex-1">
                       <Button
@@ -524,10 +567,11 @@ export function DashboardPesertaClient() {
         </div>
       )}
 
-      {/* =================== MODAL UPLOAD BUKTI TRANSFER =================== */}
-      {isProofModalOpen && selectedEnrollmentForProof && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-stone-950/70 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white dark:bg-[#0C0A09] border border-stone-200 dark:border-stone-800 rounded-3xl max-w-md w-full p-6 space-y-5 shadow-2xl relative">
+      {/* modal upload bukti transfer */}
+      {mounted && isProofModalOpen && selectedEnrollmentForProof && createPortal(
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-stone-950/70 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="fixed inset-0" onClick={() => setIsProofModalOpen(false)} />
+          <div className="bg-white dark:bg-[#0C0A09] border border-stone-200 dark:border-stone-800 rounded-3xl max-w-md w-full p-6 space-y-5 shadow-2xl relative z-10">
             <button onClick={() => setIsProofModalOpen(false)} className="absolute top-5 right-5 p-1.5 rounded-full text-stone-400 hover:text-stone-700 dark:hover:text-stone-200 hover:bg-stone-100 dark:hover:bg-stone-800">
               <X className="w-5 h-5" />
             </button>
@@ -540,11 +584,11 @@ export function DashboardPesertaClient() {
               <p className="text-xs text-stone-500 mt-1">Kursus: <span className="font-semibold text-stone-800 dark:text-stone-200">{selectedEnrollmentForProof.course?.title}</span></p>
             </div>
 
-            {/* Rekening Pembayaran Dinamis dari DB */}
+            {/* rekening pembayaran dinamis dari database */}
             <div className="p-3.5 rounded-2xl bg-stone-50 dark:bg-stone-900 border border-stone-200/70 dark:border-stone-800 space-y-2">
               <div className="flex items-center gap-1.5 mb-2">
                 <CreditCard className="w-4 h-4 text-emerald-600" />
-                <span className="text-xs font-bold text-stone-700 dark:text-stone-300">Rekening Pembayaran Resmi Skillora:</span>
+                <span className="text-xs font-bold text-stone-700 dark:text-stone-300">Rekening Pembayaran Resmi Skillora</span>
               </div>
               {paymentAccounts.length > 0 ? (
                 paymentAccounts.map((acc) => (
@@ -559,9 +603,33 @@ export function DashboardPesertaClient() {
               ) : (
                 <p className="text-xs text-stone-400 italic">Hubungi admin untuk informasi rekening pembayaran.</p>
               )}
-              <p className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold border-t border-stone-200 dark:border-stone-700 pt-2">
-                Nominal: Rp{Number(selectedEnrollmentForProof.course?.price || 0).toLocaleString("id-ID")}
-              </p>
+              {(() => {
+                const modalPriceNum = Number(selectedEnrollmentForProof.course?.price || 0);
+                const modalDiscountPercent = Number(selectedEnrollmentForProof.course?.discount_percent || 0);
+                const modalHasDiscount = modalDiscountPercent > 0 && modalPriceNum > 0;
+                const modalFinalPrice = modalHasDiscount
+                  ? Math.round(modalPriceNum * (1 - modalDiscountPercent / 100))
+                  : modalPriceNum;
+
+                return (
+                  <div className="text-[11px] border-t border-stone-200 dark:border-stone-700 pt-2 flex items-baseline gap-1.5 flex-wrap">
+                    <span className="text-stone-500">Nominal Transfer</span>
+                    <span className="font-bold text-emerald-700 dark:text-emerald-400">
+                      {modalFinalPrice === 0 ? "Gratis" : `Rp ${modalFinalPrice.toLocaleString("id-ID")}`}
+                    </span>
+                    {modalHasDiscount && (
+                      <span className="text-stone-400 line-through text-[10px]">
+                        Rp {modalPriceNum.toLocaleString("id-ID")}
+                      </span>
+                    )}
+                    {modalHasDiscount && (
+                      <span className="text-[10px] px-1.5 py-0.2 rounded-md bg-emerald-600 text-white font-bold">
+                        -{modalDiscountPercent}%
+                      </span>
+                    )}
+                  </div>
+                );
+              })()}
             </div>
 
             {proofError && (
@@ -599,13 +667,15 @@ export function DashboardPesertaClient() {
               </Button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
-      {/* =================== MODAL ULASAN KURSUS =================== */}
-      {isReviewModalOpen && selectedEnrollmentForReview && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-stone-950/70 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white dark:bg-[#0C0A09] border border-stone-200 dark:border-stone-800 rounded-3xl max-w-lg w-full p-6 space-y-5 shadow-2xl relative">
+      {/* modal ulasan kursus */}
+      {mounted && isReviewModalOpen && selectedEnrollmentForReview && createPortal(
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-stone-950/70 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="fixed inset-0" onClick={() => setIsReviewModalOpen(false)} />
+          <div className="bg-white dark:bg-[#0C0A09] border border-stone-200 dark:border-stone-800 rounded-3xl max-w-lg w-full p-6 space-y-5 shadow-2xl relative z-10">
             <button onClick={() => setIsReviewModalOpen(false)} className="absolute top-5 right-5 p-1.5 rounded-full text-stone-400 hover:text-stone-700 dark:hover:text-stone-200 hover:bg-stone-100 dark:hover:bg-stone-800">
               <X className="w-5 h-5" />
             </button>
@@ -626,7 +696,7 @@ export function DashboardPesertaClient() {
             )}
 
             <div className="space-y-2">
-              <label className="text-xs font-bold text-stone-700 dark:text-stone-300 block">Rating Kepuasan (1–5 Bintang):</label>
+              <label className="text-xs font-bold text-stone-700 dark:text-stone-300 block">Rating Kepuasan (1–5 Bintang)</label>
               <div className="flex items-center gap-2">
                 {[1, 2, 3, 4, 5].map((star) => (
                   <button key={star} type="button" onMouseEnter={() => setHoverRating(star)} onMouseLeave={() => setHoverRating(0)} onClick={() => setRatingValue(star)} className="p-1 transition-transform hover:scale-110 active:scale-95">
@@ -638,7 +708,7 @@ export function DashboardPesertaClient() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-xs font-bold text-stone-700 dark:text-stone-300 block">Ulasan / Testimoni Anda:</label>
+              <label className="text-xs font-bold text-stone-700 dark:text-stone-300 block">Ulasan / Testimoni Anda</label>
               <textarea
                 value={reviewText}
                 onChange={(e) => setReviewText(e.target.value)}
@@ -659,13 +729,15 @@ export function DashboardPesertaClient() {
               </Button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
-      {/* =================== MODAL PREVIEW BUKTI =================== */}
-      {previewImageUrl && (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-stone-950/80 backdrop-blur-md animate-in fade-in duration-200">
-          <div className="bg-white dark:bg-[#0C0A09] border border-stone-200 dark:border-stone-800 rounded-3xl max-w-lg w-full p-6 space-y-4 shadow-2xl relative">
+      {/* modal pratinjau bukti */}
+      {mounted && previewImageUrl && createPortal(
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-stone-950/80 backdrop-blur-md animate-in fade-in duration-200">
+          <div className="fixed inset-0" onClick={() => setPreviewImageUrl(null)} />
+          <div className="bg-white dark:bg-[#0C0A09] border border-stone-200 dark:border-stone-800 rounded-3xl max-w-lg w-full p-6 space-y-4 shadow-2xl relative z-10">
             <button onClick={() => setPreviewImageUrl(null)} className="absolute top-4 right-4 p-1.5 rounded-full text-stone-400 hover:text-stone-700 dark:hover:text-stone-200 hover:bg-stone-100 dark:hover:bg-stone-800">
               <X className="w-5 h-5" />
             </button>
@@ -677,7 +749,8 @@ export function DashboardPesertaClient() {
               <Button variant="outline" size="sm" onClick={() => setPreviewImageUrl(null)}>Tutup</Button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

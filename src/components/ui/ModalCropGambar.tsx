@@ -29,7 +29,7 @@ export const ImageCropModal: React.FC<ImageCropModalProps> = ({
   const imageRef = React.useRef<HTMLImageElement>(null);
   const containerRef = React.useRef<HTMLDivElement>(null);
 
-  // Load image as data URL when file changes
+  // muat gambar sebagai data url saat file berubah
   React.useEffect(() => {
     if (!imageFile) {
       setImageSrc(null);
@@ -45,7 +45,7 @@ export const ImageCropModal: React.FC<ImageCropModalProps> = ({
     reader.readAsDataURL(imageFile);
   }, [imageFile]);
 
-  // Drag handlers
+  // pengendali gestur geser foto
   const handleMouseDown = (e: React.MouseEvent) => {
     e.preventDefault();
     setIsDragging(true);
@@ -93,7 +93,7 @@ export const ImageCropModal: React.FC<ImageCropModalProps> = ({
     const container = containerRef.current;
     const containerRect = container.getBoundingClientRect();
 
-    // Size of export canvas (square 1:1)
+    // ukuran kanvas ekspor foto rasio satu banding satu
     const exportSize = 512;
     const canvas = document.createElement("canvas");
     canvas.width = exportSize;
@@ -101,18 +101,18 @@ export const ImageCropModal: React.FC<ImageCropModalProps> = ({
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    // Fill white/clean background
+    // isi latar belakang bersih
     ctx.fillStyle = "#ffffff";
     ctx.fillRect(0, 0, exportSize, exportSize);
 
-    // Calculate scaling and translation
+    // hitung penskalaan dan translasi
     const scaleFactor = exportSize / containerRect.width;
 
-    // Drawing coordinates
+    // koordinat penggambaran kanvas
     const drawWidth = img.clientWidth * zoom * scaleFactor;
     const drawHeight = img.clientHeight * zoom * scaleFactor;
 
-    // Image center relative to container
+    // titik tengah gambar terhadap kontainer
     const centerX = (containerRect.width / 2 + offset.x) * scaleFactor;
     const centerY = (containerRect.height / 2 + offset.y) * scaleFactor;
 
@@ -140,7 +140,7 @@ export const ImageCropModal: React.FC<ImageCropModalProps> = ({
       description="Geser dan sesuaikan ukuran foto agar pas dengan bingkai proporsi 1:1."
     >
       <div className="space-y-4 pt-1">
-        {/* 1:1 Crop Viewport */}
+        {/* area potong foto rasio persegi */}
         <div className="flex justify-center">
           <div
             ref={containerRef}
@@ -151,7 +151,7 @@ export const ImageCropModal: React.FC<ImageCropModalProps> = ({
             onTouchStart={handleTouchStart}
             onTouchMove={handleTouchMove}
             onTouchEnd={handleMouseUp}
-            className="relative w-64 h-64 sm:w-72 sm:h-72 rounded-2xl overflow-hidden bg-stone-900 border-2 border-[#0F3E2E] shadow-inner select-none cursor-grab active:cursor-grabbing flex items-center justify-center"
+            className="relative w-64 h-64 sm:w-72 sm:h-72 rounded-full overflow-hidden bg-stone-900 border-2 border-[#0F3E2E] shadow-inner select-none cursor-grab active:cursor-grabbing flex items-center justify-center"
           >
             {imageSrc && (
               <img
@@ -167,19 +167,19 @@ export const ImageCropModal: React.FC<ImageCropModalProps> = ({
               />
             )}
 
-            {/* Circular / Square Guide Overlay */}
-            <div className="absolute inset-0 pointer-events-none border border-white/40 rounded-2xl">
+            {/* panduan lingkaran foto profil */}
+            <div className="absolute inset-0 pointer-events-none border border-white/40 rounded-full">
               <div className="absolute inset-2 border border-dashed border-emerald-400/60 rounded-full" />
             </div>
 
-            {/* Hint text */}
+            {/* petunjuk geser */}
             <span className="absolute bottom-2 left-1/2 -translate-x-1/2 text-[10px] font-medium text-white/70 bg-black/60 px-2.5 py-0.5 rounded-full pointer-events-none">
               Tarik untuk menggeser posisi
             </span>
           </div>
         </div>
 
-        {/* Zoom & Control Controls */}
+        {/* kontrol pembesaran foto */}
         <div className="space-y-2 px-2">
           <div className="flex items-center justify-between text-xs text-stone-500 font-medium">
             <span className="flex items-center gap-1">
@@ -213,7 +213,7 @@ export const ImageCropModal: React.FC<ImageCropModalProps> = ({
           </div>
         </div>
 
-        {/* Modal Actions */}
+        {/* tombol aksi modal */}
         <div className="pt-3 border-t border-stone-200 dark:border-stone-800 flex items-center justify-end gap-2.5">
           <Button
             type="button"

@@ -7,6 +7,7 @@ import { NavigationProgressBar } from "@/components/ProgressBar";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { ScrollToTop } from "@/components/ScrollToTop";
+import { PelacakPengunjung } from "@/components/PelacakPengunjung";
 
 const plusJakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -100,6 +101,7 @@ export default function RootLayout({
           disableTransitionOnChange={false}
         >
           <NavigationProgressBar />
+          <PelacakPengunjung />
           <LenisProvider>
             <Navbar />
             <main className="flex-1">{children}</main>

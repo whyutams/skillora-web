@@ -822,9 +822,25 @@ export function StudentDashboardClient() {
               <p className="text-stone-600 dark:text-stone-400 font-mono text-[11px]">
                 DANA / GoPay / ShopeePay: <strong>0812-3456-7890</strong>
               </p>
-              <p className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold pt-1">
-                Nominal: Rp{Number(selectedEnrollmentForProof.course?.price || 0).toLocaleString("id-ID")}
-              </p>
+              {(() => {
+                const rawPrice = Number(selectedEnrollmentForProof.course?.price || 0);
+                const discountPercent = Number((selectedEnrollmentForProof.course as { discount_percent?: number } | null)?.discount_percent || 0);
+                const hasDiscount = discountPercent > 0 && rawPrice > 0;
+                const finalPrice = hasDiscount
+                  ? Math.round(rawPrice * (1 - discountPercent / 100))
+                  : rawPrice;
+
+                return (
+                  <p className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold pt-1">
+                    Nominal: {finalPrice === 0 ? "Gratis" : `Rp ${finalPrice.toLocaleString("id-ID")}`}
+                    {hasDiscount && (
+                      <span className="text-stone-400 line-through text-[10px] font-normal ml-1.5">
+                        Rp {rawPrice.toLocaleString("id-ID")}
+                      </span>
+                    )}
+                  </p>
+                );
+              })()}
             </div>
 
             {/* Error Banner */}

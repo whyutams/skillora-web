@@ -227,7 +227,7 @@ export function FormProfilDashboard({ roleTitle }: { roleTitle: string }) {
         <Card className="border-stone-200/90 dark:border-stone-800/90 text-center p-6 space-y-4">
           <div className="relative inline-block mx-auto">
             {avatarUrl ? (
-              <div className="w-28 h-28 mx-auto rounded-2xl overflow-hidden border-2 border-emerald-500/40 shadow-md">
+              <div className="w-28 h-28 mx-auto rounded-full overflow-hidden border-2 border-emerald-500/40 shadow-md">
                 <SmoothImage
                   src={avatarUrl}
                   alt="Foto Profil"
@@ -235,7 +235,7 @@ export function FormProfilDashboard({ roleTitle }: { roleTitle: string }) {
                 />
               </div>
             ) : (
-              <div className="w-28 h-28 rounded-2xl bg-[#0F3E2E] text-emerald-300 font-extrabold text-3xl flex items-center justify-center border border-emerald-600/30 mx-auto shadow-md">
+              <div className="w-28 h-28 rounded-full bg-[#0F3E2E] text-emerald-300 font-extrabold text-3xl flex items-center justify-center border border-emerald-600/30 mx-auto shadow-md">
                 {fullName ? fullName.charAt(0).toUpperCase() : "A"}
               </div>
             )}
@@ -245,7 +245,7 @@ export function FormProfilDashboard({ roleTitle }: { roleTitle: string }) {
               onClick={() => fileInputRef.current?.click()}
               disabled={uploadingAvatar}
               aria-label="Ubah foto profil"
-              className="absolute -bottom-2 -right-2 p-2 rounded-xl bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 text-stone-700 dark:text-stone-300 hover:text-emerald-600 shadow-md hover:scale-105 transition-all"
+              className="absolute bottom-0 right-0 p-2 rounded-full bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 text-stone-700 dark:text-stone-300 hover:text-emerald-600 shadow-md hover:scale-105 transition-all"
             >
               {uploadingAvatar ? (
                 <Loader2 className="w-4 h-4 animate-spin text-emerald-600" />

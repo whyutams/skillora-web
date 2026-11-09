@@ -109,6 +109,7 @@ export async function GET(request: Request) {
           registration_end: courseParsed.registrationEnd,
           event_start: courseParsed.eventStart,
           event_end: courseParsed.eventEnd,
+          discount_percent: rawCourse.discount_percent ?? courseParsed.discountPercent ?? 0,
         };
       }
 
