@@ -43,7 +43,7 @@ export function FormProfilDashboard({ roleTitle }: { roleTitle: string }) {
   const [errorMsg, setErrorMsg] = React.useState<string | null>(null);
   const [successModalOpen, setSuccessModalOpen] = React.useState(false);
 
-  // Crop Modal States (1:1 crop requirement)
+  // status modal crop foto profil rasio satu banding satu
   const [cropModalOpen, setCropModalOpen] = React.useState(false);
   const [selectedCropFile, setSelectedCropFile] = React.useState<File | null>(null);
   const [isSavingCrop, setIsSavingCrop] = React.useState(false);

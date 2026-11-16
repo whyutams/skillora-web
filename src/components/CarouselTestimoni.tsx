@@ -105,12 +105,11 @@ export function CarouselTestimoni({ testimonials = [] }: CarouselTestimoniProps)
     }
   };
 
-  // Jika belum ada data ulasan, sembunyikan carousel & pagination button dan tampilkan keterangan dengan icon
   if (baseCount === 0) {
     return (
       <div
         data-aos="fade-up"
-        className="text-center py-14 px-6 rounded-3xl max-w-xl mx-auto space-y-3"
+        className="text-center py-14 px-6 rounded-2xl max-w-xl mx-auto space-y-3"
       >
         <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 text-[#0F3E2E] dark:text-emerald-400 flex items-center justify-center mx-auto border border-emerald-500/20">
           <MessageSquareDashed className="w-7 h-7" />

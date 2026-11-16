@@ -60,7 +60,7 @@ export function ProgressBar() {
       try {
         const url = new URL(href, window.location.href);
 
-        // ATURAN UTAMA: Jika menuju ke halaman yang masih sama (pathname sama), JANGAN perlihatkan NProgress!
+        // jika menuju ke halaman yang masih sama jangan perlihatkan nprogress
         const isSamePathname = url.pathname === window.location.pathname;
         const isSameSearch = url.search === window.location.search;
 
@@ -68,7 +68,7 @@ export function ProgressBar() {
           return;
         }
 
-        // Jika hanya perbedaan hash (#) pada halaman yang sama, jangan tampilkan NProgress
+        // jika hanya perbedaan hash pada halaman yang sama jangan tampilkan nprogress
         if (isSamePathname && url.hash) {
           return;
         }

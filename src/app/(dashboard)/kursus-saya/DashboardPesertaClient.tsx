@@ -32,6 +32,7 @@ import {
   CreditCard,
   Users,
   Banknote,
+  Play,
 } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
@@ -310,8 +311,8 @@ export function DashboardPesertaClient() {
   }
 
   return (
-    <div className="space-y-8 max-w-7xl mx-auto pb-12">
-      <div className="p-6 sm:p-8 rounded-3xl border border-stone-200/80 dark:border-stone-800/80 bg-white/70 dark:bg-stone-900/60 backdrop-blur-md flex flex-col md:flex-row items-start md:items-center justify-between gap-6 shadow-xs">
+    <div className="space-y-8 w-full pb-12">
+      <div className="p-6 sm:p-8 rounded-2xl border border-stone-200/80 dark:border-stone-800/80 bg-white/70 dark:bg-stone-900/60 backdrop-blur-md flex flex-col md:flex-row items-start md:items-center justify-between gap-6 shadow-xs">
         <div className="flex items-start sm:items-center gap-4">
           <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-[#0F3E2E] text-emerald-300 flex items-center justify-center font-extrabold text-xl sm:text-2xl shrink-0 shadow-md">
             {profile?.full_name ? profile.full_name.charAt(0).toUpperCase() : "M"}
@@ -319,7 +320,7 @@ export function DashboardPesertaClient() {
           <div className="space-y-1">
             <div className="flex flex-wrap items-center gap-2">
               <h1 className="text-xl sm:text-2xl font-black text-stone-900 dark:text-stone-100">
-                Halo, {profile?.full_name || "Mahasiswa"}!
+                Halo, {profile?.full_name || "Peserta"}!
               </h1>
               {profile?.username && (
                 <span className="text-xs px-2.5 py-0.5 rounded-md bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 border border-emerald-500/30 flex items-center gap-1 font-semibold">
@@ -333,7 +334,7 @@ export function DashboardPesertaClient() {
           </div>
         </div>
         <div className="flex items-center gap-3 shrink-0 w-full md:w-auto">
-          <Link href="/#kursus" className="w-full md:w-auto">
+          <Link href="/dashboard/kursus" className="w-full md:w-auto">
             <Button variant="primary" size="sm" className="gap-2 w-full justify-center bg-[#0F3E2E] hover:bg-[#16533e] text-white">
               <BookOpen className="w-4 h-4 text-emerald-300" />
               <span>Jelajahi Kursus Lain</span>
@@ -415,14 +416,14 @@ export function DashboardPesertaClient() {
               Temukan kursus keterampilan impian Anda di katalog resmi Skillora.
             </p>
           </div>
-          <Link href="/#kursus" className="inline-block pt-2">
+          <Link href="/dashboard/kursus" className="inline-block pt-2">
             <Button variant="primary" size="sm" className="gap-2 bg-[#0F3E2E] hover:bg-[#16533e] text-white">
               <span>Jelajahi Katalog Kursus</span><ArrowRight className="w-4 h-4 text-emerald-300" />
             </Button>
           </Link>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
           {filteredEnrollments.map((item) => {
             const course = item.course;
             const isApproved = item.status === "approved";
@@ -520,9 +521,28 @@ export function DashboardPesertaClient() {
                     </div>
                   )}
 
-                  {/* tombol lihat detail + tombol gabung grup (approved) */}
-                  <div className="flex items-center gap-2">
-                    <Link href={`/kursus-saya/${item.course?.slug || item.id}`} className="flex-1">
+                  {/* tombol aksi kartu kursus */}
+                  <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+                    {isApproved && (
+                      <Link
+                        href={`/kursus-saya/${item.course?.slug || item.id}/belajar`}
+                        className="flex-1 min-w-[120px]"
+                      >
+                        <Button
+                          variant="primary"
+                          size="sm"
+                          className="w-full gap-2 text-xs font-bold justify-center bg-[#0F3E2E] hover:bg-[#16533e] text-white shadow-xs"
+                        >
+                          <Play className="w-3.5 h-3.5 fill-current" />
+                          <span>Mulai Belajar</span>
+                        </Button>
+                      </Link>
+                    )}
+
+                    <Link
+                      href={`/kursus-saya/${item.course?.slug || item.id}`}
+                      className={isApproved ? "flex-1 min-w-[110px]" : "w-full"}
+                    >
                       <Button
                         variant="outline"
                         size="sm"
@@ -530,18 +550,23 @@ export function DashboardPesertaClient() {
                       >
                         <Eye className="w-3.5 h-3.5" />
                         <span>Lihat Detail</span>
-                        <ChevronRight className="w-3.5 h-3.5 ml-auto" />
+                        {!isApproved && <ChevronRight className="w-3.5 h-3.5 ml-auto" />}
                       </Button>
                     </Link>
 
                     {isApproved && course?.whatsapp_group_url && (
-                      <a href={course.whatsapp_group_url} target="_blank" rel="noopener noreferrer">
+                      <a
+                        href={course.whatsapp_group_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="shrink-0"
+                      >
                         <Button
-                          variant="primary"
+                          variant="outline"
                           size="sm"
-                          className="gap-1.5 bg-[#0F3E2E] hover:bg-[#16533e] text-white text-xs whitespace-nowrap"
+                          className="gap-1.5 text-xs whitespace-nowrap text-emerald-700 dark:text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/10"
                         >
-                          <MessageCircle className="w-3.5 h-3.5 text-emerald-300" />
+                          <MessageCircle className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                           <span>Gabung Grup</span>
                           <ExternalLink className="w-3 h-3" />
                         </Button>
@@ -553,7 +578,7 @@ export function DashboardPesertaClient() {
                         variant="secondary"
                         size="sm"
                         onClick={() => handleOpenReviewModal(item)}
-                        className="gap-1.5 text-xs whitespace-nowrap border-amber-500/30 text-amber-700 dark:text-amber-300"
+                        className="gap-1.5 text-xs whitespace-nowrap border-amber-500/30 text-amber-700 dark:text-amber-300 shrink-0"
                       >
                         <Star className="w-3.5 h-3.5" />
                         <span>Beri Ulasan</span>
@@ -571,7 +596,7 @@ export function DashboardPesertaClient() {
       {mounted && isProofModalOpen && selectedEnrollmentForProof && createPortal(
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-stone-950/70 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="fixed inset-0" onClick={() => setIsProofModalOpen(false)} />
-          <div className="bg-white dark:bg-[#0C0A09] border border-stone-200 dark:border-stone-800 rounded-3xl max-w-md w-full p-6 space-y-5 shadow-2xl relative z-10">
+          <div className="bg-white dark:bg-[#0C0A09] border border-stone-200 dark:border-stone-800 rounded-2xl max-w-md w-full p-6 space-y-5 shadow-2xl relative z-10">
             <button onClick={() => setIsProofModalOpen(false)} className="absolute top-5 right-5 p-1.5 rounded-full text-stone-400 hover:text-stone-700 dark:hover:text-stone-200 hover:bg-stone-100 dark:hover:bg-stone-800">
               <X className="w-5 h-5" />
             </button>
@@ -595,7 +620,7 @@ export function DashboardPesertaClient() {
                   <div key={acc.id} className="flex items-center justify-between text-xs">
                     <span className="font-semibold text-stone-700 dark:text-stone-300">{acc.bank_name}</span>
                     <div className="text-right">
-                      <p className="font-mono font-bold text-stone-900 dark:text-stone-100">{acc.account_number}</p>
+                      <p className="font-bold text-stone-900 dark:text-stone-100">{acc.account_number}</p>
                       <p className="text-stone-500">a.n {acc.account_holder}</p>
                     </div>
                   </div>
@@ -675,7 +700,7 @@ export function DashboardPesertaClient() {
       {mounted && isReviewModalOpen && selectedEnrollmentForReview && createPortal(
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-stone-950/70 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="fixed inset-0" onClick={() => setIsReviewModalOpen(false)} />
-          <div className="bg-white dark:bg-[#0C0A09] border border-stone-200 dark:border-stone-800 rounded-3xl max-w-lg w-full p-6 space-y-5 shadow-2xl relative z-10">
+          <div className="bg-white dark:bg-[#0C0A09] border border-stone-200 dark:border-stone-800 rounded-2xl max-w-lg w-full p-6 space-y-5 shadow-2xl relative z-10">
             <button onClick={() => setIsReviewModalOpen(false)} className="absolute top-5 right-5 p-1.5 rounded-full text-stone-400 hover:text-stone-700 dark:hover:text-stone-200 hover:bg-stone-100 dark:hover:bg-stone-800">
               <X className="w-5 h-5" />
             </button>
@@ -737,7 +762,7 @@ export function DashboardPesertaClient() {
       {mounted && previewImageUrl && createPortal(
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-stone-950/80 backdrop-blur-md animate-in fade-in duration-200">
           <div className="fixed inset-0" onClick={() => setPreviewImageUrl(null)} />
-          <div className="bg-white dark:bg-[#0C0A09] border border-stone-200 dark:border-stone-800 rounded-3xl max-w-lg w-full p-6 space-y-4 shadow-2xl relative z-10">
+          <div className="bg-white dark:bg-[#0C0A09] border border-stone-200 dark:border-stone-800 rounded-2xl max-w-lg w-full p-6 space-y-4 shadow-2xl relative z-10">
             <button onClick={() => setPreviewImageUrl(null)} className="absolute top-4 right-4 p-1.5 rounded-full text-stone-400 hover:text-stone-700 dark:hover:text-stone-200 hover:bg-stone-100 dark:hover:bg-stone-800">
               <X className="w-5 h-5" />
             </button>

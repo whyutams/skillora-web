@@ -128,9 +128,9 @@ function extractModulesFromHtml(html: string): CourseModuleItem[] {
       duration: "45-60 Menit",
       isPreview: idx < 2,
       lessons: [
-        { title: `Konsep Dasar: ${cleanTitle || m.title}`, type: "reading", duration: "15m" },
-        { title: `Praktik Terarah: ${cleanTitle || m.title}`, type: "practice", duration: "30m" },
-        { title: `Kuis Pemahaman Modul ${idx + 1}`, type: "quiz", duration: "10m" },
+        { title: `Konsep Dasar: ${cleanTitle || m.title}`, type: "reading" },
+        { title: `Praktik Terarah: ${cleanTitle || m.title}`, type: "practice" },
+        { title: `Kuis Pemahaman Modul ${idx + 1}`, type: "quiz" },
       ],
     };
   });

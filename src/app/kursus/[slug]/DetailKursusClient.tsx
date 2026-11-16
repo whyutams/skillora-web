@@ -106,6 +106,11 @@ export default function DetailKursusClient({
   const isProfileComplete = !currentUser || (hasAvatar && hasSchool);
 
   const handleEnrollClick = () => {
+    // jika kursus berstatus draft tidak ada yang bisa mendaftar
+    if (!course.is_published) {
+      return;
+    }
+
     if (!currentUser) {
       setIsLoginAlertOpen(true);
       return;
@@ -126,7 +131,7 @@ export default function DetailKursusClient({
 
   const handleGoToLogin = () => {
     setIsLoginAlertOpen(false);
-    const returnUrl = encodeURIComponent(`/courses/${course.slug}`);
+    const returnUrl = encodeURIComponent(`/kursus/${course.slug}`);
     router.push(`/login?returnUrl=${returnUrl}`);
   };
 

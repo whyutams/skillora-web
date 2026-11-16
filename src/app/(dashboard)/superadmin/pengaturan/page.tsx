@@ -14,7 +14,6 @@ import {
   MessageSquare,
   Lock,
   Layers,
-  Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/Card";
@@ -128,7 +127,7 @@ export default function SuperadminPengaturanPage() {
   };
 
   return (
-    <div className="space-y-8 max-w-5xl mx-auto pb-12">
+    <div className="space-y-8 w-full pb-12">
       {/* header halaman */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-stone-200/80 dark:border-stone-800/80">
         <div className="space-y-1">
@@ -308,7 +307,7 @@ export default function SuperadminPengaturanPage() {
                     </Link>
                   </div>
                   <p className="text-[11px] text-stone-500">
-                    Rute publik: <code className="px-1 py-0.5 rounded bg-stone-200 dark:bg-stone-800 font-mono text-[10px]">/maintenance</code>
+                    Rute publik: <code className="px-1 py-0.5 rounded bg-stone-200 dark:bg-stone-800 font-semibold text-[10px]">/maintenance</code>
                   </p>
                 </div>
 
@@ -328,7 +327,7 @@ export default function SuperadminPengaturanPage() {
                     </Link>
                   </div>
                   <p className="text-[11px] text-stone-500">
-                    Rute khusus login pengelola: <code className="px-1 py-0.5 rounded bg-stone-200 dark:bg-stone-800 font-mono text-[10px]">/maintenance/login</code>
+                    Rute khusus login pengelola: <code className="px-1 py-0.5 rounded bg-stone-200 dark:bg-stone-800 font-semibold text-[10px]">/maintenance/login</code>
                   </p>
                 </div>
               </div>

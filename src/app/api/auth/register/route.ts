@@ -155,7 +155,7 @@ export async function POST(request: Request) {
       console.error("Error checking existing email list:", listErr);
     }
 
-    // 9. Buat akun di Supabase Auth via Admin Client (email_confirm: true otomatis aktif)
+    // buat akun di supabase auth via admin client
     const { data: authResult, error: authError } =
       await adminClient.auth.admin.createUser({
         email: cleanEmail,

@@ -42,12 +42,12 @@ export function HtmlEditor({
 }: HtmlEditorProps) {
   const [isCodeView, setIsCodeView] = React.useState(false);
 
-  // Link Modal State
+  // state modal tautan link
   const [linkModalOpen, setLinkModalOpen] = React.useState(false);
   const [linkUrl, setLinkUrl] = React.useState("");
   const [linkText, setLinkText] = React.useState("");
 
-  // Image Modal State
+  // state modal gambar
   const [imageModalOpen, setImageModalOpen] = React.useState(false);
   const [imageTab, setImageTab] = React.useState<"upload" | "url">("upload");
   const [insertImageUrl, setInsertImageUrl] = React.useState("");
@@ -59,7 +59,7 @@ export function HtmlEditor({
   const editorImageInputRef = React.useRef<HTMLInputElement>(null);
   const isUpdatingRef = React.useRef(false);
 
-  // Sync value from props to contentEditable without resetting cursor if already focused
+  // sinkronisasi nilai properti ke elemen tanpa mengubah posisi kursor jika fokus aktif
   React.useEffect(() => {
     if (editorRef.current && !isCodeView) {
       if (editorRef.current.innerHTML !== value) {
@@ -165,11 +165,12 @@ export function HtmlEditor({
 
   return (
     <div
+      data-lenis-prevent
       className={`rounded-2xl border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-950 overflow-hidden shadow-2xs transition-colors focus-within:ring-2 focus-within:ring-[#0F3E2E] dark:focus-within:ring-emerald-500 focus-within:border-transparent ${className}`}
     >
-      {/* Toolbar */}
+      {/* bilah alat toolbar */}
       <div className="flex flex-wrap items-center gap-1 p-2 bg-stone-50 dark:bg-stone-900 border-b border-stone-200 dark:border-stone-800 select-none text-stone-700 dark:text-stone-300">
-        {/* Headings */}
+        {/* heading dan paragraf */}
         <div className="flex items-center gap-0.5 border-r border-stone-200 dark:border-stone-800 pr-1 mr-1">
           <button
             type="button"
@@ -209,7 +210,7 @@ export function HtmlEditor({
           </button>
         </div>
 
-        {/* Text Styles */}
+        {/* gaya teks */}
         <div className="flex items-center gap-0.5 border-r border-stone-200 dark:border-stone-800 pr-1 mr-1">
           <button
             type="button"
@@ -249,7 +250,7 @@ export function HtmlEditor({
           </button>
         </div>
 
-        {/* Lists & Quotes */}
+        {/* daftar dan kutipan */}
         <div className="flex items-center gap-0.5 border-r border-stone-200 dark:border-stone-800 pr-1 mr-1">
           <button
             type="button"
@@ -289,7 +290,7 @@ export function HtmlEditor({
           </button>
         </div>
 
-        {/* Links, Images & Alignment */}
+        {/* tautan gambar dan perataan */}
         <div className="flex items-center gap-0.5 border-r border-stone-200 dark:border-stone-800 pr-1 mr-1">
           <button
             type="button"
@@ -352,7 +353,7 @@ export function HtmlEditor({
           </button>
         </div>
 
-        {/* Clear formatting */}
+        {/* bersihkan pemformatan */}
         <div className="flex items-center gap-0.5 border-r border-stone-200 dark:border-stone-800 pr-1 mr-1">
           <button
             type="button"
@@ -365,7 +366,7 @@ export function HtmlEditor({
           </button>
         </div>
 
-        {/* Mode Toggle: Visual WYSIWYG vs HTML Source */}
+        {/* tombol alih mode tampilan visual atau kode html mentah */}
         <div className="ml-auto flex items-center">
           <button
             type="button"
@@ -392,28 +393,30 @@ export function HtmlEditor({
         </div>
       </div>
 
-      {/* Editor Body */}
+      {/* isi konten editor */}
       {isCodeView ? (
         <textarea
+          data-lenis-prevent
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder="<p>Masukkan kode HTML di sini...</p>"
           style={{ minHeight }}
-          className="w-full p-4 font-mono text-xs bg-stone-900 text-emerald-400 focus:outline-none resize-y border-none leading-relaxed"
+          className="w-full p-4 font-mono text-xs sm:text-sm bg-stone-900 text-emerald-300 focus:outline-none resize-y border-none leading-relaxed overflow-y-auto selection:bg-emerald-500/30"
         />
       ) : (
         <div
           ref={editorRef}
+          data-lenis-prevent
           contentEditable
           onInput={handleInput}
           onBlur={handleInput}
           style={{ minHeight }}
           data-placeholder={placeholder}
-          className="p-4 text-sm text-stone-900 dark:text-stone-100 focus:outline-none overflow-y-auto leading-relaxed prose dark:prose-invert max-w-none empty:before:content-[attr(data-placeholder)] empty:before:text-stone-400 empty:before:pointer-events-none [&_h2]:text-xl [&_h2]:font-bold [&_h2]:my-2 [&_h3]:text-lg [&_h3]:font-bold [&_h3]:my-1.5 [&_h4]:text-base [&_h4]:font-semibold [&_h4]:my-1 [&_p]:my-1.5 [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:my-1.5 [&_ol]:list-decimal [&_ol]:pl-5 [&_ol]:my-1.5 [&_li]:my-0.5 [&_blockquote]:border-l-4 [&_blockquote]:border-emerald-600 [&_blockquote]:pl-3 [&_blockquote]:italic [&_blockquote]:text-stone-500 [&_code]:bg-stone-100 [&_code]:dark:bg-stone-800 [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:rounded [&_code]:text-xs [&_a]:text-emerald-600 [&_a]:underline [&_img]:rounded-xl [&_img]:max-w-full [&_img]:my-3"
+          className="learning-content p-4 text-sm sm:text-base text-stone-900 dark:text-stone-100 focus:outline-none overflow-y-auto leading-relaxed empty:before:content-[attr(data-placeholder)] empty:before:text-stone-400 empty:before:pointer-events-none"
         />
       )}
 
-      {/* Link Insertion Modal */}
+      {/* modal sisipkan tautan */}
       {linkModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-2xl p-5 max-w-md w-full space-y-4 shadow-xl">
@@ -470,7 +473,7 @@ export function HtmlEditor({
         </div>
       )}
 
-      {/* Image Insertion Modal */}
+      {/* modal sisipkan gambar */}
       {imageModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-2xl p-5 max-w-md w-full space-y-4 shadow-xl">
@@ -479,7 +482,7 @@ export function HtmlEditor({
               <span>Sisipkan Gambar ke Materi</span>
             </h3>
 
-            {/* Tab: Upload vs URL */}
+            {/* tab unggah atau tautan url */}
             <div className="flex items-center gap-2 p-1 rounded-xl bg-stone-100 dark:bg-stone-800 text-xs font-semibold">
               <button
                 type="button"

@@ -66,7 +66,7 @@ export function Modal({
         role="dialog"
         aria-modal="true"
         aria-labelledby="modal-title"
-        className={`relative z-10 w-full ${maxWidthStyles} rounded-xl border border-stone-200 dark:border-stone-800 bg-[#FAF9F6] dark:bg-[#0C0A09] text-stone-900 dark:text-stone-100 shadow-xl overflow-hidden transition-all duration-200 animate-in fade-in-0 zoom-in-95`}
+        className={`relative z-10 w-full ${maxWidthStyles} rounded-2xl border border-stone-200 dark:border-stone-800 bg-[#FAF9F6] dark:bg-[#0C0A09] text-stone-900 dark:text-stone-100 shadow-xl overflow-hidden overscroll-contain transition-all duration-200 animate-in fade-in-0 zoom-in-95`}
       >
         <div className="flex items-center justify-between p-5 border-b border-stone-200/80 dark:border-stone-800/80">
           <div>

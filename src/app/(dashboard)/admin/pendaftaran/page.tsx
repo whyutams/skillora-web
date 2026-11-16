@@ -99,7 +99,7 @@ export default function AdminPendaftaranPage() {
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
 
-  // Mode View: per-course atau specific course selected atau all
+  // mode tampilan per kursus atau seluruh kursus
   const [selectedCourseId, setSelectedCourseId] = React.useState<string | null>(null);
   const [statusFilter, setStatusFilter] = React.useState<string>("all");
   const [searchQuery, setSearchQuery] = React.useState("");
@@ -107,7 +107,7 @@ export default function AdminPendaftaranPage() {
 
   const [currentPage, setCurrentPage] = React.useState<number>(1);
 
-  // Modal Bukti Transfer Preview
+  // modal pratinjau bukti transfer
   const [previewProofUrl, setPreviewProofUrl] = React.useState<string | null>(null);
 
   // Modal Tolak Pendaftaran dengan Alasan
@@ -603,9 +603,9 @@ export default function AdminPendaftaranPage() {
   }
 
   return (
-    <div className="space-y-8 w-full pb-12 max-w-7xl mx-auto">
+    <div className="space-y-8 w-full pb-12">
       {/* Header Panel */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-6 sm:p-8 rounded-3xl border border-stone-200/80 dark:border-stone-800/80 bg-white/70 dark:bg-stone-900/60 backdrop-blur-md shadow-xs">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-6 sm:p-8 rounded-2xl border border-stone-200/80 dark:border-stone-800/80 bg-white/70 dark:bg-stone-900/60 backdrop-blur-md shadow-xs">
         <div className="flex items-center gap-4">
           <div className="w-14 h-14 rounded-2xl bg-purple-600/15 text-purple-700 dark:text-purple-400 flex items-center justify-center border border-purple-500/30 shrink-0">
             <ShieldCheck className="w-7 h-7" />
@@ -1216,7 +1216,7 @@ export default function AdminPendaftaranPage() {
       {/* ================= MODAL TOLAK DENGAN ALASAN ================= */}
       {rejectModalData.isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-950/70 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white dark:bg-[#0C0A09] border border-stone-200 dark:border-stone-800 rounded-3xl max-w-md w-full p-6 space-y-5 shadow-2xl relative">
+          <div className="bg-white dark:bg-[#0C0A09] border border-stone-200 dark:border-stone-800 rounded-2xl max-w-md w-full p-6 space-y-5 shadow-2xl relative">
             <button
               onClick={() => setRejectModalData((prev) => ({ ...prev, isOpen: false }))}
               className="absolute top-5 right-5 p-1.5 rounded-full text-stone-400 hover:text-stone-700 dark:hover:text-stone-200 hover:bg-stone-100 dark:hover:bg-stone-800"
@@ -1290,7 +1290,7 @@ export default function AdminPendaftaranPage() {
       {/* modal upload e-sertifikat per mahasiswa */}
       {certificateModalData.isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-950/70 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white dark:bg-[#0C0A09] border border-stone-200 dark:border-stone-800 rounded-3xl max-w-md w-full p-6 space-y-5 shadow-2xl relative">
+          <div className="bg-white dark:bg-[#0C0A09] border border-stone-200 dark:border-stone-800 rounded-2xl max-w-md w-full p-6 space-y-5 shadow-2xl relative">
             <button
               onClick={() => setCertificateModalData((prev) => ({ ...prev, isOpen: false }))}
               className="absolute top-5 right-5 p-1.5 rounded-full text-stone-400 hover:text-stone-700 dark:hover:text-stone-200 hover:bg-stone-100 dark:hover:bg-stone-800"
@@ -1392,7 +1392,7 @@ export default function AdminPendaftaranPage() {
       {/* ================= MODAL LIHAT BUKTI TRANSFER ================= */}
       {previewProofUrl && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-950/80 backdrop-blur-md animate-in fade-in duration-200">
-          <div className="bg-white dark:bg-[#0C0A09] border border-stone-200 dark:border-stone-800 rounded-3xl max-w-lg w-full p-6 space-y-4 shadow-2xl relative">
+          <div className="bg-white dark:bg-[#0C0A09] border border-stone-200 dark:border-stone-800 rounded-2xl max-w-lg w-full p-6 space-y-4 shadow-2xl relative">
             <button
               onClick={() => setPreviewProofUrl(null)}
               className="absolute top-4 right-4 p-1.5 rounded-full text-stone-400 hover:text-stone-700 dark:hover:text-stone-200 hover:bg-stone-100 dark:hover:bg-stone-800"

@@ -39,11 +39,10 @@ export default async function KursusSayaPage() {
     redirect("/admin/dashboard");
   }
 
+  // untuk peserta tampilkan manajemen kursus saya
   return (
-    <div className="min-h-screen bg-[#FAF9F6] dark:bg-[#0C0A09]">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14">
-        <DashboardPesertaClient />
-      </div>
+    <div className="space-y-6">
+      <DashboardPesertaClient />
     </div>
   );
 }

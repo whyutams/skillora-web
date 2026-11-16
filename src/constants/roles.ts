@@ -20,3 +20,10 @@ export const isStudent = (role?: string | null): boolean =>
 export const isManagerRole = (role?: string | null): boolean =>
   role === USER_ROLES.SUPERADMIN || role === USER_ROLES.ADMIN;
 
+// fungsi pembantu untuk menampilkan label peran baku pengguna di antarmuka
+export const getRoleLabel = (role?: string | null): string => {
+  if (role === USER_ROLES.SUPERADMIN) return "Superadmin";
+  if (role === USER_ROLES.ADMIN) return "Admin";
+  return "Peserta";
+};
+

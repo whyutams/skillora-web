@@ -19,7 +19,6 @@ import {
   Plus,
   ArrowRight,
   RefreshCw,
-  Sparkles,
   DollarSign,
   TrendingUp,
   ExternalLink,

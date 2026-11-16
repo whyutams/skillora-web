@@ -401,7 +401,7 @@ export default function SuperadminUsersPage() {
       {/* Modal Reset Password */}
       {resetModal.isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-950/70 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white dark:bg-[#0C0A09] border border-stone-200 dark:border-stone-800 rounded-3xl max-w-md w-full p-6 space-y-5 shadow-2xl relative">
+          <div className="bg-white dark:bg-[#0C0A09] border border-stone-200 dark:border-stone-800 rounded-2xl max-w-md w-full p-6 space-y-5 shadow-2xl relative">
             <button onClick={() => setResetModal((prev) => ({ ...prev, isOpen: false }))} className="absolute top-5 right-5 p-1.5 rounded-full text-stone-400 hover:text-stone-700 dark:hover:text-stone-200 hover:bg-stone-100 dark:hover:bg-stone-800">
               <X className="w-5 h-5" />
             </button>

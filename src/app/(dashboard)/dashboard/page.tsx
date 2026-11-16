@@ -1,8 +1,14 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
 import { USER_ROLES } from "@/constants/roles";
+import { DashboardPesertaOverview } from "./DashboardPesertaOverview";
 
-export default async function DashboardRedirectPage() {
+export const metadata = {
+  title: "Dashboard Peserta | Skillora",
+  description: "Pusat belajar peserta Skillora pantau progres materi dan sertifikat",
+};
+
+export default async function DashboardPage() {
   const supabase = await createClient();
 
   const {
@@ -10,7 +16,7 @@ export default async function DashboardRedirectPage() {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    redirect("/login?redirect=/kursus-saya");
+    redirect("/login?redirect=/dashboard");
   }
 
   const { data: profile } = await supabase
@@ -31,6 +37,6 @@ export default async function DashboardRedirectPage() {
     redirect("/admin/dashboard");
   }
 
-  // peserta diarahkan ke halaman kursus saya
-  redirect("/kursus-saya");
+  // untuk akun peserta tampilkan ringkasan beranda dashboard peserta
+  return <DashboardPesertaOverview />;
 }

@@ -11,7 +11,7 @@ import {
   BookOpen,
   ArrowLeft,
   Upload,
-  Sparkles,
+  Globe,
   MessageCircle,
   FileText,
   AlignLeft,
@@ -258,7 +258,7 @@ export default function CreateCoursePage() {
                 className="w-full px-4 py-2.5 text-sm rounded-xl border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-950 text-stone-900 dark:text-stone-100 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-[#0F3E2E] dark:focus:ring-emerald-500"
               />
               <div className="flex items-center gap-1.5 text-[11px] text-stone-400 pt-0.5">
-                <Sparkles className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+                <Globe className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
                 <span>Slug:</span>
                 <span className="font-semibold text-emerald-700 dark:text-emerald-400">
                   /{generatedSlug || "judul-kursus"}

@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import {
@@ -87,6 +88,13 @@ export default function AdminCourseDetailPage() {
   const [targetLearning, setTargetLearning] = React.useState<string[]>([]);
   const [isSaving, setIsSaving] = React.useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = React.useState(false);
+  const [mounted, setMounted] = React.useState(false);
+  const moduleTitleInputRef = React.useRef<HTMLInputElement>(null);
+  const modalContainerRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const [moduleModal, setModuleModal] = React.useState<{
     isOpen: boolean;
@@ -136,6 +144,33 @@ export default function AdminCourseDetailPage() {
     type: "info",
   });
 
+  // kunci scroll body dan alihkan fokus ke modal saat modal modul terbuka
+  React.useEffect(() => {
+    if (!moduleModal.isOpen) return;
+
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    // fokuskan input judul modul secara otomatis
+    const timer = setTimeout(() => {
+      moduleTitleInputRef.current?.focus();
+    }, 60);
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setModuleModal((p) => ({ ...p, isOpen: false }));
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = originalOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+      clearTimeout(timer);
+    };
+  }, [moduleModal.isOpen]);
+
   const [participants, setParticipants] = React.useState<CourseParticipant[]>([]);
   const [loadingParticipants, setLoadingParticipants] = React.useState(true);
   const [participantSearch, setParticipantSearch] = React.useState("");
@@ -173,7 +208,7 @@ export default function AdminCourseDetailPage() {
               ? m.lessons.map((l: any) => ({
                 title: l.title || "Topik Tanpa Judul",
                 type: l.type || "reading",
-                duration: l.duration || "15 Menit",
+                duration: l.duration || "",
                 content: l.content || "",
                 video_url: l.video_url || "",
                 starter_code: l.starter_code || "",
@@ -242,7 +277,7 @@ export default function AdminCourseDetailPage() {
             lessons: (m.lessons || []).map((l) => ({
               title: l.title,
               type: l.type,
-              duration: l.duration || "15 Menit",
+              duration: l.duration || "",
               ...(l.content ? { content: l.content } : {}),
               ...(l.video_url ? { video_url: l.video_url } : {}),
               ...(l.starter_code ? { starter_code: l.starter_code } : {}),
@@ -484,7 +519,7 @@ export default function AdminCourseDetailPage() {
   }
 
   return (
-    <div className="space-y-8 max-w-7xl mx-auto pb-12">
+    <div className="space-y-8 w-full pb-12">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-stone-200/80 dark:border-stone-800/80">
         <div className="space-y-2">
           <Link
@@ -517,7 +552,7 @@ export default function AdminCourseDetailPage() {
             </Badge>
           </div>
 
-          <p className="text-xs text-stone-500 font-mono">
+          <p className="text-xs text-stone-500 font-medium">
             slug: <span className="text-emerald-700 dark:text-emerald-400 font-bold">/courses/{course.slug}</span>
           </p>
         </div>
@@ -1045,7 +1080,7 @@ export default function AdminCourseDetailPage() {
                         key={p.id}
                         className="hover:bg-stone-50/80 dark:hover:bg-stone-900/50 transition-colors"
                       >
-                        <td className="py-3 px-4 text-center font-mono text-stone-400 font-medium">
+                        <td className="py-3 px-4 text-center text-stone-400 font-medium text-xs">
                           {rowNumber}
                         </td>
                         <td className="py-3 px-4">
@@ -1312,10 +1347,25 @@ export default function AdminCourseDetailPage() {
         </CardContent>
       </Card>
 
-      {moduleModal.isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
-          <div className="w-full max-w-xl bg-white dark:bg-stone-900 rounded-3xl border border-stone-200 dark:border-stone-800 shadow-2xl p-6 space-y-5 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between pb-3 border-b border-stone-100 dark:border-stone-800">
+      {mounted && moduleModal.isOpen && createPortal(
+        <div
+          role="dialog"
+          aria-modal="true"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200 overflow-y-auto overscroll-contain"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setModuleModal((p) => ({ ...p, isOpen: false }));
+            }
+          }}
+        >
+          <div
+            ref={modalContainerRef}
+            tabIndex={-1}
+            className="w-full max-w-xl bg-white dark:bg-stone-900 rounded-2xl border border-stone-200 dark:border-stone-800 shadow-2xl p-6 flex flex-col max-h-[88vh] overscroll-contain focus:outline-none"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* header modal silabus */}
+            <div className="flex items-center justify-between pb-3 border-b border-stone-100 dark:border-stone-800 shrink-0">
               <h3 className="text-base font-bold text-stone-900 dark:text-stone-100 flex items-center gap-2">
                 <BookOpen className="w-4 h-4 text-emerald-600" />
                 <span>
@@ -1331,12 +1381,14 @@ export default function AdminCourseDetailPage() {
               </button>
             </div>
 
-            <div className="space-y-4 text-xs">
+            {/* area formulir modal dengan scroll mulus dan terisolasi */}
+            <div className="flex-1 overflow-y-auto overscroll-contain py-3 pr-1 space-y-4 text-xs">
               <div className="space-y-1.5">
                 <label className="font-semibold text-stone-700 dark:text-stone-300 block">
                   Judul Modul <span className="text-rose-500">*</span>
                 </label>
                 <input
+                  ref={moduleTitleInputRef}
                   type="text"
                   value={moduleModal.title}
                   onChange={(e) => setModuleModal((p) => ({ ...p, title: e.target.value }))}
@@ -1413,7 +1465,7 @@ export default function AdminCourseDetailPage() {
                   </Button>
                 </div>
 
-                <div className="space-y-1.5 max-h-48 overflow-y-auto pt-1">
+                <div className="space-y-1.5 max-h-56 overflow-y-auto overscroll-contain pt-1 pr-1">
                   {moduleModal.lessons.map((lesson, lIdx) => (
                     <div
                       key={lIdx}
@@ -1451,7 +1503,8 @@ export default function AdminCourseDetailPage() {
               </div>
             </div>
 
-            <div className="pt-3 border-t border-stone-100 dark:border-stone-800 flex items-center justify-end gap-2">
+            {/* tombol aksi modal tetap diam di bawah tidak ikut tergulung */}
+            <div className="pt-3 border-t border-stone-100 dark:border-stone-800 flex items-center justify-end gap-2 shrink-0">
               <Button
                 variant="outline"
                 size="sm"
@@ -1469,7 +1522,8 @@ export default function AdminCourseDetailPage() {
               </Button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       <ConfirmModal

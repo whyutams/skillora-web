@@ -239,7 +239,7 @@ export default function AdminRekeningPage() {
                           {account.is_active ? "Aktif" : "Nonaktif"}
                         </Badge>
                       </div>
-                      <p className="text-xs text-stone-700 dark:text-stone-300 font-mono mt-0.5">{account.account_number}</p>
+                      <p className="text-xs text-stone-700 dark:text-stone-300 font-semibold mt-0.5">{account.account_number}</p>
                       <p className="text-xs text-stone-500 dark:text-stone-400">a.n {account.account_holder}</p>
                     </div>
                   </div>
@@ -286,7 +286,7 @@ export default function AdminRekeningPage() {
       {/* Modal Tambah / Edit Rekening */}
       {isFormOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-950/70 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white dark:bg-[#0C0A09] border border-stone-200 dark:border-stone-800 rounded-3xl max-w-md w-full p-6 space-y-5 shadow-2xl relative">
+          <div className="bg-white dark:bg-[#0C0A09] border border-stone-200 dark:border-stone-800 rounded-2xl max-w-md w-full p-6 space-y-5 shadow-2xl relative">
             <button
               onClick={() => setIsFormOpen(false)}
               className="absolute top-5 right-5 p-1.5 rounded-full text-stone-400 hover:text-stone-700 dark:hover:text-stone-200 hover:bg-stone-100 dark:hover:bg-stone-800"
@@ -334,7 +334,7 @@ export default function AdminRekeningPage() {
                   value={form.account_number}
                   onChange={(e) => setForm((f) => ({ ...f, account_number: e.target.value }))}
                   placeholder="Contoh: 1234567890 atau 0812-3456-7890"
-                  className="w-full px-3 py-2.5 rounded-xl border border-stone-200 dark:border-stone-800 bg-stone-50/50 dark:bg-stone-900/50 text-sm font-mono text-stone-900 dark:text-stone-100 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  className="w-full px-3 py-2.5 rounded-xl border border-stone-200 dark:border-stone-800 bg-stone-50/50 dark:bg-stone-900/50 text-sm font-medium text-stone-900 dark:text-stone-100 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-emerald-500"
                 />
               </div>
               <div>

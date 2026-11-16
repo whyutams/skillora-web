@@ -62,15 +62,15 @@ export function EnrollmentCardSkeleton() {
 
 export function StudentCourseDetailSkeleton() {
   return (
-    <div className="space-y-8 animate-in fade-in duration-200">
-      {/* Breadcrumb skeleton */}
+    <div className="space-y-8 w-full animate-in fade-in duration-200">
+      {/* skeleton navigasi remah roti */}
       <div className="flex items-center justify-between">
         <Skeleton className="w-36 h-8 rounded-xl" />
         <Skeleton className="w-24 h-8 rounded-xl" />
       </div>
 
-      {/* Header banner skeleton */}
-      <div className="p-6 sm:p-8 rounded-3xl border border-stone-200/80 dark:border-stone-800/80 bg-white/80 dark:bg-stone-900/60 space-y-4 shadow-xs">
+      {/* skeleton spanduk tajuk */}
+      <div className="p-6 sm:p-8 rounded-2xl border border-stone-200/80 dark:border-stone-800/80 bg-white/80 dark:bg-stone-900/60 space-y-4 shadow-xs">
         <div className="flex items-center gap-2.5">
           <Skeleton className="w-28 h-6 rounded-full" />
           <Skeleton className="w-20 h-6 rounded-full" />
@@ -84,11 +84,11 @@ export function StudentCourseDetailSkeleton() {
         </div>
       </div>
 
-      {/* 2-column grid skeleton */}
+      {/* skeleton kisi dua kolom */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
         <div className="lg:col-span-2 space-y-6">
-          <Skeleton className="w-full h-64 sm:h-80 rounded-3xl" />
-          <div className="p-6 sm:p-8 rounded-3xl border border-stone-200/80 dark:border-stone-800/80 bg-white dark:bg-stone-900/60 space-y-4">
+          <Skeleton className="w-full h-64 sm:h-80 rounded-2xl" />
+          <div className="p-6 sm:p-8 rounded-2xl border border-stone-200/80 dark:border-stone-800/80 bg-white dark:bg-stone-900/60 space-y-4">
             <Skeleton className="w-48 h-6 rounded-md" />
             <Skeleton className="w-full h-4 rounded" />
             <Skeleton className="w-full h-4 rounded" />
@@ -98,13 +98,13 @@ export function StudentCourseDetailSkeleton() {
         </div>
 
         <div className="space-y-6">
-          <div className="p-6 rounded-3xl border border-stone-200/80 dark:border-stone-800/80 bg-white dark:bg-stone-900/60 space-y-4">
+          <div className="p-6 rounded-2xl border border-stone-200/80 dark:border-stone-800/80 bg-white dark:bg-stone-900/60 space-y-4">
             <Skeleton className="w-36 h-5 rounded-md" />
             <Skeleton className="w-full h-20 rounded-2xl" />
             <Skeleton className="w-full h-10 rounded-xl" />
           </div>
 
-          <div className="p-6 rounded-3xl border border-stone-200/80 dark:border-stone-800/80 bg-white dark:bg-stone-900/60 space-y-3">
+          <div className="p-6 rounded-2xl border border-stone-200/80 dark:border-stone-800/80 bg-white dark:bg-stone-900/60 space-y-3">
             <Skeleton className="w-44 h-5 rounded-md" />
             <Skeleton className="w-full h-14 rounded-2xl" />
             <Skeleton className="w-full h-14 rounded-2xl" />
@@ -187,7 +187,7 @@ export function CourseCatalogSkeleton() {
 
 export function ProfileSkeleton() {
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 space-y-8">
+    <div className="w-full space-y-8 animate-pulse">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-stone-200/80 dark:border-stone-800/80">
         <div className="space-y-2">
           <Skeleton className="w-48 h-8 rounded-lg" />
@@ -391,7 +391,7 @@ export function AdminCourseFormSkeleton() {
 // skeleton formulir edit topik
 export function AdminTopicEditSkeleton() {
   return (
-    <div className="space-y-8 max-w-5xl mx-auto pb-16 animate-in fade-in duration-150">
+    <div className="space-y-8 w-full pb-16 animate-in fade-in duration-150">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-stone-200/80 dark:border-stone-800/80">
         <div className="space-y-2">
           <Skeleton className="w-40 h-7 rounded-xl" />
@@ -484,7 +484,7 @@ export function TableRowsSkeleton({ rows = 5, cols = 4 }: { rows?: number; cols?
 // skeleton halaman pengaturan sistem
 export function SettingsSkeleton() {
   return (
-    <div className="space-y-6 animate-in fade-in duration-150">
+    <div className="space-y-6 w-full animate-in fade-in duration-150">
       {[1, 2].map((i) => (
         <div
           key={i}
@@ -507,8 +507,8 @@ export function SettingsSkeleton() {
 // skeleton halaman pendaftaran admin
 export function AdminPendaftaranSkeleton() {
   return (
-    <div className="space-y-8 w-full pb-12 max-w-7xl mx-auto animate-in fade-in duration-150">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-6 sm:p-8 rounded-3xl border border-stone-200/80 dark:border-stone-800/80 bg-white/70 dark:bg-stone-900/60 shadow-xs">
+    <div className="space-y-8 w-full pb-12 animate-in fade-in duration-150">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-6 sm:p-8 rounded-2xl border border-stone-200/80 dark:border-stone-800/80 bg-white/70 dark:bg-stone-900/60 shadow-xs">
         <div className="flex items-center gap-4">
           <Skeleton className="w-14 h-14 rounded-2xl shrink-0" />
           <div className="space-y-2">
@@ -537,7 +537,7 @@ export function AdminPendaftaranSkeleton() {
         {[1, 2, 3, 4, 5, 6].map((i) => (
           <div
             key={i}
-            className="p-6 rounded-3xl border border-stone-200/80 dark:border-stone-800/80 bg-white/70 dark:bg-stone-900/60 space-y-4 shadow-xs"
+            className="p-6 rounded-2xl border border-stone-200/80 dark:border-stone-800/80 bg-white/70 dark:bg-stone-900/60 space-y-4 shadow-xs"
           >
             <div className="flex items-start justify-between gap-2">
               <Skeleton className="w-3/4 h-5 rounded-md" />
@@ -566,8 +566,8 @@ export function AdminPendaftaranSkeleton() {
 // skeleton halaman katalog kursus admin
 export function AdminCoursesSkeleton() {
   return (
-    <div className="space-y-8 w-full pb-12 max-w-7xl mx-auto animate-in fade-in duration-150">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-6 sm:p-8 rounded-3xl border border-stone-200/80 dark:border-stone-800/80 bg-white/70 dark:bg-stone-900/60 shadow-xs">
+    <div className="space-y-8 w-full pb-12 animate-in fade-in duration-150">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-6 sm:p-8 rounded-2xl border border-stone-200/80 dark:border-stone-800/80 bg-white/70 dark:bg-stone-900/60 shadow-xs">
         <div className="flex items-center gap-4">
           <Skeleton className="w-14 h-14 rounded-2xl shrink-0" />
           <div className="space-y-2">
@@ -588,7 +588,7 @@ export function AdminCoursesSkeleton() {
         {[1, 2, 3, 4].map((i) => (
           <div
             key={i}
-            className="p-4 rounded-xl border border-stone-200/80 dark:border-stone-800/80 bg-white/50 dark:bg-stone-900/40 space-y-2"
+            className="p-4 rounded-2xl border border-stone-200/80 dark:border-stone-800/80 bg-white/50 dark:bg-stone-900/40 space-y-2"
           >
             <Skeleton className="w-24 h-3.5 rounded" />
             <Skeleton className="w-16 h-7 rounded-md" />
@@ -628,7 +628,7 @@ export function AdminCoursesSkeleton() {
 // skeleton halaman rekening pembayaran admin
 export function AdminRekeningSkeleton() {
   return (
-    <div className="space-y-6 w-full max-w-5xl mx-auto pb-12 animate-in fade-in duration-150">
+    <div className="space-y-6 w-full pb-12 animate-in fade-in duration-150">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-6 rounded-2xl border border-stone-200/80 dark:border-stone-800/80 bg-white/70 dark:bg-stone-900/60">
         <div className="flex items-center gap-3.5">
           <Skeleton className="w-12 h-12 rounded-xl shrink-0" />
@@ -675,13 +675,12 @@ export function AdminRekeningSkeleton() {
 // skeleton ruang belajar materi kursus mandiri
 export function TopicWorkspaceSkeleton() {
   return (
-    <div className="min-h-screen bg-stone-50 dark:bg-[#0C0A09] text-stone-900 dark:text-stone-100 py-6 sm:py-10 transition-colors animate-in fade-in duration-150">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8 animate-pulse">
+    <div className="w-full space-y-8 animate-pulse">
         {/* bagian navigasi atas dan tajuk */}
         <div className="space-y-4">
           <Skeleton className="w-48 h-8 rounded-xl" />
 
-          <div className="p-6 sm:p-7 rounded-3xl border border-stone-200/80 dark:border-stone-800/80 bg-white/80 dark:bg-stone-900/60 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="p-6 sm:p-7 rounded-2xl border border-stone-200/80 dark:border-stone-800/80 bg-white/80 dark:bg-stone-900/60 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div className="space-y-3 flex-1">
               <div className="flex items-center gap-2">
                 <Skeleton className="w-32 h-5 rounded-md" />
@@ -698,7 +697,7 @@ export function TopicWorkspaceSkeleton() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-start">
           {/* kolom kiri konten topik */}
           <div className="lg:col-span-8 space-y-6">
-            <div className="p-6 rounded-3xl border border-stone-200/80 dark:border-stone-800/80 bg-white/80 dark:bg-stone-900/60 space-y-3">
+            <div className="p-6 rounded-2xl border border-stone-200/80 dark:border-stone-800/80 bg-white/80 dark:bg-stone-900/60 space-y-3">
               <div className="flex items-center justify-between">
                 <Skeleton className="w-48 h-4 rounded-md" />
                 <Skeleton className="w-20 h-5 rounded-md" />
@@ -706,9 +705,9 @@ export function TopicWorkspaceSkeleton() {
               <Skeleton className="w-2/3 h-7 rounded-xl" />
             </div>
 
-            <Skeleton className="w-full aspect-video rounded-3xl" />
+            <Skeleton className="w-full aspect-video rounded-2xl" />
 
-            <div className="p-6 sm:p-8 rounded-3xl border border-stone-200/80 dark:border-stone-800/80 bg-white/80 dark:bg-stone-900/60 space-y-4">
+            <div className="p-6 sm:p-8 rounded-2xl border border-stone-200/80 dark:border-stone-800/80 bg-white/80 dark:bg-stone-900/60 space-y-4">
               <Skeleton className="w-full h-4 rounded" />
               <Skeleton className="w-5/6 h-4 rounded" />
               <Skeleton className="w-4/5 h-4 rounded" />
@@ -716,7 +715,7 @@ export function TopicWorkspaceSkeleton() {
               <Skeleton className="w-1/2 h-4 rounded" />
             </div>
 
-            <div className="p-4 sm:p-5 rounded-3xl border border-stone-200/80 dark:border-stone-800/80 bg-white/80 dark:bg-stone-900/60 flex items-center justify-between">
+            <div className="p-4 sm:p-5 rounded-2xl border border-stone-200/80 dark:border-stone-800/80 bg-white/80 dark:bg-stone-900/60 flex items-center justify-between">
               <Skeleton className="w-36 h-10 rounded-xl" />
               <div className="flex items-center gap-2">
                 <Skeleton className="w-28 h-10 rounded-xl" />
@@ -727,7 +726,7 @@ export function TopicWorkspaceSkeleton() {
 
           {/* kolom kanan daftar modul */}
           <div className="lg:col-span-4 lg:sticky lg:top-24 space-y-6">
-            <div className="rounded-3xl border border-stone-200/80 dark:border-stone-800/80 bg-white/80 dark:bg-stone-900/60 p-5 sm:p-6 space-y-4">
+            <div className="rounded-2xl border border-stone-200/80 dark:border-stone-800/80 bg-white/80 dark:bg-stone-900/60 p-5 sm:p-6 space-y-4">
               <div className="space-y-2 pb-2 border-b border-stone-100 dark:border-stone-800/60">
                 <Skeleton className="w-44 h-5 rounded-md" />
                 <Skeleton className="w-32 h-3.5 rounded" />
@@ -760,6 +759,5 @@ export function TopicWorkspaceSkeleton() {
           </div>
         </div>
       </div>
-    </div>
   );
 }

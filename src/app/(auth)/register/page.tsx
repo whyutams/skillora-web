@@ -295,7 +295,7 @@ function RegisterForm() {
             <GraduationCap className="w-6 h-6" />
           </div>
           <h1 className="text-2xl font-bold tracking-tight text-stone-900 dark:text-stone-100">
-            Daftar Akun Pelajar Skillora
+            Daftar Akun Peserta Skillora
           </h1>
           <p className="text-xs sm:text-sm text-stone-500 dark:text-stone-400">
             Lengkapi identitas untuk bergabung dalam kelas & grup WhatsApp belajar.

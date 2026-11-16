@@ -20,7 +20,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     },
     ref
   ) => {
-    // Anti-AI style: tegas rounded-lg, crisp subtle border, controlled micro-interactions
+    // gaya tombol konsisten dengan sudut rounded dan interaksi mikro terkontrol
     const baseStyles =
       "inline-flex items-center justify-center font-medium rounded-lg transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-stone-400 dark:focus-visible:ring-stone-600 disabled:opacity-50 disabled:pointer-events-none active:scale-[0.98]";
 
@@ -31,22 +31,22 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     }[size];
 
     const variantStyles = {
-      // Primary: Deep Pine (#0F3E2E) with clean text and subtle border
+      // varian utama warna deep pine dengan teks kontras
       primary:
         "bg-[#0F3E2E] hover:bg-[#16533e] text-white border border-[#1d5849]/50 shadow-sm",
-      // Secondary: Stone neutral with subtle border
+      // varian sekunder netral dengan garis batas tipis
       secondary:
         "bg-stone-100 hover:bg-stone-200 dark:bg-stone-800/80 dark:hover:bg-stone-700/80 text-stone-900 dark:text-stone-100 border border-stone-200/80 dark:border-stone-700/80",
-      // Outline: clean minimal border
+      // varian outline minimalis
       outline:
         "border border-stone-300 dark:border-stone-700 hover:bg-stone-100/60 dark:hover:bg-stone-800/60 text-stone-800 dark:text-stone-200",
-      // Danger: muted crimson
+      // varian danger warna merah
       danger:
         "bg-rose-600 hover:bg-rose-700 text-white border border-rose-700/50 shadow-sm",
-      // Ghost: transparent with hover fill
+      // varian ghost transparan
       ghost:
         "hover:bg-stone-100 dark:hover:bg-stone-800/70 text-stone-700 dark:text-stone-300",
-      // Sage: Muted Sage / Mint Halus accent button
+      // varian sage aksen lembut
       sage:
         "bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-800 dark:text-emerald-300 border border-emerald-600/30 dark:border-emerald-500/30",
     }[variant];

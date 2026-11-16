@@ -8,7 +8,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { Badge } from "@/components/ui/Badge";
 import { ConfirmModal } from "@/components/ui/ModalKonfirmasi";
 import { SmoothImage } from "@/components/ui/SmoothImage";
-import { UserRole, USER_ROLES } from "@/types/database";
+import { UserRole, USER_ROLES, getRoleLabel } from "@/types/database";
 import {
   GraduationCap,
   LayoutDashboard,
@@ -26,8 +26,12 @@ import {
   Heart,
   CreditCard,
   Settings,
+  Award,
+  MessageCircle,
+  PanelLeftClose,
+  PanelLeftOpen,
 } from "lucide-react";
-import { APP_VERSION } from "@/config/app";
+import { APP_NAME, APP_VERSION } from "@/config/app";
 import { BreadcrumbProvider, useBreadcrumb } from "@/context/BreadcrumbContext";
 
 function formatSlugToTitle(slug: string): string {
@@ -40,10 +44,7 @@ function formatSlugToTitle(slug: string): string {
     .join(" ");
 }
 
-function DashboardBreadcrumbs() {
-  const pathname = usePathname();
-  const { customTitle } = useBreadcrumb();
-
+function getBreadcrumbData(pathname: string, customTitle?: string | null) {
   const dashboardHomeHref = pathname.startsWith("/superadmin")
     ? "/superadmin/dashboard"
     : pathname.startsWith("/admin")
@@ -52,13 +53,11 @@ function DashboardBreadcrumbs() {
 
   const isDashboardHome = pathname === dashboardHomeHref;
 
-  // jika berada tepat di beranda dashboard
   if (isDashboardHome) {
-    return (
-      <span className="font-semibold text-stone-800 dark:text-stone-200">
-        Dashboard
-      </span>
-    );
+    return {
+      title: "Dashboard",
+      breadcrumbs: [{ label: "Dashboard", href: dashboardHomeHref }],
+    };
   }
 
   // untuk halaman selain beranda dashboard posisi pertama selalu dashboard
@@ -66,13 +65,18 @@ function DashboardBreadcrumbs() {
     { label: "Dashboard", href: dashboardHomeHref },
   ];
 
+  let title = "Dashboard";
+
   if (pathname.startsWith("/admin/courses")) {
     if (pathname === "/admin/courses") {
+      title = "Manajemen Kursus";
       breadcrumbs.push({ label: "Kursus" });
     } else if (pathname === "/admin/courses/create") {
+      title = "Tambah Kursus";
       breadcrumbs.push({ label: "Kursus", href: "/admin/courses" });
       breadcrumbs.push({ label: "Tambah Kursus" });
     } else if (pathname.includes("/edit")) {
+      title = "Edit Kursus";
       const courseSegment = pathname.split("/")[3] || "";
       const displayTitle = customTitle || formatSlugToTitle(courseSegment);
       breadcrumbs.push({ label: "Kursus", href: "/admin/courses" });
@@ -81,6 +85,7 @@ function DashboardBreadcrumbs() {
       }
       breadcrumbs.push({ label: "Edit Kursus" });
     } else if (pathname.includes("/topics")) {
+      title = "Kurikulum Kursus";
       const courseSegment = pathname.split("/")[3] || "";
       const displayTitle = customTitle || formatSlugToTitle(courseSegment);
       breadcrumbs.push({ label: "Kursus", href: "/admin/courses" });
@@ -92,46 +97,110 @@ function DashboardBreadcrumbs() {
       // halaman detail kursus
       const courseSegment = pathname.split("/")[3] || "";
       const displayTitle = customTitle || formatSlugToTitle(courseSegment);
+      title = displayTitle || "Detail Kursus";
       breadcrumbs.push({ label: "Kursus", href: "/admin/courses" });
       breadcrumbs.push({ label: displayTitle });
     }
   } else if (pathname.startsWith("/admin/pendaftaran")) {
+    title = "Pendaftaran Peserta";
     breadcrumbs.push({ label: "Pendaftaran" });
   } else if (pathname.startsWith("/admin/rekening")) {
+    title = "Rekening Pembayaran";
     breadcrumbs.push({ label: "Rekening" });
   } else if (pathname.startsWith("/superadmin/users")) {
     if (pathname === "/superadmin/users/create") {
+      title = "Tambah Pengguna";
       breadcrumbs.push({ label: "Users", href: "/superadmin/users" });
       breadcrumbs.push({ label: "Tambah Pengguna" });
     } else {
+      title = "Manajemen Pengguna";
       breadcrumbs.push({ label: "Users Management" });
     }
   } else if (pathname.startsWith("/superadmin/logs")) {
+    title = "Activity Logs";
     breadcrumbs.push({ label: "Activity Logs" });
   } else if (pathname.startsWith("/superadmin/pengaturan")) {
+    title = "Pengaturan Sistem";
     breadcrumbs.push({ label: "Pengaturan Sistem" });
-  } else if (pathname.includes("/profile")) {
+  } else if (pathname.startsWith("/kursus-saya")) {
+    const courseSegment = pathname.split("/")[2] || "";
+    if (!courseSegment) {
+      title = "Kursus Saya";
+      breadcrumbs.push({ label: "Kursus Saya" });
+    } else {
+      const displayTitle = customTitle || formatSlugToTitle(courseSegment);
+      breadcrumbs.push({ label: "Kursus Saya", href: "/kursus-saya" });
+      if (pathname.includes("/belajar")) {
+        title = "Ruang Belajar";
+        breadcrumbs.push({ label: displayTitle, href: `/kursus-saya/${courseSegment}` });
+        breadcrumbs.push({ label: "Ruang Belajar" });
+      } else {
+        title = displayTitle || "Detail Kursus";
+        breadcrumbs.push({ label: displayTitle });
+      }
+    }
+  } else if (pathname === "/dashboard/kursus" || pathname === "/kursus") {
+    title = "Katalog Kursus";
+    breadcrumbs.push({ label: "Kursus" });
+  } else if (pathname.startsWith("/dashboard/sertifikat") || pathname.startsWith("/sertifikat")) {
+    title = "Sertifikat Kelulusan";
+    breadcrumbs.push({ label: "Sertifikat" });
+  } else if (pathname.includes("/profile") || pathname.includes("/profil")) {
+    title = "Pengaturan Profil";
     breadcrumbs.push({ label: "Pengaturan Profil" });
   } else {
+    title = "Dashboard";
     breadcrumbs.push({ label: "Halaman" });
   }
 
+  return { title, breadcrumbs };
+}
+
+function NavbarPageTitle() {
+  const pathname = usePathname();
+  const { customTitle } = useBreadcrumb();
+  const { title } = getBreadcrumbData(pathname, customTitle);
+
   return (
-    <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-xs text-stone-500">
+    <span className="font-bold text-sm sm:text-base text-stone-900 dark:text-stone-100 truncate">
+      {title}
+    </span>
+  );
+}
+
+function DashboardBreadcrumbs() {
+  const pathname = usePathname();
+  const { customTitle } = useBreadcrumb();
+  const { breadcrumbs } = getBreadcrumbData(pathname, customTitle);
+
+  // jika hanya berada tepat di beranda dashboard sembunyikan breadcrumb
+  if (breadcrumbs.length <= 1) {
+    return null;
+  }
+
+  return (
+    <nav
+      aria-label="Breadcrumb"
+      className="flex items-center gap-1.5 sm:gap-2 text-xs overflow-x-auto pb-3 mb-2 flex-wrap font-medium"
+    >
       {breadcrumbs.map((item, index) => {
         const isLast = index === breadcrumbs.length - 1;
         return (
           <React.Fragment key={index}>
-            {index > 0 && <span>/</span>}
+            {index > 0 && (
+              <span className="text-emerald-600/40 dark:text-emerald-500/40 font-semibold select-none">
+                /
+              </span>
+            )}
             {item.href && !isLast ? (
               <Link
                 href={item.href}
-                className="hover:text-stone-900 dark:hover:text-stone-100 transition-colors"
+                className="text-[#0F3E2E] dark:text-emerald-400 font-semibold hover:text-emerald-700 dark:hover:text-emerald-300 hover:underline transition-colors whitespace-nowrap"
               >
                 {item.label}
               </Link>
             ) : (
-              <span className="font-semibold text-stone-800 dark:text-stone-200">
+              <span className="font-bold text-stone-900 dark:text-stone-100 whitespace-nowrap">
                 {item.label}
               </span>
             )}
@@ -157,14 +226,40 @@ function DashboardLayoutContent({
   const [username, setUsername] = React.useState<string>("");
   const [avatarUrl, setAvatarUrl] = React.useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = React.useState(false);
+  const [isSidebarMinimized, setIsSidebarMinimized] = React.useState(false);
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = React.useState(false);
   const [isLogoutModalOpen, setIsLogoutModalOpen] = React.useState(false);
   const [isLoggingOut, setIsLoggingOut] = React.useState(false);
   const [loading, setLoading] = React.useState(true);
 
+  // muat preferensi sidebar minimize desktop dari penyimpanan lokal
+  React.useEffect(() => {
+    try {
+      const saved = localStorage.getItem("skillora_sidebar_minimized");
+      if (saved !== null) {
+        setIsSidebarMinimized(saved === "true");
+      }
+    } catch {
+      // non blocking
+    }
+  }, []);
+
+  // fungsi toggle untuk memperluas atau mengecilkan sidebar desktop
+  const toggleSidebarMinimize = () => {
+    setIsSidebarMinimized((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem("skillora_sidebar_minimized", String(next));
+      } catch {
+        // non blocking
+      }
+      return next;
+    });
+  };
+
   const dropdownRef = React.useRef<HTMLDivElement>(null);
 
-  // Close dropdown on click outside
+  // tutup menu dropdown profil saat pengguna mengklik di luar area
   React.useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -214,7 +309,7 @@ function DashboardLayoutContent({
   React.useEffect(() => {
     if (loading) return;
 
-    if (role === USER_ROLES.SUPERADMIN && (pathname.startsWith("/admin") || pathname === "/courses")) {
+    if (role === USER_ROLES.SUPERADMIN && (pathname.startsWith("/admin") || pathname === "/courses" || pathname === "/kursus")) {
       router.replace("/superadmin/dashboard");
     } else if (role === USER_ROLES.ADMIN && pathname.startsWith("/superadmin")) {
       router.replace("/admin/dashboard");
@@ -307,30 +402,44 @@ function DashboardLayoutContent({
       ];
     }
 
-    // fallback default
+    // navigasi khusus akun peserta
     return [
       {
         label: "Dashboard",
         href: "/dashboard",
         icon: LayoutDashboard,
       },
+      {
+        label: "Kursus",
+        href: "/dashboard/kursus",
+        icon: BookOpen,
+      },
+      {
+        label: "Kursus Saya",
+        href: "/kursus-saya",
+        icon: GraduationCap,
+      },
+      {
+        label: "Sertifikat",
+        href: "/dashboard/sertifikat",
+        icon: Award,
+      },
     ];
   };
 
   const navLinks = getNavLinks();
+  const adminPhone = process.env.NEXT_PUBLIC_ADMIN_WHATSAPP_NUMBER || "6281356578805";
 
   const editProfileHref =
     role === USER_ROLES.SUPERADMIN
       ? "/superadmin/profile"
       : role === USER_ROLES.ADMIN
       ? "/admin/profile"
-      : "/profile";
-
-
+      : "/profil";
 
   return (
     <div className="min-h-screen flex bg-[#FAF9F6] dark:bg-[#0C0A09] text-stone-900 dark:text-stone-100">
-      {/* Sidebar Mobile Backdrop */}
+      {/* latar belakang redup sidebar mobile */}
       {isSidebarOpen && (
         <div
           onClick={() => setIsSidebarOpen(false)}
@@ -338,36 +447,74 @@ function DashboardLayoutContent({
         />
       )}
 
-      {/* Sidebar Desktop & Mobile Drawer */}
+      {/* bilah samping desktop dan mobile drawer */}
       <aside
-        className={`fixed lg:sticky top-0 z-50 h-screen w-64 border-r border-stone-200/80 dark:border-stone-800/80 bg-[#FAF9F6]/95 dark:bg-[#0C0A09]/95 backdrop-blur-md flex flex-col justify-between transition-transform duration-200 lg:translate-x-0 ${
-          isSidebarOpen ? "translate-x-0" : "-translate-x-full"
+        className={`fixed lg:sticky top-0 z-50 h-screen border-r border-stone-200/80 dark:border-stone-800/80 bg-[#FAF9F6]/95 dark:bg-[#0C0A09]/95 backdrop-blur-md flex flex-col justify-between transition-all duration-300 ease-in-out ${
+          isSidebarMinimized ? "lg:w-20" : "lg:w-64"
+        } w-64 ${
+          isSidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         }`}
       >
-        {/* Sidebar Header (Tanpa Role Badge) */}
+        {/* bagian atas sidebar */}
         <div>
-          <div className="h-16 px-6 border-b border-stone-200/80 dark:border-stone-800/80 flex items-center justify-between">
-            <Link href="/" className="flex items-center" title="Skillora">
-              <img
-                src="/logo.png"
-                alt="Skillora"
-                className="h-8 w-auto object-contain"
-              />
-            </Link>
+          {/* header sidebar */}
+          <div
+            className={`h-16 border-b border-stone-200/80 dark:border-stone-800/80 flex items-center transition-all duration-300 ${
+              isSidebarMinimized
+                ? "lg:px-3 lg:justify-center px-6 justify-between"
+                : "px-6 justify-between"
+            }`}
+          >
+            {/* logo dan nama aplikasi */}
+            {(!isSidebarMinimized || isSidebarOpen) && (
+              <Link href="/" className="flex items-center min-w-0" title="Skillora">
+                <img
+                  src="/logo.png"
+                  alt="Skillora"
+                  className="h-8 w-auto object-contain"
+                />
+              </Link>
+            )}
 
+            {/* tombol minimize atau expand sidebar khusus tampilan desktop */}
             <button
+              type="button"
+              onClick={toggleSidebarMinimize}
+              className={`p-2 rounded-xl text-stone-500 hover:text-stone-900 dark:hover:text-stone-100 hover:bg-stone-200/60 dark:hover:bg-stone-800 transition-colors hidden lg:flex items-center justify-center cursor-pointer ${
+                isSidebarMinimized ? "mx-auto" : ""
+              }`}
+              title={isSidebarMinimized ? "Perluas Sidebar" : "Kecilkan Sidebar"}
+              aria-label={isSidebarMinimized ? "Perluas Sidebar" : "Kecilkan Sidebar"}
+            >
+              {isSidebarMinimized ? (
+                <PanelLeftOpen className="w-5 h-5 text-emerald-700 dark:text-emerald-400" />
+              ) : (
+                <PanelLeftClose className="w-5 h-5 text-stone-500 hover:text-stone-800 dark:text-stone-400 dark:hover:text-stone-200" />
+              )}
+            </button>
+
+            {/* tombol tutup drawer khusus mobile */}
+            <button
+              type="button"
               onClick={() => setIsSidebarOpen(false)}
-              className="p-1.5 rounded-lg lg:hidden text-stone-400 hover:text-stone-700 dark:hover:text-stone-200"
+              className="p-1.5 rounded-lg lg:hidden text-stone-400 hover:text-stone-700 dark:hover:text-stone-200 cursor-pointer"
+              aria-label="Tutup Menu"
             >
               <X className="w-4 h-4" />
             </button>
           </div>
 
           {/* tautan navigasi */}
-          <nav className="p-4 space-y-2">
-            <span className="text-[11px] uppercase font-bold tracking-wider text-stone-400 dark:text-stone-500 px-3.5 block mb-2">
-              Menu Navigasi
-            </span>
+          <nav
+            className={`py-4 transition-all duration-300 ${
+              isSidebarMinimized ? "lg:px-2 px-4" : "p-4"
+            } space-y-2`}
+          >
+            {(!isSidebarMinimized || isSidebarOpen) && (
+              <span className="text-[11px] uppercase font-bold tracking-wider text-stone-400 dark:text-stone-500 px-3.5 block mb-2 transition-opacity">
+                Menu Navigasi
+              </span>
+            )}
 
             {navLinks.map((link) => {
               // menu dashboard utama hanya aktif saat berada tepat di rutenya
@@ -387,14 +534,23 @@ function DashboardLayoutContent({
                 <Link
                   key={link.href}
                   href={link.href}
+                  title={link.label}
                   onClick={() => setIsSidebarOpen(false)}
-                  className={`group flex items-center justify-between px-4 py-3 rounded-xl text-sm transition-all ${
+                  className={`group flex items-center rounded-xl text-sm transition-all cursor-pointer ${
+                    isSidebarMinimized
+                      ? "lg:justify-center lg:px-0 lg:w-12 lg:h-12 lg:mx-auto px-4 py-3 justify-between"
+                      : "justify-between px-4 py-3"
+                  } ${
                     isActive
                       ? "bg-[#0F3E2E] text-white shadow-xs font-semibold"
                       : "text-stone-600 dark:text-stone-400 hover:bg-stone-200/60 dark:hover:bg-stone-900 hover:text-stone-900 dark:hover:text-stone-100 font-medium"
                   }`}
                 >
-                  <div className="flex items-center gap-3">
+                  <div
+                    className={`flex items-center ${
+                      isSidebarMinimized ? "lg:justify-center gap-0 lg:gap-0" : "gap-3"
+                    }`}
+                  >
                     <Icon
                       className={`w-5 h-5 shrink-0 transition-colors ${
                         isActive
@@ -402,30 +558,53 @@ function DashboardLayoutContent({
                           : "text-stone-500 dark:text-stone-400 group-hover:text-stone-900 dark:group-hover:text-stone-100"
                       }`}
                     />
-                    <span>{link.label}</span>
+                    <span className={isSidebarMinimized ? "lg:hidden ml-3" : "ml-3"}>
+                      {link.label}
+                    </span>
                   </div>
-                  {isActive && <ChevronRight className="w-4 h-4 opacity-80 shrink-0" />}
+                  {isActive && !isSidebarMinimized && (
+                    <ChevronRight className="w-4 h-4 opacity-80 shrink-0" />
+                  )}
                 </Link>
               );
             })}
           </nav>
         </div>
+
+        {/* bagian bawah sidebar navigasi */}
+        <div className="p-4 pb-4 border-t border-stone-200/80 dark:border-stone-800/80 flex justify-center items-center">
+          {isSidebarMinimized ? (
+            <div
+              className="text-[10px] font-semibold text-stone-400 hidden lg:block"
+              title={`${APP_NAME} v${APP_VERSION}`}
+            >
+              v{APP_VERSION}
+            </div>
+          ) : null}
+          <div
+            className={`text-[11px] font-bold text-stone-500 dark:text-stone-400 uppercase ${
+              isSidebarMinimized ? "lg:hidden" : "block"
+            }`}
+          >
+            {APP_NAME}&nbsp; <span className="font-medium lowercase">v{APP_VERSION}</span>
+          </div>
+        </div>
       </aside>
 
-      {/* Main Content Area with Header & Dedicated Footer */}
+      {/* area konten utama dengan header dan footer */}
       <div className="flex-1 flex flex-col min-w-0">
-        {/* Top bar inside Dashboard */}
+        {/* bilah atas navigasi dashboard */}
         <header className="h-16 border-b border-stone-200/80 dark:border-stone-800/80 px-4 sm:px-6 lg:px-8 flex items-center justify-between bg-[#FAF9F6]/90 dark:bg-[#0C0A09]/90 backdrop-blur-md sticky top-0 z-30">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 min-w-0">
             <button
               onClick={() => setIsSidebarOpen(true)}
-              className="p-2 rounded-lg border border-stone-200 dark:border-stone-800 lg:hidden text-stone-600 dark:text-stone-300"
+              className="p-2 rounded-lg border border-stone-200 dark:border-stone-800 lg:hidden text-stone-600 dark:text-stone-300 shrink-0"
               aria-label="Buka Sidebar"
             >
               <Menu className="w-5 h-5" />
             </button>
 
-            <DashboardBreadcrumbs />
+            <NavbarPageTitle />
           </div>
 
           <div className="flex items-center gap-3">
@@ -458,7 +637,7 @@ function DashboardLayoutContent({
                     {fullName || "Administrator"}
                   </span>
                   <span className="text-[10px] text-stone-500 capitalize leading-none">
-                    {role}
+                    {getRoleLabel(role)}
                   </span>
                 </div>
                 <ChevronDown
@@ -504,7 +683,7 @@ function DashboardLayoutContent({
                           }
                           className="text-[9px] uppercase px-1.5 py-0.2"
                         >
-                          {role}
+                          {getRoleLabel(role)}
                         </Badge>
                       </div>
                     </div>
@@ -552,13 +731,16 @@ function DashboardLayoutContent({
           </div>
         </header>
 
-        {/* Dashboard Content */}
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto">{children}</main>
+        {/* konten isi dashboard */}
+        <main className="flex-1 p-4 sm:p-6 lg:p-8">
+          <DashboardBreadcrumbs />
+          {children}
+        </main>
 
-        {/* Dedicated Dashboard Footer */}
+        {/* footer khusus dashboard */}
         <footer className="border-t border-stone-200/80 dark:border-stone-800/80 px-6 py-4 bg-white/40 dark:bg-stone-950/40 text-stone-400 text-xs flex flex-col sm:flex-row items-center justify-between gap-2">
-          <div className="w-full flex space-x-1 gap-1 items-center">© {new Date().getFullYear()} Skillora. All rights reserved. Made with true <Heart className="w-3 h-3 text-rose-500 fill-rose-500" /> by Skillora Dev</div>
-          <div className="text-[11px] font-mono font-bold text-stone-500 dark:text-stone-400">v{APP_VERSION}</div>
+          <div className="w-full flex space-x-1 gap-1 items-center">© {new Date().getFullYear()} Skillora. All rights reserved. </div>
+          <div className="w-full flex space-x-1 gap-1 items-center justify-end">Made with true <Heart className="w-3 h-3 text-rose-500 fill-rose-500" /> by Skillora Dev</div>
         </footer>
       </div>
 

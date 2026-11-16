@@ -51,7 +51,7 @@ async function getAccountsFromFallback(): Promise<PaymentAccount[]> {
   return [];
 }
 
-// Fallback helper: Simpan accounts ke activity_logs
+// simpan data rekening cadangan ke activity logs
 async function saveAccountsToFallback(accounts: PaymentAccount[]): Promise<boolean> {
   try {
     const adminClient = createAdminClient();

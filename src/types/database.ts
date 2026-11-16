@@ -7,7 +7,7 @@ export type Json =
   | Json[];
 
 import type { UserRole } from "@/constants/roles";
-export { USER_ROLES, isSuperadmin, isAdmin, isStudent, isManagerRole } from "@/constants/roles";
+export { USER_ROLES, isSuperadmin, isAdmin, isStudent, isManagerRole, getRoleLabel } from "@/constants/roles";
 export type { UserRole };
 export type EnrollmentStatus = "pending_payment" | "approved" | "rejected";
 

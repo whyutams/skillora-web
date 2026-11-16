@@ -38,9 +38,9 @@ export function Navbar() {
   const [activeSection, setActiveSection] = React.useState<string>("");
   const [isMaintenanceActive, setIsMaintenanceActive] = React.useState(false);
 
-  // pantau status pemeliharaan untuk pengelola
+  // pantau status pemeliharaan khusus superadmin
   React.useEffect(() => {
-    if (role === USER_ROLES.SUPERADMIN || role === USER_ROLES.ADMIN) {
+    if (role === USER_ROLES.SUPERADMIN) {
       fetch("/api/system/maintenance")
         .then((res) => res.json())
         .then((data) => {
@@ -211,7 +211,7 @@ export function Navbar() {
   // navigasi tombol dashboard yang andal
   const handleDashboardClick = (_e: React.MouseEvent) => {
     if (role === USER_ROLES.SUPERADMIN) {
-      router.push("/superadmin/users");
+      router.push("/superadmin/dashboard");
       return;
     }
     if (role === USER_ROLES.ADMIN) {
@@ -219,11 +219,11 @@ export function Navbar() {
       return;
     }
 
-    // untuk mahasiswa ke halaman kursus saya
-    router.push("/kursus-saya");
+    // untuk peserta langsung ke halaman dashboard
+    router.push("/dashboard");
   };
 
-  // Nav link item configuration
+  // nav link item configuration
   const navItems = [
     { id: "hero", label: "Beranda", href: "/#" },
     { id: "kursus", label: "Kursus", href: "/#kursus" },
@@ -233,7 +233,7 @@ export function Navbar() {
     { id: "faq", label: "Tanya Jawab", href: "/#faq" },
   ];
 
-  // Handler klik navlink di halaman yang sama (mencegah NProgress & smooth scroll murni)
+  // handler klik navlink di halaman yang sama
   const handleNavLinkClick = (
     e: React.MouseEvent<HTMLAnchorElement>,
     item: { id: string; href: string }
@@ -255,10 +255,13 @@ export function Navbar() {
     }
   };
 
-  // Sembunyikan Navbar hanya di halaman admin/superadmin, bukan di /kursus-saya
+  // sembunyikan navbar di halaman dashboard peserta admin dan superadmin
   const isDashboardRoute =
     pathname.startsWith("/admin") ||
-    pathname.startsWith("/superadmin");
+    pathname.startsWith("/superadmin") ||
+    pathname.startsWith("/dashboard") ||
+    pathname.startsWith("/kursus-saya") ||
+    pathname.startsWith("/profil");
 
   if (isDashboardRoute) {
     return null;
@@ -266,11 +269,11 @@ export function Navbar() {
 
   return (
     <>
-      {isMaintenanceActive && (role === USER_ROLES.SUPERADMIN || role === USER_ROLES.ADMIN) && (
+      {isMaintenanceActive && role === USER_ROLES.SUPERADMIN && (
         <div className="bg-amber-500 text-stone-950 px-4 py-2 text-xs font-bold text-center flex items-center justify-center gap-2 shadow-sm relative z-50">
           <ShieldAlert className="w-4 h-4 shrink-0" />
           <span>
-            Mode Pemeliharaan Aktif — Halaman publik saat ini ditutup untuk pengunjung. Anda dapat melihat halaman ini karena login sebagai {role === USER_ROLES.SUPERADMIN ? "Superadmin" : "Admin"}.
+            Mode Pemeliharaan Aktif — Halaman publik saat ini ditutup untuk pengunjung. Anda dapat melihat halaman ini karena login sebagai Superadmin.
           </span>
           <Link
             href="/superadmin/pengaturan"
@@ -356,7 +359,7 @@ export function Navbar() {
                       {fullName || "Akun Saya"}
                     </span>
                     <span className="text-[10px] text-stone-500 capitalize leading-none">
-                      {role}
+                      {role === USER_ROLES.STUDENT ? "Peserta" : role}
                     </span>
                   </div>
                   <ChevronDown
@@ -393,7 +396,7 @@ export function Navbar() {
                         </p>
                         <div className="mt-1.5 flex items-center gap-1.5">
                           <span className="text-[9px] uppercase font-bold px-1.5 py-0.2 rounded bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 border border-emerald-500/30">
-                            {role}
+                            {role === USER_ROLES.STUDENT ? "Peserta" : role}
                           </span>
                         </div>
                       </div>
@@ -446,23 +449,31 @@ export function Navbar() {
                           </button>
                         </>
                       ) : (
-                        /* Menu Khusus Student (Kursus Saya, Edit Profil, Logout) */
+                        /* menu khusus peserta */
                         <>
-                          {/* 1. Kursus Saya */}
-                          <button
-                            onClick={(e) => {
-                              setIsProfileDropdownOpen(false);
-                              handleDashboardClick(e);
-                            }}
-                            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-semibold text-stone-700 dark:text-stone-300 hover:bg-emerald-500/10 hover:text-[#0F3E2E] dark:hover:text-emerald-300 transition-colors text-left"
+                          {/* 1. dashboard */}
+                          <Link
+                            href="/dashboard"
+                            onClick={() => setIsProfileDropdownOpen(false)}
+                            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-semibold text-stone-700 dark:text-stone-300 hover:bg-emerald-500/10 hover:text-[#0F3E2E] dark:hover:text-emerald-300 transition-colors"
                           >
                             <LayoutDashboard className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                            <span>Kursus Saya</span>
-                          </button>
+                            <span>Dashboard</span>
+                          </Link>
 
-                          {/* 2. Edit Profil */}
+                          {/* 2. kursus saya */}
                           <Link
-                            href="/profile"
+                            href="/kursus-saya"
+                            onClick={() => setIsProfileDropdownOpen(false)}
+                            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-semibold text-stone-700 dark:text-stone-300 hover:bg-emerald-500/10 hover:text-[#0F3E2E] dark:hover:text-emerald-300 transition-colors"
+                          >
+                            <GraduationCap className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                            <span>Kursus Saya</span>
+                          </Link>
+
+                          {/* 3. edit profil */}
+                          <Link
+                            href="/profil"
                             onClick={() => setIsProfileDropdownOpen(false)}
                             className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-semibold text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors"
                           >
@@ -472,7 +483,7 @@ export function Navbar() {
 
                           <div className="my-1 border-t border-stone-100 dark:border-stone-800" />
 
-                          {/* 3. Logout */}
+                          {/* 4. logout */}
                           <button
                             onClick={() => {
                               setIsProfileDropdownOpen(false);
@@ -579,7 +590,7 @@ export function Navbar() {
                     className="w-full justify-center gap-2"
                   >
                     <LayoutDashboard className="w-4 h-4 text-emerald-300" />
-                    <span>{role === USER_ROLES.STUDENT ? "Kursus Saya" : "Dashboard"}</span>
+                    <span>Dashboard</span>
                   </Button>
 
                   <Link
@@ -588,7 +599,7 @@ export function Navbar() {
                         ? "/superadmin/profile"
                         : role === USER_ROLES.ADMIN
                         ? "/admin/profile"
-                        : "/profile"
+                        : "/profil"
                     }
                     onClick={() => setIsMobileMenuOpen(false)}
                     className="w-full"

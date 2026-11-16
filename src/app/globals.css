@@ -22,7 +22,7 @@
   }
 }
 
-/* Custom subtle scrollbar */
+/* bilah gulir halus kustom */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -38,11 +38,208 @@
   background: #292524;
 }
 
-/* Crisp Anti-AI border utilities */
+/* utilitas garis tepi antarmuka */
 .border-subtle {
   @apply border border-stone-200/80 dark:border-stone-800/80;
 }
 
 .card-hover {
   @apply transition-all duration-200 hover:border-stone-300 dark:hover:border-stone-700;
+}
+
+/* tipografi dan penataan konten materi belajar */
+.learning-content {
+  color: #292524;
+  line-height: 1.75;
+}
+
+.dark .learning-content {
+  color: #e7e5e4;
+}
+
+.learning-content h1 {
+  font-size: 1.5rem;
+  font-weight: 800;
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+  color: #1c1917;
+}
+
+.dark .learning-content h1 {
+  color: #f5f5f4;
+}
+
+.learning-content h2 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+  color: #1c1917;
+}
+
+.dark .learning-content h2 {
+  color: #f5f5f4;
+}
+
+.learning-content h3 {
+  font-size: 1.125rem;
+  font-weight: 700;
+  margin-top: 1.25rem;
+  margin-bottom: 0.5rem;
+  color: #1c1917;
+}
+
+.dark .learning-content h3 {
+  color: #f5f5f4;
+}
+
+.learning-content h4 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+  color: #1c1917;
+}
+
+.dark .learning-content h4 {
+  color: #f5f5f4;
+}
+
+.learning-content p {
+  margin-top: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.learning-content ul {
+  list-style-type: disc;
+  padding-left: 1.25rem;
+  margin-top: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.learning-content ol {
+  list-style-type: decimal;
+  padding-left: 1.25rem;
+  margin-top: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.learning-content li {
+  margin-top: 0.25rem;
+  margin-bottom: 0.25rem;
+}
+
+/* penataan blok kode program */
+.learning-content pre {
+  background-color: #18181b !important;
+  color: #f4f4f5 !important;
+  padding: 1.125rem 1.25rem !important;
+  border-radius: 1rem !important;
+  overflow-x: auto !important;
+  border: 1px solid #27272a !important;
+  margin-top: 1rem !important;
+  margin-bottom: 1rem !important;
+  font-family: Consolas, "Courier New", Courier, monospace !important;
+  font-size: 0.8125rem !important;
+  line-height: 1.6 !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+}
+
+/* seluruh elemen di dalam pre wajib bersih tanpa background putih atau border pecahan */
+.learning-content pre code,
+.learning-content pre span,
+.learning-content pre div,
+.learning-content pre mark {
+  background: transparent !important;
+  background-color: transparent !important;
+  color: inherit !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+  border: none !important;
+  font-family: inherit !important;
+  font-size: inherit !important;
+  line-height: inherit !important;
+  box-shadow: none !important;
+}
+
+.learning-content pre code {
+  display: block !important;
+  white-space: pre !important;
+}
+
+/* badge kode inline khusus di luar pre bernuansa netral elegan */
+.learning-content :not(pre) > code,
+.learning-content p code,
+.learning-content li code {
+  background-color: #f5f5f4 !important;
+  color: #0F3E2E !important;
+  padding: 0.15rem 0.45rem !important;
+  border-radius: 0.375rem !important;
+  font-size: 0.8125rem !important;
+  font-weight: 600 !important;
+  border: 1px solid #e7e5e4 !important;
+}
+
+.dark .learning-content :not(pre) > code,
+.dark .learning-content p code,
+.dark .learning-content li code {
+  background-color: #1c1917 !important;
+  color: #34d399 !important;
+  border-color: #292524 !important;
+}
+
+.learning-content blockquote {
+  border-left: 4px solid #059669;
+  background-color: rgba(5, 150, 105, 0.06);
+  padding: 0.75rem 1rem;
+  border-radius: 0 0.75rem 0.75rem 0;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+  color: #44403c;
+}
+
+.dark .learning-content blockquote {
+  background-color: rgba(16, 185, 129, 0.1);
+  color: #d6d3d1;
+}
+
+.learning-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+}
+
+.learning-content th,
+.learning-content td {
+  border: 1px solid #e7e5e4;
+  padding: 0.625rem 0.75rem;
+}
+
+.dark .learning-content th,
+.dark .learning-content td {
+  border-color: #292524;
+}
+
+.learning-content th {
+  background-color: #f5f5f4;
+  font-weight: 700;
+  text-align: left;
+}
+
+.dark .learning-content th {
+  background-color: #1c1917;
+}
+
+.learning-content a {
+  color: #059669;
+  text-decoration: underline;
+}
+
+.learning-content img {
+  border-radius: 1rem;
+  max-width: 100%;
+  height: auto;
+  margin-top: 0.75rem;
+  margin-bottom: 0.75rem;
 }

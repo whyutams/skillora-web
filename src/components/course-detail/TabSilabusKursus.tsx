@@ -11,7 +11,7 @@ import {
   Code,
   HelpCircle,
   Award,
-  Sparkles,
+  GraduationCap,
 } from "lucide-react";
 import { CourseModuleItem, CourseLessonItem } from "@/utils/courseCurriculumParser";
 import { Button } from "@/components/ui/Button";
@@ -119,7 +119,7 @@ export function TabSilabusKursus({
       </div>
 
       {modules.length === 0 ? (
-        <div className="text-center py-14 px-6 rounded-3xl max-w-xl mx-auto space-y-3 bg-white/70 dark:bg-stone-900/50 border border-stone-200/80 dark:border-stone-800/80 backdrop-blur-sm">
+        <div className="text-center py-14 px-6 rounded-2xl max-w-xl mx-auto space-y-3 bg-white/70 dark:bg-stone-900/50 border border-stone-200/80 dark:border-stone-800/80 backdrop-blur-sm">
           <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 flex items-center justify-center mx-auto border border-emerald-500/20">
             <BookOpen className="w-7 h-7" />
           </div>
@@ -250,10 +250,10 @@ export function TabSilabusKursus({
       )}
 
       {!isEnrolled && modules.length > 0 && (
-        <div className="p-5 sm:p-6 rounded-2xl bg-gradient-to-br from-[#0F3E2E] to-stone-900 text-white flex flex-col sm:flex-row items-center justify-between gap-4 shadow-md">
+        <div className="p-5 sm:p-6 rounded-2xl bg-[#0F3E2E] text-white flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm border border-emerald-900/40">
           <div className="space-y-1 text-center sm:text-left">
             <h3 className="text-base sm:text-lg font-bold flex items-center justify-center sm:justify-start gap-2">
-              <Sparkles className="w-4 h-4 text-emerald-400" />
+              <GraduationCap className="w-4 h-4 text-emerald-400" />
               <span>Siap Mempelajari Seluruh Silabus Ini?</span>
             </h3>
             <p className="text-xs sm:text-sm text-stone-300">

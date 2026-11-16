@@ -41,12 +41,6 @@ export async function middleware(request: NextRequest) {
   const { supabaseResponse, user, role, isMaintenanceMode } = await updateSession(request);
 
   // 3. penanganan mode pemeliharaan maintenance mode
-  const host = request.headers.get("host") || "";
-  const isLocalhost =
-    host.includes("localhost") ||
-    host.includes("127.0.0.1") ||
-    host.startsWith("::1");
-
   const isMaintenancePath = pathname.startsWith("/maintenance");
   const isExcludedApi =
     pathname.startsWith("/api/auth") ||
@@ -54,8 +48,7 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith("/api/system/maintenance") ||
     pathname.startsWith("/api/superadmin/settings");
 
-  // mode pemeliharaan tidak berlaku jika diakses pada lingkungan localhost
-  if (isMaintenanceMode && !isLocalhost) {
+  if (isMaintenanceMode) {
     const isManager = isManagerRole(role);
 
     // jika pengguna bukan pengelola publik atau mahasiswa
@@ -74,17 +67,23 @@ export async function middleware(request: NextRequest) {
         return NextResponse.redirect(new URL("/admin/dashboard", request.url));
       }
     }
+  } else {
+    // jika mode pemeliharaan tidak aktif alihkan akses manual rute pemeliharaan ke beranda
+    if (isMaintenancePath) {
+      return NextResponse.redirect(new URL("/", request.url));
+    }
   }
 
   // 4. penjagaan peran dan proteksi rute dashboard
   const isDashboardRoute = pathname.startsWith("/dashboard");
   const isKursusSayaRoute = pathname.startsWith("/kursus-saya");
+  const isProfilRoute = pathname.startsWith("/profil");
   const isAdminRoute = pathname.startsWith("/admin");
   const isSuperadminRoute = pathname.startsWith("/superadmin");
   const isAuthRoute = pathname === "/login" || pathname === "/register";
 
   // akses tanpa login ke rute yang dilindungi
-  if ((isDashboardRoute || isKursusSayaRoute || isAdminRoute || isSuperadminRoute) && !user) {
+  if ((isDashboardRoute || isKursusSayaRoute || isProfilRoute || isAdminRoute || isSuperadminRoute) && !user) {
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("redirect", pathname);
     return NextResponse.redirect(loginUrl);
@@ -93,7 +92,7 @@ export async function middleware(request: NextRequest) {
   // pembatasan berdasarkan peran akun
   if (user && role) {
     // superadmin tidak boleh mengakses rute admin kursus langsung
-    if (isSuperadmin(role) && (isAdminRoute || pathname === "/courses")) {
+    if (isSuperadmin(role) && (isAdminRoute || pathname === "/courses" || pathname === "/kursus")) {
       return NextResponse.redirect(new URL("/superadmin/dashboard", request.url));
     }
 
@@ -102,9 +101,9 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(new URL("/admin/dashboard", request.url));
     }
 
-    // mahasiswa tidak boleh mengakses rute admin ataupun superadmin
+    // peserta tidak boleh mengakses rute admin ataupun superadmin
     if (isStudent(role) && (isAdminRoute || isSuperadminRoute)) {
-      return NextResponse.redirect(new URL("/kursus-saya", request.url));
+      return NextResponse.redirect(new URL("/dashboard", request.url));
     }
 
     // pengguna yang sudah login mengakses halaman auth login atau register
@@ -115,7 +114,7 @@ export async function middleware(request: NextRequest) {
       if (isAdmin(role)) {
         return NextResponse.redirect(new URL("/admin/dashboard", request.url));
       }
-      return NextResponse.redirect(new URL("/kursus-saya", request.url));
+      return NextResponse.redirect(new URL("/dashboard", request.url));
     }
   }
 

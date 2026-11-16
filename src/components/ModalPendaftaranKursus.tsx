@@ -101,7 +101,13 @@ export function ModalPendaftaranKursus({
 
     // Jika belum login, redirect ke login
     if (!userId || !userEmail) {
-      router.push(`/login?redirect=/courses/${course.slug}`);
+      router.push(`/login?redirect=/kursus/${course.slug}`);
+      return;
+    }
+
+    // jika kursus berstatus draft tolak pendaftaran
+    if (!course.is_published) {
+      setError("Kursus ini masih berstatus draft dan belum dibuka untuk pendaftaran.");
       return;
     }
 
@@ -301,7 +307,7 @@ export function ModalPendaftaranKursus({
             <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-800 dark:text-amber-300 text-xs flex items-center justify-between gap-2">
               <span>Foto profil dan asal kampus wajib dilengkapi terlebih dahulu.</span>
               <Link
-                href={`/profile?returnUrl=${encodeURIComponent(`/courses/${course.slug}`)}`}
+                href={`/profile?returnUrl=${encodeURIComponent(`/kursus/${course.slug}`)}`}
                 className="font-bold underline hover:text-amber-900 dark:hover:text-amber-100 flex items-center gap-1 shrink-0"
               >
                 <Edit3 className="w-3 h-3" />
@@ -338,12 +344,14 @@ export function ModalPendaftaranKursus({
               variant="primary"
               size="sm"
               isLoading={isLoading}
-              disabled={!hasValidWhatsapp || isProfileIncomplete || isLoading}
-              className="gap-2 bg-[#0F3E2E] hover:bg-[#15523d] text-white font-semibold"
+              disabled={!hasValidWhatsapp || isProfileIncomplete || isLoading || !course.is_published}
+              className="gap-2 bg-[#0F3E2E] hover:bg-[#15523d] disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold"
             >
               <MessageCircle className="w-4 h-4" />
               <span>
-                {Number(course.price || 0) <= 0
+                {!course.is_published
+                  ? "Pendaftaran Belum Dibuka (Draft)"
+                  : Number(course.price || 0) <= 0
                   ? "Daftar & Mulai Belajar Gratis"
                   : "Daftar Sekarang & Lanjut ke WA"}
               </span>

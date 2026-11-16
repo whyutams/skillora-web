@@ -39,6 +39,22 @@ export default function MaintenanceLoginPage() {
     type: "info",
   });
 
+  // alihkan ke beranda jika sistem tidak sedang dalam mode pemeliharaan
+  React.useEffect(() => {
+    async function checkMaintenanceStatus() {
+      try {
+        const res = await fetch("/api/system/maintenance");
+        const data = await res.json();
+        if (!data?.maintenance_mode) {
+          router.replace("/");
+        }
+      } catch {
+        // non blocking jika gagal
+      }
+    }
+    checkMaintenanceStatus();
+  }, [router]);
+
   // proses login otentikasi pengelola menggunakan username atau email
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();

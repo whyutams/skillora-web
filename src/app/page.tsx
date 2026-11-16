@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { Sparkles, HelpCircle, MessageCircle, ChevronDown, Pencil, Clock, UserCheck } from "lucide-react";
+import { ArrowRight, HelpCircle, MessageCircle, ChevronDown, Pencil, Clock, UserCheck } from "lucide-react";
 import { LandingKatalogKursus } from "@/components/home/LandingKatalogKursus";
 import { LandingTestimoni } from "@/components/home/LandingTestimoni";
 import { SectionStatistikPengunjung } from "@/components/SectionStatistikPengunjung";
@@ -63,7 +63,7 @@ export default function HomePage() {
               className="w-full sm:w-auto px-6 py-3 rounded-lg font-semibold text-sm bg-[#0F3E2E] hover:bg-[#16533e] text-white border border-[#1d5849]/50 shadow-sm transition-all duration-150 flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98]"
             >
               <span>Jelajahi Kursus</span>
-              <Sparkles className="w-4 h-4 text-emerald-300" />
+              <ArrowRight className="w-4 h-4 text-emerald-300" />
             </a>
             <a
               href={`https://wa.me/${adminPhone}?text=${encodeURIComponent(

@@ -18,10 +18,13 @@ export function Footer() {
   const [courses, setCourses] = React.useState<CourseFooterItem[]>([]);
   const [totalVisitors, setTotalVisitors] = React.useState<number>(0);
 
+  // sembunyikan footer di halaman dashboard peserta admin dan superadmin
   const isDashboardRoute =
     pathname.startsWith("/admin") ||
     pathname.startsWith("/superadmin") ||
-    pathname === "/dashboard";
+    pathname.startsWith("/dashboard") ||
+    pathname.startsWith("/kursus-saya") ||
+    pathname.startsWith("/profil");
 
   const adminPhone =
     process.env.NEXT_PUBLIC_ADMIN_WHATSAPP_NUMBER || "6281234567890";
@@ -94,7 +97,7 @@ export function Footer() {
                 courses.map((course) => (
                   <li key={course.id}>
                     <Link
-                      href={`/courses/${course.slug}`}
+                      href={`/kursus/${course.slug}`}
                       className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors block truncate max-w-xs"
                     >
                       {course.title}

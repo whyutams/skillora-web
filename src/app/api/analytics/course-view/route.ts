@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/utils/supabase/server";
 
-// GET: Ambil jumlah view untuk kursus tertentu
+// ambil jumlah kunjungan untuk kursus tertentu
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST: Rekam kunjungan halaman kursus spesifik
+// rekam kunjungan halaman kursus spesifik
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json().catch(() => ({}));

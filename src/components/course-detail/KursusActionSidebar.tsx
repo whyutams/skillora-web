@@ -91,7 +91,7 @@ export function KursusActionSidebar({
   )}`;
 
   return (
-    <div className="space-y-6 rounded-3xl border border-stone-200/80 dark:border-stone-800/80 bg-white/80 dark:bg-stone-900/60 backdrop-blur-md p-6 sm:p-7 shadow-xs">
+    <div className="space-y-6 rounded-2xl border border-stone-200/80 dark:border-stone-800/80 bg-white/80 dark:bg-stone-900/60 backdrop-blur-md p-6 sm:p-7 shadow-xs">
       {/* Banner */}
       {course.image_url ? (
         <div
@@ -174,7 +174,7 @@ export function KursusActionSidebar({
             </div>
 
             <Link
-              href={`/profile?returnUrl=${encodeURIComponent(`/courses/${course.slug}`)}`}
+              href={`/profile?returnUrl=${encodeURIComponent(`/kursus/${course.slug}`)}`}
               className="w-full inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shadow-xs transition-colors"
             >
               <span>Lengkapi Profil Sekarang</span>
@@ -183,7 +183,26 @@ export function KursusActionSidebar({
           </div>
         )}
 
-        {isEnrolled ? (
+        {!course.is_published ? (
+          <div className="space-y-3">
+            <div className="p-3.5 rounded-2xl border border-amber-500/30 bg-amber-500/10 dark:bg-amber-500/5 text-amber-900 dark:text-amber-200 text-xs flex items-start gap-2.5">
+              <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+              <div className="space-y-0.5">
+                <p className="font-bold">Status Kursus: Draft</p>
+                <p className="text-[11px] leading-relaxed text-stone-600 dark:text-stone-400">
+                  Kursus ini masih dalam tahap penyusunan materi (draft). Pendaftaran belum dibuka untuk peserta.
+                </p>
+              </div>
+            </div>
+            <Button
+              size="lg"
+              disabled
+              className="w-full bg-stone-200 dark:bg-stone-800 text-stone-400 dark:text-stone-500 cursor-not-allowed font-bold py-3.5 rounded-xl shadow-none text-sm"
+            >
+              <span>Pendaftaran Belum Dibuka (Draft)</span>
+            </Button>
+          </div>
+        ) : isEnrolled ? (
           <Link
             href={userEnrollmentId ? `/kursus-saya/${course.slug || userEnrollmentId}` : "/kursus-saya"}
             className="block w-full"

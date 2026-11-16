@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 import Link from "next/link";
 import {
   Wrench,
@@ -8,7 +9,6 @@ import {
   RefreshCw,
   ShieldCheck,
   Lock,
-  Sparkles,
 } from "lucide-react";
 import { createAdminClient } from "@/utils/supabase/server";
 import { recordSiteVisitServer } from "@/utils/visitorTracker";
@@ -20,8 +20,9 @@ export const metadata: Metadata = {
   description: "Platform Skillora sedang dalam pemeliharaan sistem berkala untuk peningkatan fitur dan kualitas layanan.",
 };
 
-// ambil pesan pemeliharaan terkini
+// ambil pesan dan status pemeliharaan terkini
 async function getMaintenanceData() {
+  const isEnvMaintenance = process.env.NEXT_PUBLIC_MAINTENANCE_MODE === "true";
   try {
     const adminClient = createAdminClient();
     const { data } = await adminClient
@@ -35,6 +36,7 @@ async function getMaintenanceData() {
     if (data?.details && typeof data.details === "object") {
       const details = data.details as Record<string, unknown>;
       return {
+        isMaintenanceActive: isEnvMaintenance || Boolean(details.maintenance_mode),
         message:
           typeof details.message === "string" && details.message.trim() !== ""
             ? details.message
@@ -48,6 +50,7 @@ async function getMaintenanceData() {
   }
 
   return {
+    isMaintenanceActive: isEnvMaintenance,
     message:
       "Platform Skillora sedang dalam pemeliharaan sistem berkala untuk peningkatan performa dan kualitas belajar.",
     estimated_finish: "",
@@ -55,6 +58,13 @@ async function getMaintenanceData() {
 }
 
 export default async function MaintenancePage() {
+  const { message, estimated_finish, isMaintenanceActive } = await getMaintenanceData();
+
+  // alihkan ke beranda jika sistem tidak sedang dalam mode pemeliharaan
+  if (!isMaintenanceActive) {
+    redirect("/");
+  }
+
   // catat kunjungan pengunjung saat halaman pemeliharaan dimuat di server
   try {
     const headerList = await headers();
@@ -70,7 +80,6 @@ export default async function MaintenancePage() {
     // non blocking jika gagal mencatat
   }
 
-  const { message, estimated_finish } = await getMaintenanceData();
   const adminPhone =
     process.env.NEXT_PUBLIC_ADMIN_WHATSAPP_NUMBER || "6281234567890";
   const waHelpUrl = `https://wa.me/${adminPhone}?text=${encodeURIComponent(
@@ -83,12 +92,9 @@ export default async function MaintenancePage() {
       <main className="max-w-2xl mx-auto w-full my-auto py-12 text-center space-y-6">
         {/* animasi ikon ilustrasi */}
         <div className="relative mx-auto w-24 h-24 sm:w-28 sm:h-28 flex items-center justify-center">
-          <div className="absolute inset-0 rounded-3xl bg-emerald-500/10 dark:bg-emerald-500/5 animate-pulse" />
-          <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-3xl bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 shadow-xl flex items-center justify-center text-[#0F3E2E] dark:text-emerald-400 relative">
+          <div className="absolute inset-0 rounded-2xl bg-emerald-500/10 dark:bg-emerald-500/5 animate-pulse" />
+          <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 shadow-xl flex items-center justify-center text-[#0F3E2E] dark:text-emerald-400 relative">
             <Wrench className="w-10 h-10 sm:w-12 sm:h-12 text-emerald-700 dark:text-emerald-400 animate-bounce duration-1000" />
-            <div className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-amber-500 text-white flex items-center justify-center shadow-sm">
-              <Sparkles className="w-3.5 h-3.5" />
-            </div>
           </div>
         </div>
 

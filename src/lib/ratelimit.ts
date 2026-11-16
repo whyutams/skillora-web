@@ -13,7 +13,7 @@ if (redisUrl && redisToken) {
     token: redisToken,
   });
 
-  // Limit: 10 requests per 10 seconds untuk auth & sensitive API routes
+  // batas sepuluh request per sepuluh detik untuk rute otentikasi
   ratelimit = new Ratelimit({
     redis: redis,
     limiter: Ratelimit.slidingWindow(10, "10 s"),
@@ -22,7 +22,7 @@ if (redisUrl && redisToken) {
   });
 }
 
-// In-memory fallback untuk local development tanpa Upstash keys
+// cadangan memori lokal saat kunci redis tidak disetel
 const localCache = new Map<string, { count: number; expiresAt: number }>();
 
 export async function checkRateLimit(identifier: string): Promise<{ success: boolean; limit: number; remaining: number; reset: number }> {

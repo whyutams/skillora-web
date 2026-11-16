@@ -28,7 +28,7 @@ export function TabUlasanKursus({
 
   if (totalReviews === 0) {
     return (
-      <div className="text-center py-14 px-6 rounded-3xl max-w-xl mx-auto space-y-3 bg-white/70 dark:bg-stone-900/50 border border-stone-200/80 dark:border-stone-800/80 backdrop-blur-sm">
+      <div className="text-center py-14 px-6 rounded-2xl mx-auto space-y-3 bg-white/70 dark:bg-stone-900/50 border border-stone-200/80 dark:border-stone-800/80 backdrop-blur-sm">
         <div className="w-14 h-14 rounded-2xl bg-amber-500/10 text-amber-500 flex items-center justify-center mx-auto border border-amber-500/20">
           <Star className="w-7 h-7" />
         </div>
@@ -44,7 +44,7 @@ export function TabUlasanKursus({
 
   return (
     <div className="space-y-8">
-      <div className="p-6 sm:p-7 rounded-3xl border border-stone-200/80 dark:border-stone-800/80 bg-white/70 dark:bg-stone-900/60 backdrop-blur-md shadow-xs">
+      <div className="p-6 sm:p-7 rounded-2xl border border-stone-200/80 dark:border-stone-800/80 bg-white/70 dark:bg-stone-900/60 backdrop-blur-md shadow-xs">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
           {/* Ringkasan Skor */}
           <div className="md:col-span-4 text-center md:text-left space-y-2 border-b md:border-b-0 md:border-r border-stone-200/80 dark:border-stone-800/80 pb-5 md:pb-0 md:pr-6">
@@ -96,7 +96,7 @@ export function TabUlasanKursus({
                     />
                   </div>
 
-                  <span className="w-10 text-right text-stone-400 font-mono text-[11px]">
+                  <span className="w-10 text-right text-stone-400 font-medium text-[11px]">
                     {count}
                   </span>
                 </div>

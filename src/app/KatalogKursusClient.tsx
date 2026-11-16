@@ -13,7 +13,6 @@ import {
   Star,
   Zap,
   Clock,
-  Sparkles,
 } from "lucide-react";
 
 import { BannerKursusPlaceholder } from "@/components/ui/BannerKursusPlaceholder";
@@ -40,7 +39,7 @@ export default function KatalogKursusClient({
     return (
       <div
         data-aos="fade-up"
-        className="text-center py-14 px-6 rounded-3xl max-w-xl mx-auto space-y-3"
+        className="text-center py-14 px-6 rounded-2xl max-w-xl mx-auto space-y-3"
       >
         <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 text-[#0F3E2E] dark:text-emerald-400 flex items-center justify-center mx-auto border border-emerald-500/20">
           <BookOpen className="w-7 h-7" />
@@ -102,7 +101,7 @@ export default function KatalogKursusClient({
                       </div>
                     ) : (
                       <div className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-semibold">
-                        <Sparkles className="w-3.5 h-3.5" />
+                        <Clock className="w-3.5 h-3.5" />
                         <span>Kursus Baru</span>
                       </div>
                     )}
@@ -165,7 +164,7 @@ export default function KatalogKursusClient({
                   })()}
                 </div>
 
-                <Link href={`/courses/${course.slug}`}>
+                <Link href={`/kursus/${course.slug}`}>
                   <Button
                     variant="outline"
                     size="sm"

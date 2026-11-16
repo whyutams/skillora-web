@@ -26,7 +26,7 @@ export async function POST(request: Request) {
     if (profile && isManagerRole(profile.role)) {
       return NextResponse.json(
         {
-          error: `Akun dengan role ${profile.role.toUpperCase()} tidak diizinkan mendaftar sebagai peserta kursus. Gunakan akun Mahasiswa (Student) untuk mendaftar.`,
+          error: `Akun dengan role ${profile.role.toUpperCase()} tidak diizinkan mendaftar sebagai peserta kursus. Gunakan akun Peserta untuk mendaftar.`,
         },
         { status: 403 }
       );
@@ -55,10 +55,10 @@ export async function POST(request: Request) {
       );
     }
 
-    // Cek apakah kursus valid dan aktif
+    // cek apakah kursus valid dan aktif
     const { data: course, error: courseErr } = await supabase
       .from("courses")
-      .select("id, title, price, description")
+      .select("id, title, price, description, is_published")
       .eq("id", courseId)
       .single();
 
@@ -66,6 +66,14 @@ export async function POST(request: Request) {
       return NextResponse.json(
         { error: "Kursus tidak ditemukan atau sudah tidak tersedia." },
         { status: 404 }
+      );
+    }
+
+    // validasi status publikasi kursus jika masih draft tolak pendaftaran
+    if (!course.is_published) {
+      return NextResponse.json(
+        { error: "Kursus ini masih berstatus draft dan belum dibuka untuk pendaftaran." },
+        { status: 400 }
       );
     }
 

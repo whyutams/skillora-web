@@ -1,13 +1,17 @@
 "use client";
 
 import * as React from "react";
+import { usePathname } from "next/navigation";
 import Lenis from "lenis";
 import AOS from "aos";
 import "aos/dist/aos.css";
 
 export function LenisProvider({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  const lenisRef = React.useRef<Lenis | null>(null);
+
   React.useEffect(() => {
-    // Inisialisasi Lenis Smooth Scroll
+    // inisialisasi lenis smooth scroll
     const lenis = new Lenis({
       duration: 1.2,
       easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
@@ -15,17 +19,32 @@ export function LenisProvider({ children }: { children: React.ReactNode }) {
       gestureOrientation: "vertical",
       smoothWheel: true,
       wheelMultiplier: 1,
-      touchMultiplier: 2,
+      touchMultiplier: 1.5,
+      prevent: (node) => {
+        if (!node || typeof node.closest !== "function") return false;
+        // izinkan scrolling alami mouse wheel pada textarea, pre, code, editor html dan elemen ber-scrollbar
+        return Boolean(
+          node.tagName === "TEXTAREA" ||
+          node.tagName === "PRE" ||
+          node.tagName === "CODE" ||
+          node.isContentEditable ||
+          node.closest("textarea, pre, code, [data-lenis-prevent], [contenteditable='true']")
+        );
+      },
     });
 
+    lenisRef.current = lenis;
+    (window as any).__lenis = lenis;
+
+    let rafId: number;
     function raf(time: number) {
       lenis.raf(time);
-      requestAnimationFrame(raf);
+      rafId = requestAnimationFrame(raf);
     }
 
-    requestAnimationFrame(raf);
+    rafId = requestAnimationFrame(raf);
 
-    // Inisialisasi AOS (Animate On Scroll)
+    // inisialisasi aos animate on scroll
     AOS.init({
       duration: 750,
       easing: "ease-out-cubic",
@@ -33,7 +52,15 @@ export function LenisProvider({ children }: { children: React.ReactNode }) {
       offset: 50,
     });
 
-    // Smooth scroll interceptor untuk semua link yang menuju ke ID
+    // pantau perubahan ukuran dokumen secara dinamis agar lenis selalu sinkron
+    const resizeObserver = new ResizeObserver(() => {
+      lenis.resize();
+    });
+    if (document.body) {
+      resizeObserver.observe(document.body);
+    }
+
+    // smooth scroll interceptor untuk tautan id anchor
     const handleAnchorClick = (e: MouseEvent) => {
       const target = (e.target as HTMLElement).closest("a");
       if (!target) return;
@@ -61,10 +88,22 @@ export function LenisProvider({ children }: { children: React.ReactNode }) {
     document.addEventListener("click", handleAnchorClick);
 
     return () => {
+      cancelAnimationFrame(rafId);
       document.removeEventListener("click", handleAnchorClick);
+      resizeObserver.disconnect();
       lenis.destroy();
+      lenisRef.current = null;
+      delete (window as any).__lenis;
     };
   }, []);
+
+  // saat rute navigasi halaman berubah reset scroll ke atas dan ukur ulang dimensi halaman
+  React.useEffect(() => {
+    if (lenisRef.current) {
+      lenisRef.current.scrollTo(0, { immediate: true });
+      lenisRef.current.resize();
+    }
+  }, [pathname]);
 
   return <>{children}</>;
 }

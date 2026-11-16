@@ -72,7 +72,7 @@ export default function HalamanEditTopikClient({
   // form state topik
   const [title, setTitle] = React.useState("");
   const [type, setType] = React.useState<CourseLessonItem["type"]>("reading");
-  const [duration, setDuration] = React.useState("15 Menit");
+  const [duration, setDuration] = React.useState("");
   const [content, setContent] = React.useState("");
   const [videoUrl, setVideoUrl] = React.useState("");
   const [starterCode, setStarterCode] = React.useState("");
@@ -143,7 +143,7 @@ export default function HalamanEditTopikClient({
       // inisialisasi form
       setTitle(targetLesson.title || "");
       setType(targetLesson.type || "reading");
-      setDuration(targetLesson.duration || "15 Menit");
+      setDuration(targetLesson.duration || "");
       setContent(targetLesson.content || "");
       setVideoUrl(targetLesson.video_url || "");
       setStarterCode(targetLesson.starter_code || "");
@@ -294,7 +294,7 @@ export default function HalamanEditTopikClient({
             ...les,
             title: title.trim(),
             type,
-            duration: duration.trim() || "15 Menit",
+            duration: "",
           };
 
           if (type === "reading") {
@@ -414,8 +414,8 @@ export default function HalamanEditTopikClient({
   }
 
   return (
-    <div className="space-y-8 max-w-5xl mx-auto pb-16">
-      {/* Header Halaman */}
+    <div className="space-y-8 w-full pb-16">
+      {/* header halaman */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-stone-200/80 dark:border-stone-800/80">
         <div className="space-y-2">
           <Link
@@ -454,7 +454,7 @@ export default function HalamanEditTopikClient({
         </div>
       </div>
 
-      {/* Form Informasi Dasar Topik */}
+      {/* form informasi dasar topik */}
       <Card className="p-6 border-stone-200/80 dark:border-stone-800/80 space-y-6">
         <div>
           <h2 className="text-sm font-bold text-stone-900 dark:text-stone-100 uppercase tracking-wider">
@@ -488,16 +488,16 @@ export default function HalamanEditTopikClient({
               onChange={(e) => setType(e.target.value as CourseLessonItem["type"])}
               className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-950 text-stone-900 dark:text-stone-100 focus:outline-none focus:ring-2 focus:ring-[#0F3E2E]"
             >
-              <option value="reading">Bacaan Teori & Video (HTML Editor)</option>
-              <option value="practice">Latihan Koding Praktik (Monospace Starter Code)</option>
-              <option value="quiz">Kuis Pilihan Ganda (Banyak Soal)</option>
-              <option value="project">Tugas Proyek Mandiri (Brief & Kriteria)</option>
+              <option value="reading">Bacaan Teori & Video</option>
+              <option value="practice">Latihan Koding Praktik</option>
+              <option value="quiz">Kuis Pilihan Ganda</option>
+              <option value="project">Tugas Proyek Mandiri</option>
             </select>
           </div>
         </div>
       </Card>
 
-      {/* Editor Konten Berdasarkan Tipe Topik */}
+      {/* editor konten berdasarkan tipe topik */}
       {type === "reading" && (
         <Card className="p-6 border-stone-200/80 dark:border-stone-800/80 space-y-6">
           <div className="flex items-center gap-2 pb-2 border-b border-stone-100 dark:border-stone-800">
@@ -548,7 +548,7 @@ export default function HalamanEditTopikClient({
                 value={content}
                 onChange={(val) => setContent(val)}
                 placeholder="Tuliskan naskah materi lengkap di sini. Anda dapat memformat paragraf, judul, daftar butir, dan menyisipkan media..."
-                minHeight="350px"
+                minHeight="450px"
               />
             </div>
           </div>
@@ -580,20 +580,21 @@ export default function HalamanEditTopikClient({
                 value={instructions}
                 onChange={(val) => setInstructions(val)}
                 placeholder="Tuliskan instruksi langkah demi langkah apa yang harus dikerjakan oleh mahasiswa..."
-                minHeight="200px"
+                minHeight="400px"
               />
             </div>
 
             <div className="space-y-1.5">
               <label className="text-xs font-semibold text-stone-700 dark:text-stone-300 block">
-                Kerangka Kode Awal (Starter Code Monospace)
+                Kerangka Kode Awal (Starter Code)
               </label>
               <textarea
-                rows={8}
+                data-lenis-prevent
+                rows={14}
                 value={starterCode}
                 onChange={(e) => setStarterCode(e.target.value)}
                 placeholder="// Tuliskan starter code atau fungsi awal di sini..."
-                className="w-full p-4 font-mono text-xs rounded-xl border border-stone-300 dark:border-stone-700 bg-stone-900 text-stone-100 placeholder-stone-500 focus:outline-none focus:ring-2 focus:ring-[#0F3E2E]"
+                className="w-full min-h-[280px] p-4 font-mono text-xs sm:text-sm rounded-xl border border-stone-300 dark:border-stone-700 bg-stone-900 text-stone-100 placeholder-stone-500 focus:outline-none focus:ring-2 focus:ring-[#0F3E2E] resize-y overflow-auto leading-relaxed"
               />
             </div>
 
@@ -602,11 +603,12 @@ export default function HalamanEditTopikClient({
                 Catatan Solusi / Tips Pendukung (Opsional)
               </label>
               <textarea
-                rows={3}
+                data-lenis-prevent
+                rows={4}
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
                 placeholder="Tips pemecahan masalah atau catatan penting untuk mahasiswa..."
-                className="w-full px-4 py-2.5 text-xs rounded-xl border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-950 text-stone-900 dark:text-stone-100 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-[#0F3E2E] resize-none"
+                className="w-full px-4 py-2.5 text-xs sm:text-sm rounded-xl border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-950 text-stone-900 dark:text-stone-100 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-[#0F3E2E] resize-y min-h-[90px]"
               />
             </div>
           </div>
@@ -767,7 +769,7 @@ export default function HalamanEditTopikClient({
               className="gap-1.5 text-xs border-dashed"
             >
               <Plus className="w-3.5 h-3.5" />
-              <span>+ Tambah Soal Kuis Selanjutnya</span>
+              <span>Tambah Soal Kuis Selanjutnya</span>
             </Button>
           </div>
         </Card>
@@ -798,7 +800,7 @@ export default function HalamanEditTopikClient({
                 value={projectBrief}
                 onChange={(val) => setProjectBrief(val)}
                 placeholder="Jelaskan skenario proyek yang harus diselesaikan mahasiswa..."
-                minHeight="200px"
+                minHeight="350px"
               />
             </div>
 
@@ -807,11 +809,12 @@ export default function HalamanEditTopikClient({
                 Kriteria Penilaian & Syarat Kelulusan (Tiap Baris)
               </label>
               <textarea
-                rows={4}
+                data-lenis-prevent
+                rows={5}
                 value={projectCriteria}
                 onChange={(e) => setProjectCriteria(e.target.value)}
                 placeholder="- Responsif di perangkat ponsel dan desktop&#10;- Bebas error pada console browser&#10;- Struktur kode bersih dan modular"
-                className="w-full px-4 py-2.5 text-xs rounded-xl border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-950 text-stone-900 dark:text-stone-100 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-[#0F3E2E]"
+                className="w-full px-4 py-2.5 text-xs sm:text-sm rounded-xl border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-950 text-stone-900 dark:text-stone-100 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-[#0F3E2E] resize-y min-h-[120px]"
               />
             </div>
 
@@ -831,7 +834,7 @@ export default function HalamanEditTopikClient({
         </Card>
       )}
 
-      {/* Floating / Bottom Action Bar */}
+      {/* floating atau bottom action bar */}
       <div className="sticky bottom-6 z-20 p-4 rounded-2xl bg-white/95 dark:bg-stone-900/95 backdrop-blur-md border border-stone-200 dark:border-stone-800 shadow-xl flex items-center justify-between gap-4">
         <Link
           href={`/admin/courses/${course?.slug || courseId}`}
@@ -853,7 +856,7 @@ export default function HalamanEditTopikClient({
         </div>
       </div>
 
-      {/* Modal Notifikasi */}
+      {/* modal notifikasi */}
       <AlertModal
         isOpen={alertData.isOpen}
         onClose={() => {
