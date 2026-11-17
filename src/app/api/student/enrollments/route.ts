@@ -91,6 +91,10 @@ export async function GET() {
         review_rating: parsedMeta.review_rating,
         review_text: parsedMeta.review_text,
         reviewed_at: parsedMeta.reviewed_at,
+        completed_lessons: parsedMeta.completed_lessons || [],
+        project_submission_url: parsedMeta.project_submission_url || null,
+        quiz_results: parsedMeta.quiz_results || {},
+        last_accessed_lesson: parsedMeta.last_accessed_lesson || null,
         course: parsedCourse,
       };
     });

@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { createPortal } from "react-dom";
 import {
   Play,
   RotateCcw,
@@ -92,6 +93,11 @@ export default function WebCodeEditor({
   const [copied, setCopied] = React.useState(false);
   const [savedTooltip, setSavedTooltip] = React.useState(false);
   const [isFullscreen, setIsFullscreen] = React.useState(false);
+  const [mounted, setMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // referensi elemen masukan baris terminal
   const terminalInputRef = React.useRef<HTMLInputElement>(null);
@@ -1215,13 +1221,13 @@ export default function WebCodeEditor({
 
   const isCodeModified = code !== initialCode;
 
-  return (
+  const editorContent = (
     <div
       onKeyDown={handleContainerKeyDown}
       tabIndex={-1}
       className={
         isFullscreen
-          ? "fixed inset-0 z-50 bg-[#1e1e1e] text-[#d4d4d4] flex flex-col font-sans focus:outline-none w-screen h-screen overflow-hidden animate-in fade-in duration-100"
+          ? "fixed inset-0 z-[99999] bg-[#1e1e1e] text-[#d4d4d4] flex flex-col font-sans focus:outline-none w-screen h-screen m-0 p-0 rounded-none overflow-hidden"
           : "w-full rounded-2xl bg-[#1e1e1e] border border-[#2d2d2d] text-[#d4d4d4] shadow-2xl overflow-hidden flex flex-col font-sans focus:outline-none"
       }
     >
@@ -1889,4 +1895,11 @@ export default function WebCodeEditor({
       )}
     </div>
   );
+
+  // jika mode layar penuh aktif render langsung di root body agar tidak tertutup navbar
+  if (isFullscreen && mounted && typeof document !== "undefined") {
+    return createPortal(editorContent, document.body);
+  }
+
+  return editorContent;
 }

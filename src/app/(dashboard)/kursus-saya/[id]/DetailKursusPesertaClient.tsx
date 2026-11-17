@@ -210,9 +210,18 @@ export function DetailKursusPesertaClient({ enrollmentId }: { enrollmentId: stri
     fetchDetail();
   }, [fetchDetail]);
 
-  // sinkronkan progres belajar dari penyimpanan lokal
+  // sinkronkan progres belajar dari database pendaftaran
   React.useEffect(() => {
     if (!enrollment?.id) return;
+    if (Array.isArray(enrollment.completed_lessons) && enrollment.completed_lessons.length > 0) {
+      setCompletedLessons(enrollment.completed_lessons);
+      try {
+        localStorage.setItem(`skillora_progress_${enrollment.id}`, JSON.stringify(enrollment.completed_lessons));
+      } catch {
+        // non blocking
+      }
+      return;
+    }
     try {
       const savedProgress = localStorage.getItem(`skillora_progress_${enrollment.id}`);
       if (savedProgress) {
@@ -221,7 +230,7 @@ export function DetailKursusPesertaClient({ enrollmentId }: { enrollmentId: stri
     } catch {
       // non blocking
     }
-  }, [enrollment?.id]);
+  }, [enrollment?.id, enrollment?.completed_lessons]);
 
   const course = enrollment?.course;
 

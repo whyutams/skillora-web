@@ -5,15 +5,18 @@ export interface EnrollmentMetadata {
   review_rating?: number | null;
   review_text?: string | null;
   reviewed_at?: string | null;
+  completed_lessons?: string[];
+  project_submission_url?: string | null;
+  quiz_results?: Record<string, unknown>;
+  last_accessed_lesson?: { moduleIndex: number; topicIndex: number } | null;
+  updated_at?: string;
 }
 
 export interface ParsedEnrollmentMeta extends EnrollmentMetadata {
   phone: string;
 }
 
-/**
- * Membaca nomor WhatsApp murni dan metadata enrollment yang tersimpan di kolom whatsapp_number.
- */
+// membaca nomor whatsapp murni dan metadata pendaftaran yang tersimpan di kolom whatsapp_number
 export function parseEnrollmentMeta(
   rawWhatsapp: string | null | undefined
 ): ParsedEnrollmentMeta {
@@ -26,6 +29,10 @@ export function parseEnrollmentMeta(
       review_rating: null,
       review_text: null,
       reviewed_at: null,
+      completed_lessons: [],
+      project_submission_url: null,
+      quiz_results: {},
+      last_accessed_lesson: null,
     };
   }
 
@@ -39,6 +46,10 @@ export function parseEnrollmentMeta(
       review_rating: null,
       review_text: null,
       reviewed_at: null,
+      completed_lessons: [],
+      project_submission_url: null,
+      quiz_results: {},
+      last_accessed_lesson: null,
     };
   }
 
@@ -54,6 +65,13 @@ export function parseEnrollmentMeta(
         typeof meta.review_rating === "number" ? meta.review_rating : null,
       review_text: meta.review_text || null,
       reviewed_at: meta.reviewed_at || null,
+      completed_lessons: Array.isArray(meta.completed_lessons)
+        ? meta.completed_lessons
+        : [],
+      project_submission_url: meta.project_submission_url || null,
+      quiz_results: meta.quiz_results && typeof meta.quiz_results === "object" ? meta.quiz_results : {},
+      last_accessed_lesson: meta.last_accessed_lesson || null,
+      updated_at: meta.updated_at || undefined,
     };
   } catch {
     return {
@@ -64,13 +82,15 @@ export function parseEnrollmentMeta(
       review_rating: null,
       review_text: null,
       reviewed_at: null,
+      completed_lessons: [],
+      project_submission_url: null,
+      quiz_results: {},
+      last_accessed_lesson: null,
     };
   }
 }
 
-/**
- * Menggabungkan nomor WhatsApp dan metadata enrollment ke dalam satu string format.
- */
+// menggabungkan nomor whatsapp dan metadata pendaftaran ke dalam satu string format
 export function encodeEnrollmentMeta(
   phone: string,
   meta: EnrollmentMetadata
@@ -95,6 +115,21 @@ export function encodeEnrollmentMeta(
   }
   if (meta.reviewed_at && meta.reviewed_at.trim()) {
     cleanMeta.reviewed_at = meta.reviewed_at.trim();
+  }
+  if (Array.isArray(meta.completed_lessons) && meta.completed_lessons.length > 0) {
+    cleanMeta.completed_lessons = Array.from(new Set(meta.completed_lessons));
+  }
+  if (meta.project_submission_url && meta.project_submission_url.trim()) {
+    cleanMeta.project_submission_url = meta.project_submission_url.trim();
+  }
+  if (meta.quiz_results && typeof meta.quiz_results === "object" && Object.keys(meta.quiz_results).length > 0) {
+    cleanMeta.quiz_results = meta.quiz_results;
+  }
+  if (meta.last_accessed_lesson && typeof meta.last_accessed_lesson === "object") {
+    cleanMeta.last_accessed_lesson = meta.last_accessed_lesson;
+  }
+  if (meta.updated_at) {
+    cleanMeta.updated_at = meta.updated_at;
   }
 
   if (Object.keys(cleanMeta).length === 0) {

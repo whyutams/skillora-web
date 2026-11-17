@@ -193,6 +193,41 @@ export default function HalamanBelajarTopikClient({
   const [projectSavedNotice, setProjectSavedNotice] = React.useState(false);
   const [copiedCode, setCopiedCode] = React.useState(false);
 
+  // simpan pembaruan progres belajar ke database supabase
+  const syncProgressToDatabase = React.useCallback(
+    async (
+      enrollmentId: string,
+      lessons: string[],
+      extra?: {
+        project_submission_url?: string;
+        quiz_result?: unknown;
+        last_accessed_lesson?: { moduleIndex: number; topicIndex: number };
+      }
+    ) => {
+      if (!enrollmentId) return;
+      try {
+        await fetch(`/api/student/enrollments/${enrollmentId}`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            completed_lessons: lessons,
+            project_submission_url: extra?.project_submission_url,
+            quiz_result: extra?.quiz_result,
+            last_accessed_lesson: extra?.last_accessed_lesson || {
+              moduleIndex: currentModIdx,
+              topicIndex: currentLesIdx,
+            },
+          }),
+        });
+      } catch (err) {
+        console.error("Gagal menyinkronkan progres ke database", err);
+      }
+    },
+    [currentModIdx, currentLesIdx]
+  );
+
   // ambil data pendaftaran kursus mahasiswa
   const fetchDetail = React.useCallback(async () => {
     try {
@@ -204,34 +239,59 @@ export default function HalamanBelajarTopikClient({
         throw new Error(data.error || "Gagal memuat detail pendaftaran kursus.");
       }
       setEnrollment(data.enrollment);
+
+      // sinkronisasi progres dari database sebagai sumber data utama
+      const dbCompleted: string[] = Array.isArray(data.enrollment?.completed_lessons)
+        ? data.enrollment.completed_lessons
+        : [];
+      let localCompleted: string[] = [];
+      try {
+        const saved = localStorage.getItem(`skillora_progress_${data.enrollment?.id}`);
+        if (saved) localCompleted = JSON.parse(saved);
+      } catch {
+        // non blocking
+      }
+      const merged = Array.from(new Set([...dbCompleted, ...localCompleted]));
+      setCompletedLessons(merged);
+      try {
+        localStorage.setItem(`skillora_progress_${data.enrollment?.id}`, JSON.stringify(merged));
+      } catch {
+        // non blocking
+      }
+      if (merged.length > dbCompleted.length && data.enrollment?.id) {
+        syncProgressToDatabase(data.enrollment.id, merged);
+      }
+
+      const projectUrl = data.enrollment?.project_submission_url;
+      if (projectUrl) {
+        setProjectSubmittedUrl(projectUrl);
+        setProjectSubmissionUrl(projectUrl);
+        try {
+          localStorage.setItem(`skillora_project_${data.enrollment?.id}`, projectUrl);
+        } catch {
+          // non blocking
+        }
+      } else {
+        try {
+          const savedProject = localStorage.getItem(`skillora_project_${data.enrollment?.id}`);
+          if (savedProject) {
+            setProjectSubmittedUrl(savedProject);
+            setProjectSubmissionUrl(savedProject);
+          }
+        } catch {
+          // non blocking
+        }
+      }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Terjadi kesalahan.");
     } finally {
       setLoading(false);
     }
-  }, [enrollmentOrSlug]);
+  }, [enrollmentOrSlug, syncProgressToDatabase]);
 
   React.useEffect(() => {
     fetchDetail();
   }, [fetchDetail]);
-
-  // sinkronkan progres dari local storage saat pendaftaran termuat
-  React.useEffect(() => {
-    if (!enrollment?.id) return;
-    try {
-      const savedProgress = localStorage.getItem(`skillora_progress_${enrollment.id}`);
-      if (savedProgress) {
-        setCompletedLessons(JSON.parse(savedProgress));
-      }
-      const savedProject = localStorage.getItem(`skillora_project_${enrollment.id}`);
-      if (savedProject) {
-        setProjectSubmittedUrl(savedProject);
-        setProjectSubmissionUrl(savedProject);
-      }
-    } catch {
-      // non blocking
-    }
-  }, [enrollment?.id]);
 
   // buka accordion modul saat indeks modul berubah
   React.useEffect(() => {
@@ -406,6 +466,8 @@ export default function HalamanBelajarTopikClient({
         } catch {
           // non blocking
         }
+        // simpan status selesai langsung ke database
+        syncProgressToDatabase(enrollment.id, next);
       }
       return next;
     });
@@ -578,24 +640,49 @@ export default function HalamanBelajarTopikClient({
     }
 
     // berapapun nilainya topik langsung ditandai selesai agar peserta dapat melanjutkan
+    const nextCompleted = completedLessons.includes(currentLessonKey)
+      ? completedLessons
+      : [...completedLessons, currentLessonKey];
     if (!completedLessons.includes(currentLessonKey)) {
-      toggleLessonCompletion(currentLessonKey);
+      setCompletedLessons(nextCompleted);
+    }
+
+    if (enrollment?.id) {
+      syncProgressToDatabase(enrollment.id, nextCompleted, {
+        quiz_result: {
+          lessonKey: currentLessonKey,
+          score,
+          correctCount: correct,
+          totalQuestions: shuffledQuestions.length,
+          submittedAt: new Date().toISOString(),
+        },
+      });
     }
   };
 
-  const handleSaveProjectSubmission = () => {
+  const handleSaveProjectSubmission = async () => {
     if (!projectSubmissionUrl.trim() || !enrollment?.id) return;
+    const url = projectSubmissionUrl.trim();
     try {
-      localStorage.setItem(`skillora_project_${enrollment.id}`, projectSubmissionUrl.trim());
-      setProjectSubmittedUrl(projectSubmissionUrl.trim());
-      setProjectSavedNotice(true);
-      if (!completedLessons.includes(currentLessonKey)) {
-        toggleLessonCompletion(currentLessonKey);
-      }
-      setTimeout(() => setProjectSavedNotice(false), 3000);
+      localStorage.setItem(`skillora_project_${enrollment.id}`, url);
     } catch {
       // non blocking
     }
+    setProjectSubmittedUrl(url);
+    setProjectSavedNotice(true);
+
+    const nextCompleted = completedLessons.includes(currentLessonKey)
+      ? completedLessons
+      : [...completedLessons, currentLessonKey];
+    if (!completedLessons.includes(currentLessonKey)) {
+      setCompletedLessons(nextCompleted);
+    }
+
+    // simpan url tugas proyek dan status progres ke database
+    await syncProgressToDatabase(enrollment.id, nextCompleted, {
+      project_submission_url: url,
+    });
+    setTimeout(() => setProjectSavedNotice(false), 3000);
   };
 
   // jika sedang memuat data tampilkan kerangka skeleton

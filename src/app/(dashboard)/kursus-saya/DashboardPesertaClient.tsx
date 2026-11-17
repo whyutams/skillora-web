@@ -54,6 +54,10 @@ export interface StudentEnrollmentItem {
   review_rating: number | null;
   review_text: string | null;
   reviewed_at: string | null;
+  completed_lessons?: string[];
+  project_submission_url?: string | null;
+  quiz_results?: Record<string, unknown>;
+  last_accessed_lesson?: { moduleIndex: number; topicIndex: number } | null;
   course: (Course & {
     content?: string;
     image_url?: string | null;

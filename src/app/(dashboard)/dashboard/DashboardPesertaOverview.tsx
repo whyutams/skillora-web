@@ -45,20 +45,26 @@ export function DashboardPesertaOverview() {
         const list: StudentEnrollmentItem[] = data.enrollments || [];
         setEnrollments(list);
 
-        // hitung total topik yang telah diselesaikan dari penyimpanan lokal
+        // hitung total topik yang telah diselesaikan dari database atau penyimpanan lokal
         let totalCompleted = 0;
         list.forEach((item) => {
-          try {
-            const saved = localStorage.getItem(`skillora_progress_${item.id}`);
-            if (saved) {
-              const parsed = JSON.parse(saved);
-              if (Array.isArray(parsed)) {
-                totalCompleted += parsed.length;
+          let itemCompleted = 0;
+          if (Array.isArray(item.completed_lessons) && item.completed_lessons.length > 0) {
+            itemCompleted = item.completed_lessons.length;
+          } else {
+            try {
+              const saved = localStorage.getItem(`skillora_progress_${item.id}`);
+              if (saved) {
+                const parsed = JSON.parse(saved);
+                if (Array.isArray(parsed)) {
+                  itemCompleted = parsed.length;
+                }
               }
+            } catch {
+              // abaikan kegagalan baca penyimpanan lokal
             }
-          } catch {
-            // abaikan kegagalan baca penyimpanan lokal
           }
+          totalCompleted += itemCompleted;
         });
         setCompletedTopicCount(totalCompleted);
       }
@@ -99,6 +105,12 @@ export function DashboardPesertaOverview() {
 
   const resumeProgressPercent = React.useMemo(() => {
     if (!resumeEnrollment || resumeCurriculum.totalLessons === 0) return 0;
+    if (Array.isArray(resumeEnrollment.completed_lessons) && resumeEnrollment.completed_lessons.length > 0) {
+      return Math.min(
+        100,
+        Math.round((resumeEnrollment.completed_lessons.length / resumeCurriculum.totalLessons) * 100)
+      );
+    }
     try {
       const saved = localStorage.getItem(`skillora_progress_${resumeEnrollment.id}`);
       if (saved) {
