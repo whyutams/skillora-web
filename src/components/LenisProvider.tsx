@@ -10,8 +10,24 @@ export function LenisProvider({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const lenisRef = React.useRef<Lenis | null>(null);
 
+  // smooth scroll hanya aktif untuk landing page publik
+  const isLandingPage = pathname === "/";
+
   React.useEffect(() => {
-    // inisialisasi lenis smooth scroll
+    // jika bukan landing page pastikan lenis tidak aktif atau dihancurkan
+    if (!isLandingPage) {
+      if (lenisRef.current) {
+        lenisRef.current.destroy();
+        lenisRef.current = null;
+        if (typeof window !== "undefined") {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          delete (window as any).__lenis;
+        }
+      }
+      return;
+    }
+
+    // inisialisasi lenis smooth scroll khusus landing page
     const lenis = new Lenis({
       duration: 1.2,
       easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
@@ -22,7 +38,6 @@ export function LenisProvider({ children }: { children: React.ReactNode }) {
       touchMultiplier: 1.5,
       prevent: (node) => {
         if (!node || typeof node.closest !== "function") return false;
-        // izinkan scrolling alami mouse wheel pada textarea, pre, code, editor html dan elemen ber-scrollbar
         return Boolean(
           node.tagName === "TEXTAREA" ||
           node.tagName === "PRE" ||
@@ -34,7 +49,10 @@ export function LenisProvider({ children }: { children: React.ReactNode }) {
     });
 
     lenisRef.current = lenis;
-    (window as any).__lenis = lenis;
+    if (typeof window !== "undefined") {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (window as any).__lenis = lenis;
+    }
 
     let rafId: number;
     function raf(time: number) {
@@ -44,7 +62,7 @@ export function LenisProvider({ children }: { children: React.ReactNode }) {
 
     rafId = requestAnimationFrame(raf);
 
-    // inisialisasi aos animate on scroll
+    // inisialisasi aos animate on scroll untuk landing page
     AOS.init({
       duration: 750,
       easing: "ease-out-cubic",
@@ -52,7 +70,7 @@ export function LenisProvider({ children }: { children: React.ReactNode }) {
       offset: 50,
     });
 
-    // pantau perubahan ukuran dokumen secara dinamis agar lenis selalu sinkron
+    // pantau perubahan ukuran dokumen secara dinamis agar lenis selalu sinkron di landing page
     const resizeObserver = new ResizeObserver(() => {
       lenis.resize();
     });
@@ -60,7 +78,7 @@ export function LenisProvider({ children }: { children: React.ReactNode }) {
       resizeObserver.observe(document.body);
     }
 
-    // smooth scroll interceptor untuk tautan id anchor
+    // smooth scroll interceptor untuk tautan id anchor pada landing page
     const handleAnchorClick = (e: MouseEvent) => {
       const target = (e.target as HTMLElement).closest("a");
       if (!target) return;
@@ -93,17 +111,12 @@ export function LenisProvider({ children }: { children: React.ReactNode }) {
       resizeObserver.disconnect();
       lenis.destroy();
       lenisRef.current = null;
-      delete (window as any).__lenis;
+      if (typeof window !== "undefined") {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        delete (window as any).__lenis;
+      }
     };
-  }, []);
-
-  // saat rute navigasi halaman berubah reset scroll ke atas dan ukur ulang dimensi halaman
-  React.useEffect(() => {
-    if (lenisRef.current) {
-      lenisRef.current.scrollTo(0, { immediate: true });
-      lenisRef.current.resize();
-    }
-  }, [pathname]);
+  }, [isLandingPage]);
 
   return <>{children}</>;
 }
