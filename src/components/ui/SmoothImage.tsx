@@ -13,6 +13,9 @@ interface SmoothImageProps
 export const DEFAULT_FALLBACK_IMAGE =
   "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=600&auto=format&fit=crop&q=80";
 
+// cache memori global untuk mencatat url gambar yang telah selesai dimuat agar tidak animasi ulang
+const loadedImagesCache = new Set<string>();
+
 export const SmoothImage: React.FC<SmoothImageProps> = ({
   src,
   alt,
@@ -23,28 +26,42 @@ export const SmoothImage: React.FC<SmoothImageProps> = ({
   onClick,
   ...rest
 }) => {
-  const [isLoaded, setIsLoaded] = React.useState(false);
-  const [imgSrc, setImgSrc] = React.useState<string>(src || fallbackSrc);
+  const initialTarget = src || fallbackSrc;
+  const isInitiallyCached = Boolean(initialTarget && loadedImagesCache.has(initialTarget));
+
+  const [isLoaded, setIsLoaded] = React.useState<boolean>(isInitiallyCached);
+  const [imgSrc, setImgSrc] = React.useState<string>(initialTarget);
   const imgRef = React.useRef<HTMLImageElement>(null);
 
   React.useEffect(() => {
     const target = src || fallbackSrc;
     setImgSrc(target);
 
-    // Cek jika gambar sudah selesai dimuat dari cache browser
+    if (target && loadedImagesCache.has(target)) {
+      setIsLoaded(true);
+      return;
+    }
+
+    // cek jika gambar sudah selesai dimuat dari cache browser
     if (imgRef.current && imgRef.current.complete && imgRef.current.naturalWidth > 0) {
+      if (target) {
+        loadedImagesCache.add(target);
+      }
       setIsLoaded(true);
     } else {
       setIsLoaded(false);
     }
   }, [src, fallbackSrc]);
 
-  // Handler saat gambar selesai dimuat (onLoad event)
+  // handler saat gambar selesai dimuat onload
   const handleLoad = () => {
+    if (imgSrc) {
+      loadedImagesCache.add(imgSrc);
+    }
     setIsLoaded(true);
   };
 
-  // Handler saat gambar gagal dimuat (onError event) -> beralih ke fallback
+  // handler saat gambar gagal dimuat onerror beralih ke fallback
   const handleError = () => {
     if (imgSrc !== fallbackSrc) {
       setImgSrc(fallbackSrc);
@@ -52,7 +69,7 @@ export const SmoothImage: React.FC<SmoothImageProps> = ({
     setIsLoaded(true);
   };
 
-  // Container styling yang menjaga agar efek blur tidak menyebar keluar div pembungkusnya
+  // container styling yang menjaga agar efek blur tidak menyebar keluar div pembungkusnya
   const resolvedContainerClass = containerClassName
     ? `relative overflow-hidden ${containerClassName}`
     : `relative overflow-hidden ${className}`;
@@ -61,18 +78,22 @@ export const SmoothImage: React.FC<SmoothImageProps> = ({
     ? `w-full h-full ${className}`
     : "w-full h-full object-cover";
 
+  const wasCached = Boolean(imgSrc && loadedImagesCache.has(imgSrc));
+
   return (
     <div
       className={resolvedContainerClass}
       style={style}
       onClick={onClick}
     >
-      {/* Background placeholder selama gambar belum loaded */}
-      <div
-        className={`absolute inset-0 bg-stone-200/80 dark:bg-stone-800/80 transition-opacity duration-500 pointer-events-none ${
-          isLoaded ? "opacity-0" : "opacity-100"
-        }`}
-      />
+      {/* background placeholder selama gambar belum loaded */}
+      {!wasCached && (
+        <div
+          className={`absolute inset-0 bg-stone-200/80 dark:bg-stone-800/80 transition-opacity duration-500 pointer-events-none ${
+            isLoaded ? "opacity-0" : "opacity-100"
+          }`}
+        />
+      )}
 
       <img
         ref={imgRef}
@@ -80,10 +101,14 @@ export const SmoothImage: React.FC<SmoothImageProps> = ({
         alt={alt}
         onLoad={handleLoad}
         onError={handleError}
-        className={`${resolvedImgClass} transition-all duration-700 ease-out ${
-          isLoaded
+        className={`${resolvedImgClass} ${
+          wasCached
             ? "blur-0 scale-100 opacity-100"
-            : "blur-2xl scale-110 opacity-0"
+            : `transition-all duration-700 ease-out ${
+                isLoaded
+                  ? "blur-0 scale-100 opacity-100"
+                  : "blur-2xl scale-110 opacity-0"
+              }`
         }`}
         {...rest}
       />

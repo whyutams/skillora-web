@@ -168,7 +168,7 @@ export default function KatalogKursusClient({
                   <Button
                     variant="outline"
                     size="sm"
-                    className="gap-1.5 text-xs font-semibold hover:bg-[#0F3E2E] hover:text-white dark:hover:bg-emerald-600 transition-colors"
+                    className="gap-1.5 text-xs font-semibold hover:!bg-[#0F3E2E] hover:!text-white hover:!border-[#0F3E2E] dark:hover:!bg-emerald-600 dark:hover:!border-emerald-600 dark:hover:!text-white transition-colors"
                   >
                     <span>Lihat Silabus</span>
                     <ArrowRight className="w-3.5 h-3.5" />

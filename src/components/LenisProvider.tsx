@@ -10,12 +10,28 @@ export function LenisProvider({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const lenisRef = React.useRef<Lenis | null>(null);
 
-  // smooth scroll hanya aktif untuk landing page publik
-  const isLandingPage = pathname === "/";
+  // smooth scroll aktif untuk landing page dan halaman publik seperti katalog dan detail kursus
+  const isDashboardRoute =
+    pathname.startsWith("/dashboard") ||
+    pathname.startsWith("/admin") ||
+    pathname.startsWith("/superadmin") ||
+    pathname.startsWith("/kursus-saya") ||
+    pathname.startsWith("/profil");
+
+  const isPublicCoursePage =
+    pathname === "/kursus" ||
+    pathname.startsWith("/kursus/") ||
+    pathname === "/courses" ||
+    pathname.startsWith("/courses/");
+
+  const isCertificatePage = pathname.startsWith("/sertifikat");
+
+  const isLandingPage = pathname === "/" || isPublicCoursePage || isCertificatePage;
+  const shouldEnableLenis = isLandingPage && !isDashboardRoute;
 
   React.useEffect(() => {
-    // jika bukan landing page pastikan lenis tidak aktif atau dihancurkan
-    if (!isLandingPage) {
+    // jika rute dashboard atau bukan halaman publik yang diizinkan lenis dihancurkan
+    if (!shouldEnableLenis) {
       if (lenisRef.current) {
         lenisRef.current.destroy();
         lenisRef.current = null;
@@ -27,7 +43,7 @@ export function LenisProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    // inisialisasi lenis smooth scroll khusus landing page
+    // inisialisasi lenis smooth scroll khusus landing page dan halaman publik kursus
     const lenis = new Lenis({
       duration: 1.2,
       easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
@@ -116,7 +132,7 @@ export function LenisProvider({ children }: { children: React.ReactNode }) {
         delete (window as any).__lenis;
       }
     };
-  }, [isLandingPage]);
+  }, [shouldEnableLenis]);
 
   return <>{children}</>;
 }

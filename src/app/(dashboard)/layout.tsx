@@ -689,31 +689,31 @@ function DashboardLayoutContent({
                     </div>
                   </div>
 
-                  {/* Menu Options Dropdown */}
+                  {/* menu options dropdown */}
                   <div className="space-y-1">
-                    {/* 1. Edit Profil */}
+                    {/* 1. edit profil */}
                     <Link
                       href={editProfileHref}
                       onClick={() => setIsProfileDropdownOpen(false)}
-                      className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-semibold text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors"
+                      className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-semibold text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 hover:text-stone-900 dark:hover:text-stone-100 transition-colors"
                     >
-                      <User className="w-4 h-4 text-stone-500" />
+                      <User className="w-4 h-4" />
                       <span>Edit Profil</span>
                     </Link>
 
-                    {/* 2. Landing Page */}
+                    {/* 2. landing page */}
                     <Link
                       href="/"
                       onClick={() => setIsProfileDropdownOpen(false)}
-                      className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-semibold text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors"
+                      className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-semibold text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 hover:text-stone-900 dark:hover:text-stone-100 transition-colors"
                     >
-                      <ExternalLink className="w-4 h-4 text-stone-500" />
+                      <ExternalLink className="w-4 h-4" />
                       <span>Landing Page</span>
                     </Link>
 
                     <div className="my-1 border-t border-stone-100 dark:border-stone-800" />
 
-                    {/* 3. Logout */}
+                    {/* 3. logout */}
                     <button
                       onClick={() => {
                         setIsProfileDropdownOpen(false);

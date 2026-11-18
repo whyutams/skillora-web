@@ -402,11 +402,11 @@ export function Navbar() {
                       </div>
                     </div>
 
-                    {/* Menu Options */}
+                    {/* menu options */}
                     <div className="space-y-1">
                       {role === USER_ROLES.SUPERADMIN || role === USER_ROLES.ADMIN ? (
                         <>
-                          {/* 1. Dashboard / Main Area */}
+                          {/* 1. dashboard / main area */}
                           <Link
                             href={
                               role === USER_ROLES.SUPERADMIN
@@ -414,13 +414,13 @@ export function Navbar() {
                                 : "/admin/dashboard"
                             }
                             onClick={() => setIsProfileDropdownOpen(false)}
-                            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-semibold text-stone-700 dark:text-stone-300 hover:bg-emerald-500/10 hover:text-[#0F3E2E] dark:hover:text-emerald-300 transition-colors"
+                            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-semibold text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 hover:text-stone-900 dark:hover:text-stone-100 transition-colors"
                           >
-                            <LayoutDashboard className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                            <LayoutDashboard className="w-4 h-4" />
                             <span>Dashboard</span>
                           </Link>
 
-                          {/* 2. Edit Profile Dashboard */}
+                          {/* 2. edit profile dashboard */}
                           <Link
                             href={
                               role === USER_ROLES.SUPERADMIN
@@ -428,15 +428,15 @@ export function Navbar() {
                                 : "/admin/profile"
                             }
                             onClick={() => setIsProfileDropdownOpen(false)}
-                            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-semibold text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors"
+                            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-semibold text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 hover:text-stone-900 dark:hover:text-stone-100 transition-colors"
                           >
-                            <User className="w-4 h-4 text-stone-500" />
+                            <User className="w-4 h-4" />
                             <span>Edit Profil</span>
                           </Link>
 
                           <div className="my-1 border-t border-stone-100 dark:border-stone-800" />
 
-                          {/* 3. Logout */}
+                          {/* 3. logout */}
                           <button
                             onClick={() => {
                               setIsProfileDropdownOpen(false);
@@ -455,9 +455,9 @@ export function Navbar() {
                           <Link
                             href="/dashboard"
                             onClick={() => setIsProfileDropdownOpen(false)}
-                            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-semibold text-stone-700 dark:text-stone-300 hover:bg-emerald-500/10 hover:text-[#0F3E2E] dark:hover:text-emerald-300 transition-colors"
+                            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-semibold text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 hover:text-stone-900 dark:hover:text-stone-100 transition-colors"
                           >
-                            <LayoutDashboard className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                            <LayoutDashboard className="w-4 h-4" />
                             <span>Dashboard</span>
                           </Link>
 
@@ -465,9 +465,9 @@ export function Navbar() {
                           <Link
                             href="/kursus-saya"
                             onClick={() => setIsProfileDropdownOpen(false)}
-                            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-semibold text-stone-700 dark:text-stone-300 hover:bg-emerald-500/10 hover:text-[#0F3E2E] dark:hover:text-emerald-300 transition-colors"
+                            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-semibold text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 hover:text-stone-900 dark:hover:text-stone-100 transition-colors"
                           >
-                            <GraduationCap className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                            <GraduationCap className="w-4 h-4" />
                             <span>Kursus Saya</span>
                           </Link>
 
@@ -475,9 +475,9 @@ export function Navbar() {
                           <Link
                             href="/profil"
                             onClick={() => setIsProfileDropdownOpen(false)}
-                            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-semibold text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors"
+                            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-semibold text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 hover:text-stone-900 dark:hover:text-stone-100 transition-colors"
                           >
-                            <User className="w-4 h-4 text-stone-500" />
+                            <User className="w-4 h-4" />
                             <span>Edit Profil</span>
                           </Link>
 
