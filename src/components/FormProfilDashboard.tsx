@@ -6,7 +6,7 @@ import { createClient } from "@/utils/supabase/client";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
-import { AlertModal } from "@/components/ui/ModalKonfirmasi";
+import { AlertModal, ConfirmModal } from "@/components/ui/ModalKonfirmasi";
 import { Profile, USER_ROLES } from "@/types/database";
 import { SmoothImage } from "@/components/ui/SmoothImage";
 import { ImageCropModal } from "@/components/ui/ModalCropGambar";
@@ -15,6 +15,7 @@ import { ProfileSkeleton } from "@/components/ui/Skeleton";
 import {
   User,
   Camera,
+  Trash2,
   AtSign,
   Mail,
   Building2,
@@ -47,6 +48,10 @@ export function FormProfilDashboard({ roleTitle }: { roleTitle: string }) {
   const [cropModalOpen, setCropModalOpen] = React.useState(false);
   const [selectedCropFile, setSelectedCropFile] = React.useState<File | null>(null);
   const [isSavingCrop, setIsSavingCrop] = React.useState(false);
+
+  // status modal hapus foto profil
+  const [deleteAvatarModalOpen, setDeleteAvatarModalOpen] = React.useState(false);
+  const [isDeletingAvatar, setIsDeletingAvatar] = React.useState(false);
 
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
@@ -158,6 +163,42 @@ export function FormProfilDashboard({ roleTitle }: { roleTitle: string }) {
     }
   };
 
+  // hapus foto profil akun pengelola dan kembalikan ke inisial nama
+  const handleDeleteAvatar = async () => {
+    setIsDeletingAvatar(true);
+    setErrorMsg(null);
+    try {
+      const res = await fetch("/api/profile", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          fullName,
+          schoolOrigin,
+          whatsappNumber,
+          avatarUrl: null,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Gagal menghapus foto profil.");
+      }
+
+      setAvatarUrl(null);
+      setProfile((prev) => (prev ? { ...prev, avatar_url: null } : null));
+      setDeleteAvatarModalOpen(false);
+      router.refresh();
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setErrorMsg(err.message);
+      } else {
+        setErrorMsg("Terjadi kesalahan saat menghapus foto profil.");
+      }
+    } finally {
+      setIsDeletingAvatar(false);
+    }
+  };
+
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!fullName.trim()) {
@@ -204,8 +245,8 @@ export function FormProfilDashboard({ roleTitle }: { roleTitle: string }) {
   }
 
   return (
-    <div className="space-y-6 w-full max-w-5xl text-left">
-      {/* Header Info */}
+    <div className="space-y-6 w-full text-left">
+      {/* header informasi profil */}
       <div>
         <h1 className="text-xl sm:text-2xl font-extrabold text-stone-900 dark:text-stone-100 tracking-tight">
           Pengaturan Profil {roleTitle}
@@ -223,7 +264,7 @@ export function FormProfilDashboard({ roleTitle }: { roleTitle: string }) {
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Left Column: Avatar & Quick Info */}
+        {/* kolom kiri avatar dan ringkasan */}
         <Card className="border-stone-200/90 dark:border-stone-800/90 text-center p-6 space-y-4">
           <div className="relative inline-block mx-auto">
             {avatarUrl ? (
@@ -240,11 +281,13 @@ export function FormProfilDashboard({ roleTitle }: { roleTitle: string }) {
               </div>
             )}
 
+            {/* tombol upload ganti foto profil */}
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              disabled={uploadingAvatar}
+              disabled={uploadingAvatar || isDeletingAvatar}
               aria-label="Ubah foto profil"
+              title="Unggah Foto Profil Baru"
               className="absolute bottom-0 right-0 p-2 rounded-full bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 text-stone-700 dark:text-stone-300 hover:text-emerald-600 shadow-md hover:scale-105 transition-all"
             >
               {uploadingAvatar ? (
@@ -254,6 +297,24 @@ export function FormProfilDashboard({ roleTitle }: { roleTitle: string }) {
               )}
             </button>
 
+            {/* tombol hapus foto profil jika ada foto */}
+            {avatarUrl && (
+              <button
+                type="button"
+                onClick={() => setDeleteAvatarModalOpen(true)}
+                disabled={uploadingAvatar || isDeletingAvatar}
+                aria-label="Hapus Foto Profil"
+                title="Hapus Foto Profil"
+                className="absolute bottom-0 left-0 p-2 rounded-full bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 shadow-md text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 hover:scale-105 transition-all"
+              >
+                {isDeletingAvatar ? (
+                  <Loader2 className="w-4 h-4 animate-spin text-rose-600" />
+                ) : (
+                  <Trash2 className="w-4 h-4" />
+                )}
+              </button>
+            )}
+
             <input
               type="file"
               ref={fileInputRef}
@@ -262,6 +323,21 @@ export function FormProfilDashboard({ roleTitle }: { roleTitle: string }) {
               className="hidden"
             />
           </div>
+
+          {/* aksi teks hapus foto profil */}
+          {avatarUrl && (
+            <div className="pt-0.5">
+              <button
+                type="button"
+                onClick={() => setDeleteAvatarModalOpen(true)}
+                disabled={uploadingAvatar || isDeletingAvatar}
+                className="text-xs font-semibold text-rose-600 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300 inline-flex items-center gap-1.5 transition-colors"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Hapus Foto Profil</span>
+              </button>
+            </div>
+          )}
 
           <div>
             <h3 className="text-base font-bold text-stone-900 dark:text-stone-100">
@@ -419,6 +495,19 @@ export function FormProfilDashboard({ roleTitle }: { roleTitle: string }) {
         title="Profil Berhasil Diperbarui"
         message="Informasi profil dan foto akun Anda telah berhasil disimpan ke database."
         type="success"
+      />
+
+      {/* modal konfirmasi hapus foto profil */}
+      <ConfirmModal
+        isOpen={deleteAvatarModalOpen}
+        onClose={() => setDeleteAvatarModalOpen(false)}
+        onConfirm={handleDeleteAvatar}
+        isLoading={isDeletingAvatar}
+        title="Hapus Foto Profil"
+        description="Apakah Anda yakin ingin menghapus foto profil ini? Foto akan dihapus dan profil Anda akan menggunakan avatar inisial nama."
+        confirmText="Ya, Hapus Foto"
+        cancelText="Batal"
+        variant="danger"
       />
     </div>
   );

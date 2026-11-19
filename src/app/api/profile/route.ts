@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/utils/supabase/server";
+import { createClient, createAdminClient } from "@/utils/supabase/server";
 import { logActivity } from "@/utils/supabase/activityLogger";
 
 export async function GET() {
@@ -77,7 +77,7 @@ export async function PUT(request: NextRequest) {
       full_name: string;
       school_origin?: string;
       whatsapp_number?: string;
-      avatar_url?: string;
+      avatar_url?: string | null;
     } = {
       full_name: fullName.trim(),
     };
@@ -91,11 +91,32 @@ export async function PUT(request: NextRequest) {
       updateData.whatsapp_number = cleanPhone;
     }
 
-    if (avatarUrl !== undefined) {
-      updateData.avatar_url = avatarUrl;
+    if (avatarUrl === null || avatarUrl === "") {
+      updateData.avatar_url = null;
+      // bersihkan file fisik dari bucket storage avatars jika ada
+      try {
+        const { data: existingProfile } = await supabase
+          .from("profiles")
+          .select("avatar_url")
+          .eq("id", user.id)
+          .single();
+
+        if (existingProfile?.avatar_url && existingProfile.avatar_url.includes("/avatars/")) {
+          const parts = existingProfile.avatar_url.split("/avatars/");
+          if (parts[1]) {
+            const fileName = parts[1].split("?")[0];
+            const adminClient = createAdminClient();
+            await adminClient.storage.from("avatars").remove([fileName]);
+          }
+        }
+      } catch (storageErr) {
+        console.error("gagal membersihkan file avatar lama", storageErr);
+      }
+    } else if (avatarUrl !== undefined) {
+      updateData.avatar_url = String(avatarUrl).trim();
     }
 
-    // 1. Update ke Supabase
+    // 1. perbarui data profil ke supabase
     const { data: updatedProfile, error: updateError } = await supabase
       .from("profiles")
       .update(updateData)
@@ -111,7 +132,7 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    // 2. Catat ke Activity Log
+    // 2. catat riwayat pembaruan ke activity log
     await logActivity({
       userId: user.id,
       userEmail: user.email,
@@ -121,7 +142,8 @@ export async function PUT(request: NextRequest) {
       recordId: user.id,
       details: {
         updated_fields: Object.keys(updateData),
-        avatar_changed: !!avatarUrl,
+        avatar_changed: avatarUrl !== undefined,
+        avatar_removed: updateData.avatar_url === null,
       },
     });
 

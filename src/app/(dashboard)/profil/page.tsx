@@ -6,7 +6,7 @@ import { createClient } from "@/utils/supabase/client";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
-import { AlertModal } from "@/components/ui/ModalKonfirmasi";
+import { AlertModal, ConfirmModal } from "@/components/ui/ModalKonfirmasi";
 import { ProfileSkeleton } from "@/components/ui/Skeleton";
 import { Profile, USER_ROLES, getRoleLabel } from "@/types/database";
 import { SmoothImage } from "@/components/ui/SmoothImage";
@@ -15,6 +15,7 @@ import { ImageCropModal } from "@/components/ui/ModalCropGambar";
 import {
   User,
   Camera,
+  Trash2,
   AtSign,
   Mail,
   Building2,
@@ -51,6 +52,10 @@ export default function ProfilPesertaPage() {
   const [cropModalOpen, setCropModalOpen] = React.useState(false);
   const [selectedCropFile, setSelectedCropFile] = React.useState<File | null>(null);
   const [isSavingCrop, setIsSavingCrop] = React.useState(false);
+
+  // status modal hapus foto profil
+  const [deleteAvatarModalOpen, setDeleteAvatarModalOpen] = React.useState(false);
+  const [isDeletingAvatar, setIsDeletingAvatar] = React.useState(false);
 
   // status pembaruan kata sandi
   const [newPassword, setNewPassword] = React.useState("");
@@ -176,6 +181,42 @@ export default function ProfilPesertaPage() {
     }
   };
 
+  // hapus foto profil pengguna dan kembalikan ke avatar inisial nama
+  const handleDeleteAvatar = async () => {
+    setIsDeletingAvatar(true);
+    setErrorMsg(null);
+    try {
+      const res = await fetch("/api/profile", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          fullName,
+          schoolOrigin,
+          whatsappNumber,
+          avatarUrl: null,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Gagal menghapus foto profil.");
+      }
+
+      setAvatarUrl(null);
+      setProfile((prev) => (prev ? { ...prev, avatar_url: null } : null));
+      setDeleteAvatarModalOpen(false);
+      router.refresh();
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setErrorMsg(err.message);
+      } else {
+        setErrorMsg("Terjadi kesalahan saat menghapus foto profil.");
+      }
+    } finally {
+      setIsDeletingAvatar(false);
+    }
+  };
+
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg(null);
@@ -292,12 +333,14 @@ export default function ProfilPesertaPage() {
               </div>
             )}
 
+            {/* tombol upload ganti foto profil */}
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              disabled={uploadingAvatar}
+              disabled={uploadingAvatar || isDeletingAvatar}
               aria-label="Ubah Foto Profil"
-              className="absolute bottom-0 right-0 p-2 rounded-full bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 shadow-md text-stone-700 dark:text-stone-300 hover:text-emerald-600 dark:hover:text-emerald-400 transition-transform active:scale-95"
+              title="Unggah Foto Profil Baru"
+              className="absolute bottom-0 right-0 p-2 rounded-full bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 shadow-md text-stone-700 dark:text-stone-300 hover:text-emerald-600 dark:hover:text-emerald-400 hover:scale-105 transition-all active:scale-95"
             >
               {uploadingAvatar ? (
                 <Loader2 className="w-4 h-4 animate-spin text-emerald-600" />
@@ -305,6 +348,25 @@ export default function ProfilPesertaPage() {
                 <Camera className="w-4 h-4" />
               )}
             </button>
+
+            {/* tombol hapus foto profil jika ada foto */}
+            {avatarUrl && (
+              <button
+                type="button"
+                onClick={() => setDeleteAvatarModalOpen(true)}
+                disabled={uploadingAvatar || isDeletingAvatar}
+                aria-label="Hapus Foto Profil"
+                title="Hapus Foto Profil"
+                className="absolute bottom-0 left-0 p-2 rounded-full bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 shadow-md text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 hover:scale-105 transition-all active:scale-95"
+              >
+                {isDeletingAvatar ? (
+                  <Loader2 className="w-4 h-4 animate-spin text-rose-600" />
+                ) : (
+                  <Trash2 className="w-4 h-4" />
+                )}
+              </button>
+            )}
+
             <input
               ref={fileInputRef}
               type="file"
@@ -313,6 +375,21 @@ export default function ProfilPesertaPage() {
               onChange={handleAvatarFileChange}
             />
           </div>
+
+          {/* aksi teks hapus foto profil jika ada foto */}
+          {avatarUrl && (
+            <div className="pt-0.5">
+              <button
+                type="button"
+                onClick={() => setDeleteAvatarModalOpen(true)}
+                disabled={uploadingAvatar || isDeletingAvatar}
+                className="text-xs font-semibold text-rose-600 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300 inline-flex items-center gap-1.5 transition-colors"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Hapus Foto Profil</span>
+              </button>
+            </div>
+          )}
 
           <div className="space-y-1">
             <h2 className="text-base font-bold text-stone-900 dark:text-stone-100">
@@ -558,6 +635,19 @@ export default function ProfilPesertaPage() {
         message="Data identitas profil Anda telah berhasil disimpan dan disinkronkan ke sistem Skillora."
         buttonText="Selesai"
         type="success"
+      />
+
+      {/* modal konfirmasi hapus foto profil */}
+      <ConfirmModal
+        isOpen={deleteAvatarModalOpen}
+        onClose={() => setDeleteAvatarModalOpen(false)}
+        onConfirm={handleDeleteAvatar}
+        isLoading={isDeletingAvatar}
+        title="Hapus Foto Profil"
+        description="Apakah Anda yakin ingin menghapus foto profil ini? Foto akan dihapus dan profil Anda akan menggunakan avatar inisial nama."
+        confirmText="Ya, Hapus Foto"
+        cancelText="Batal"
+        variant="danger"
       />
 
       {/* modal crop foto profil rasio satu banding satu */}
