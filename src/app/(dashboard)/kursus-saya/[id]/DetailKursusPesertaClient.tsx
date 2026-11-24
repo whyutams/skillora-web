@@ -529,7 +529,7 @@ export function DetailKursusPesertaClient({ enrollmentId }: { enrollmentId: stri
             {/* konten sesuai tab aktif */}
             <div className="pt-2">
               {activeTab === "about" && (
-                <div data-aos="fade-in" className="animate-in fade-in duration-300">
+                <div className="animate-in fade-in duration-300">
                   <TabTentangKursus
                     courseTitle={course.title}
                     courseContentHtml={course.content}
@@ -540,7 +540,7 @@ export function DetailKursusPesertaClient({ enrollmentId }: { enrollmentId: stri
               )}
 
               {activeTab === "syllabus" && (
-                <div data-aos="fade-in" className="animate-in fade-in duration-300">
+                <div className="animate-in fade-in duration-300">
                   {isApproved ? (
                     <div className="space-y-6">
                       {/* ringkasan progres belajar mahasiswa dengan tombol kerjakan kursus */}
@@ -717,7 +717,7 @@ export function DetailKursusPesertaClient({ enrollmentId }: { enrollmentId: stri
               )}
 
               {activeTab === "reviews" && (
-                <div data-aos="fade-in" className="animate-in fade-in duration-300 space-y-8">
+                <div className="animate-in fade-in duration-300 space-y-8">
                   <TabUlasanKursus
                     reviews={reviewsData.reviews}
                     averageRating={reviewsData.averageRating}
@@ -812,7 +812,7 @@ export function DetailKursusPesertaClient({ enrollmentId }: { enrollmentId: stri
               )}
 
               {activeTab === "leaderboard" && (
-                <div data-aos="fade-in" className="animate-in fade-in duration-300">
+                <div className="animate-in fade-in duration-300">
                   <TabLeaderboardKursus
                     isUnlocked={isApproved && totalLessons > 0 && completedCount >= totalLessons}
                     completedCount={completedCount}
