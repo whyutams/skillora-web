@@ -203,7 +203,14 @@ export async function GET(
       }
     }
 
+    const { data: userProfile } = await adminClient
+      .from("profiles")
+      .select("full_name, username, school_origin")
+      .eq("id", user.id)
+      .maybeSingle();
+
     return NextResponse.json({
+      user_profile: userProfile || null,
       enrollment: {
         id: enrollment.id,
         user_id: enrollment.user_id,

@@ -38,7 +38,10 @@ import {
   CourseQuizQuestion,
 } from "@/utils/courseCurriculumParser";
 import WebCodeEditor from "@/components/learning/WebCodeEditor";
-import { getStarterCodePlaceholder } from "@/utils/codeStarterTemplate";
+import {
+  getStarterCodePlaceholder,
+  getTargetPracticeCode,
+} from "@/utils/codeStarterTemplate";
 
 function getYouTubeEmbedUrl(url?: string): string | null {
   if (!url) return null;
@@ -161,6 +164,11 @@ export default function HalamanBelajarTopikClient({
   const currentLesIdx = parseInt(topicIndexStr, 10) || 0;
 
   const [enrollment, setEnrollment] = React.useState<StudentEnrollmentItem | null>(null);
+  const [userProfile, setUserProfile] = React.useState<{
+    full_name?: string | null;
+    username?: string | null;
+    school_origin?: string | null;
+  } | null>(null);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
 
@@ -254,6 +262,9 @@ export default function HalamanBelajarTopikClient({
         throw new Error(data.error || "Gagal memuat detail pendaftaran kursus.");
       }
       setEnrollment(data.enrollment);
+      if (data.user_profile) {
+        setUserProfile(data.user_profile);
+      }
 
       // sinkronisasi progres dari database sebagai sumber data utama
       const dbCompleted: string[] = Array.isArray(data.enrollment?.completed_lessons)
@@ -1405,25 +1416,46 @@ export default function HalamanBelajarTopikClient({
                 )}
 
                 {/* editor praktik koding dan eksekusi kode interaktif */}
-                {(currentLesson.type === "practice" || Boolean(currentLesson.starter_code)) && (
-                  <WebCodeEditor
-                    initialCode={getStarterCodePlaceholder(
-                      courseTopic === "general" ? "cpp" : courseTopic,
-                      currentLesson.starter_code,
-                      activeCleanTitle,
-                      currentLesson.content
-                    )}
-                    language={courseTopic === "general" ? "cpp" : courseTopic}
-                    title={`Praktik: ${activeCleanTitle}`}
-                    tips={
-                      currentLesson.instructions
-                        ? currentLesson.instructions
-                        : currentLesson.content && !currentLesson.content.includes("#include")
-                        ? currentLesson.content
-                        : undefined
-                    }
-                  />
-                )}
+                {(currentLesson.type === "practice" || Boolean(currentLesson.starter_code)) && (() => {
+                  const practiceLang = courseTopic === "general" ? "cpp" : courseTopic;
+                  const dynamicName = userProfile?.full_name || "Mahasiswa";
+                  const targetCode = getTargetPracticeCode(
+                    practiceLang,
+                    currentLesson.starter_code,
+                    activeCleanTitle,
+                    currentLesson.content,
+                    dynamicName
+                  );
+                  const starterCode = getStarterCodePlaceholder(
+                    practiceLang,
+                    currentLesson.starter_code,
+                    activeCleanTitle,
+                    currentLesson.content,
+                    dynamicName
+                  );
+                  const dynamicValues = [
+                    dynamicName,
+                    userProfile?.username || "",
+                  ].filter(Boolean);
+
+                  return (
+                    <WebCodeEditor
+                      key={`code-editor-${currentModIdx}-${currentLesIdx}`}
+                      initialCode={starterCode}
+                      targetCode={targetCode}
+                      dynamicValues={dynamicValues}
+                      language={practiceLang}
+                      title={`Praktik ${activeCleanTitle}`}
+                      tips={
+                        currentLesson.instructions
+                          ? currentLesson.instructions
+                          : currentLesson.content && !currentLesson.content.includes("#include")
+                          ? currentLesson.content
+                          : undefined
+                      }
+                    />
+                  );
+                })()}
 
                 {/* pengumpulan tugas proyek */}
                 {currentLesson.type === "project" && (
@@ -1584,9 +1616,17 @@ export default function HalamanBelajarTopikClient({
                               </div>
 
                               <div className="flex items-center gap-2 self-start sm:self-auto">
-                                <Badge variant="neutral" className="text-xs font-bold bg-white dark:bg-stone-900 shadow-2xs">
+                                <span
+                                  className={`px-3 py-1 rounded-xl text-xs font-bold border shadow-2xs ${
+                                    (essayEvaluation?.score ?? 0) >= 80
+                                      ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-800 dark:text-emerald-300"
+                                      : (essayEvaluation?.score ?? 0) >= 60
+                                      ? "bg-amber-500/10 border-amber-500/30 text-amber-800 dark:text-amber-300"
+                                      : "bg-rose-500/10 border-rose-500/30 text-rose-800 dark:text-rose-300"
+                                  }`}
+                                >
                                   {essayEvaluation?.verdict || "Hasil Evaluasi"}
-                                </Badge>
+                                </span>
                               </div>
                             </div>
 
@@ -1639,15 +1679,29 @@ export default function HalamanBelajarTopikClient({
                             )}
                           </div>
 
-                          {/* uraian jawaban peserta yang tersimpan permanen */}
-                          <div className="p-4 rounded-xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-950 space-y-1.5">
-                            <div className="flex items-center justify-between">
+                          {/* uraian jawaban peserta yang tersimpan dengan opsi perbaiki */}
+                          <div className="p-4 rounded-xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-950 space-y-2">
+                            <div className="flex flex-wrap items-center justify-between gap-2">
                               <span className="text-xs font-bold text-stone-700 dark:text-stone-300">
-                                Jawaban Essay Anda (Tersimpan Permanen):
+                                Jawaban Essay Anda:
                               </span>
-                              <Badge variant="neutral" className="text-[10px] font-semibold">
-                                Tidak Dapat Diubah
-                              </Badge>
+                              <div className="flex items-center gap-2">
+                                {(essayEvaluation?.score ?? 0) >= 100 ? (
+                                  <span className="px-2.5 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-400 text-[11px] font-bold flex items-center gap-1">
+                                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                                    <span>Nilai Maksimal (100)</span>
+                                  </span>
+                                ) : (
+                                  <button
+                                    type="button"
+                                    onClick={() => setEssaySubmitted(false)}
+                                    className="px-3 py-1 rounded-xl bg-[#0F3E2E] hover:bg-[#15523d] text-white text-xs font-bold transition-all shadow-xs flex items-center gap-1 cursor-pointer"
+                                    title="Buka kembali form untuk memperbarui atau mengevaluasi ulang jawaban essay"
+                                  >
+                                    <span>Perbaiki / Evaluasi Ulang</span>
+                                  </button>
+                                )}
+                              </div>
                             </div>
                             <p className="text-xs sm:text-sm text-stone-800 dark:text-stone-200 whitespace-pre-wrap leading-relaxed">
                               {essayAnswer}
@@ -1936,7 +1990,7 @@ export default function HalamanBelajarTopikClient({
           variant="primary"
         />
 
-        {/* modal konfirmasi kirim jawaban essay final */}
+        {/* modal konfirmasi kirim jawaban essay */}
         <ConfirmModal
           isOpen={showEssayConfirmModal}
           onClose={() => setShowEssayConfirmModal(false)}
@@ -1944,9 +1998,9 @@ export default function HalamanBelajarTopikClient({
             setShowEssayConfirmModal(false);
             handleExecuteEssaySubmit();
           }}
-          title="Kirim Jawaban Essay Final?"
-          description="Jawaban essay Anda akan dinilai langsung oleh sistem dengan rentang nilai 0-100 dan alasan penilaian. Jawaban bersifat permanen dan tidak dapat diganti setelah dikirim. Apakah Anda yakin ingin mengirimkan jawaban ini?"
-          confirmText="Yakin & Kirim Final"
+          title="Kirim Jawaban Evaluasi Essay?"
+          description="Jawaban essay Anda akan dinilai langsung secara objektif oleh sistem dalam rentang nilai 0-100 beserta alasan penilaian. Apakah Anda yakin ingin mengirimkan jawaban ini?"
+          confirmText="Ya, Kirim Jawaban"
           cancelText="Periksa Lagi"
           variant="primary"
         />

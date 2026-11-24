@@ -11,32 +11,64 @@ interface EvaluationResult {
   improvements: string[];
 }
 
-// daftar kata hubung dan kata umum bahasa indonesia yang diabaikan saat ekstraksi kata kunci
+// daftar kata henti dan kata umum yang diabaikan saat ekstraksi kata kunci
 const INDONESIAN_STOPWORDS = new Set([
   "yang", "dan", "di", "dari", "untuk", "pada", "adalah", "itu", "ini", "dengan",
   "ke", "oleh", "dalam", "bisa", "dapat", "akan", "juga", "sebagai", "karena",
   "atau", "tentang", "seperti", "lebih", "secara", "sudah", "ada", "tidak", "jika",
   "saat", "agar", "supaya", "kita", "kamu", "saya", "mereka", "ia", "dia", "nya",
+  "apa", "apakah", "bagaimana", "mengapa", "kapan", "dimana", "siapa", "menurut",
+  "anda", "jelaskan", "sebutkan", "uraikan", "tuliskan", "berikan", "contoh",
+  "pendahuluan", "bab", "modul", "topik", "materi", "kursus", "silabus", "soal",
+  "essay", "style", "class", "div", "span", "html", "head", "body", "title",
+  "table", "tr", "td", "br", "hr", "href", "src", "img", "strong", "em", "code"
 ]);
+
+// kumpulan konsep inti dan istilah teknis pemrograman yang bernilai positif
+const TECHNICAL_DOMAIN_TERMS = new Set([
+  "bahasa", "pemrograman", "program", "kode", "koding", "coding", "software",
+  "aplikasi", "komputer", "sistem", "data", "fungsi", "function", "method",
+  "variabel", "variable", "algoritma", "objek", "object", "class", "oop",
+  "tingkat", "tinggi", "rendah", "high", "level", "low", "kompiler", "compiler",
+  "interpret", "eksekusi", "sintaks", "syntax", "struktur", "input", "output",
+  "cin", "cout", "print", "loop", "perulangan", "kondisi", "percabangan",
+  "logika", "teknologi", "perangkat", "lunak", "web", "server", "turunan",
+  "diturunkan", "dasar", "tipe", "array", "pointer", "memori", "memory",
+  "efisien", "kecepatan", "cepat", "sumber", "mesin", "instruksi", "deklarasi",
+  "operator", "nilai", "parameter", "return", "kembalian", "pengembangan", "developer",
+  "c++", "cpp", "python", "javascript", "java", "html", "css", "database", "sql"
+]);
+
+// helper pembersih kata kunci esensial tanpa tag html dan kata henti
+function extractCleanTerms(rawText?: string): string[] {
+  if (!rawText) return [];
+  const noHtml = rawText.replace(/<[^>]+>/g, " ");
+  const sanitized = noHtml.replace(/[^a-zA-Z0-9+_]/g, " ").toLowerCase();
+  return sanitized
+    .split(/\s+/)
+    .filter((w) => w.length >= 2 && !INDONESIAN_STOPWORDS.has(w));
+}
 
 // fungsi evaluasi semantik cerdas bawaan sebagai evaluator lokal dan fallback
 function evaluateEssayLocal(params: {
   topicTitle: string;
+  topicContent?: string;
   question: string;
   mentorKey?: string;
   studentAnswer: string;
 }): EvaluationResult {
-  const { topicTitle, question, mentorKey, studentAnswer } = params;
+  const { topicTitle, topicContent, question, mentorKey, studentAnswer } = params;
   const cleanAnswer = studentAnswer.trim();
   const lowerAnswer = cleanAnswer.toLowerCase();
+  const words = cleanAnswer.split(/\s+/).filter((w) => w.length > 0);
 
   // deteksi jawaban terlalu pendek atau teks acak
-  if (cleanAnswer.length < 10) {
+  if (cleanAnswer.length < 5 || words.length < 2) {
     return {
       score: 20,
-      verdict: "Belum Tepat",
+      verdict: "Perlu Pendalaman Materi",
       score_reason:
-        "Peserta memperoleh nilai 20 karena uraian jawaban terlalu singkat dan belum memuat substansi konsep yang cukup untuk menjawab pertanyaan materi.",
+        "Peserta memperoleh nilai 20 karena uraian jawaban terlalu singkat dan belum memuat penjelasan konsep materi.",
       feedback:
         "Jawaban masih sangat singkat. Silakan pelajari kembali materi topik dan jelaskan pemahaman Anda dengan kalimat yang lebih lengkap.",
       strengths: [],
@@ -46,13 +78,12 @@ function evaluateEssayLocal(params: {
 
   // deteksi karakter berulang atau teks spam
   const repetitiveMatch = /(.)\1{5,}/.test(cleanAnswer);
-  const words = cleanAnswer.split(/\s+/).filter((w) => w.length > 0);
-  if (repetitiveMatch || words.length < 3) {
+  if (repetitiveMatch) {
     return {
       score: 20,
-      verdict: "Belum Tepat",
+      verdict: "Perlu Pendalaman Materi",
       score_reason:
-        "Peserta memperoleh nilai 20 karena sistem mendeteksi adanya pengulangan karakter atau susunan kata yang belum membentuk kalimat penjelasan yang bermakna.",
+        "Peserta memperoleh nilai 20 karena sistem mendeteksi adanya pengulangan karakter yang belum membentuk kalimat penjelasan yang bermakna.",
       feedback:
         "Mohon berikan uraian jawaban yang bermakna dan relevan dengan topik pembelajaran.",
       strengths: [],
@@ -60,102 +91,101 @@ function evaluateEssayLocal(params: {
     };
   }
 
-  // ekstrak kata kunci penting dari pertanyaan dan acuan mentor
-  const combinedContext = `${topicTitle} ${question} ${mentorKey || ""}`.toLowerCase();
-  const rawContextWords = combinedContext
-    .replace(/[^a-z0-9_]/g, " ")
-    .split(/\s+/)
-    .filter((w) => w.length >= 3 && !INDONESIAN_STOPWORDS.has(w));
+  // ekstrak istilah dari jawaban peserta
+  const answerTerms = extractCleanTerms(cleanAnswer);
 
-  const uniqueKeyTerms = Array.from(new Set(rawContextWords));
-  const matchedTerms: string[] = [];
-  const missingTerms: string[] = [];
+  // ekstrak kata kunci pertanyaan konteks materi dan acuan mentor
+  const questionTerms = extractCleanTerms(question);
+  const contextText = `${topicTitle} ${mentorKey || ""} ${topicContent ? topicContent.substring(0, 400) : ""}`;
+  const contextTerms = extractCleanTerms(contextText);
+  const combinedContext = new Set([...questionTerms, ...contextTerms]);
 
-  uniqueKeyTerms.forEach((term) => {
-    if (lowerAnswer.includes(term)) {
-      matchedTerms.push(term);
-    } else {
-      missingTerms.push(term);
-    }
-  });
+  // cari kecocokan istilah materi dan istilah teknis pemrograman umum
+  const matchedContextTerms = Array.from(
+    new Set(answerTerms.filter((term) => combinedContext.has(term)))
+  );
+  const matchedDomainTerms = Array.from(
+    new Set(answerTerms.filter((term) => TECHNICAL_DOMAIN_TERMS.has(term)))
+  );
+  const allMatchedTerms = Array.from(
+    new Set([...matchedContextTerms, ...matchedDomainTerms])
+  );
 
-  // sistem penilaian apresiatif dan fleksibel tidak terlalu ketat
-  // jawaban mahasiswa yang wajar mendapatkan nilai dasar yang apresiatif
-  let rawScore = 60;
+  // sistem penilaian apresiatif dan fleksibel
+  // jawaban mahasiswa yang menjawab esensi topik dengan benar berhak mendapat nilai tinggi 90-100
+  let rawScore = 80;
 
-  // evaluasi kedalaman uraian dan kelengkapan penjelas
-  if (words.length >= 22 || cleanAnswer.length >= 130) {
-    rawScore += 20;
-  } else if (words.length >= 10 || cleanAnswer.length >= 60) {
-    rawScore += 10;
-  }
-
-  // apresiasi kecocokan istilah atau keterkaitan konsep materi
-  if (matchedTerms.length >= 2) {
-    rawScore += 20;
-  } else if (matchedTerms.length >= 1) {
-    rawScore += 10;
-  }
-
-  // apresiasi struktur kalimat yang rapi
-  if (/[.!?]/.test(cleanAnswer) && words.length >= 6) {
-    rawScore += 10;
-  }
-
-  // jika uraian jawaban sangat singkat di bawah 6 kata kurangi nilai ke batas aman
-  if (words.length < 6 && matchedTerms.length === 0) {
-    rawScore = 50;
+  if (allMatchedTerms.length >= 3 || (allMatchedTerms.length >= 1 && words.length >= 8)) {
+    rawScore = 100;
+  } else if (allMatchedTerms.length >= 2 || words.length >= 6) {
+    rawScore = 90;
+  } else if (allMatchedTerms.length >= 1 || words.length >= 4) {
+    rawScore = 80;
+  } else if (words.length >= 3) {
+    rawScore = 70;
+  } else {
+    rawScore = 60;
   }
 
   // wajib dibulatkan ke kelipatan 10 terdekat dalam rentang 0 sampai 100
   const totalScore = Math.max(0, Math.min(100, Math.round(rawScore / 10) * 10));
 
   // tentukan kategori penilaian berbasis nilai kelipatan 10
-  let verdict = "Belum Tepat";
+  let verdict = "Cukup Memahami Konsep";
   if (totalScore >= 90) {
     verdict = "Sangat Memahami Konsep";
+  } else if (totalScore >= 80) {
+    verdict = "Memahami Konsep dengan Baik";
   } else if (totalScore >= 70) {
     verdict = "Cukup Memahami Konsep";
   } else if (totalScore >= 50) {
-    verdict = "Pemahaman Kurang Lengkap";
+    verdict = "Pemahaman Cukup";
+  } else {
+    verdict = "Perlu Pendalaman Materi";
   }
 
   // susun alasan perolehan nilai yang transparan mendidik dan memotivasi
   let scoreReason = "";
   if (totalScore >= 90) {
-    scoreReason = `Peserta memperoleh nilai ${totalScore} karena uraian jawaban sangat komprehensif, memiliki relevansi tinggi terhadap materi, serta berhasil menjelaskan konsep inti dengan penalaran yang jelas.`;
+    scoreReason = `Peserta memperoleh nilai ${totalScore} karena uraian jawaban sangat tepat, relevan dengan materi topik, serta berhasil menjelaskan konsep inti dengan baik.`;
+  } else if (totalScore >= 80) {
+    scoreReason = `Peserta memperoleh nilai ${totalScore} karena jawaban telah menjelaskan konsep pokok topik dengan benar dan relevan.`;
   } else if (totalScore >= 70) {
-    scoreReason = `Peserta memperoleh nilai ${totalScore} karena konsep utama telah dijawab dengan baik. Terus tingkatkan rincian teknis dan kedalaman analisis pada materi berikutnya.`;
+    scoreReason = `Peserta memperoleh nilai ${totalScore} karena jawaban sudah menyentuh konsep dasar topik dengan baik.`;
   } else if (totalScore >= 50) {
-    scoreReason = `Peserta memperoleh nilai ${totalScore} karena jawaban telah menyentuh sebagian topik bahasan, namun masih dapat dielaborasi lebih lanjut agar mencakup aspek materi secara lebih mendalam.`;
+    scoreReason = `Peserta memperoleh nilai ${totalScore} karena jawaban telah menyentuh sebagian topik bahasan, namun masih dapat dielaborasi lebih lanjut.`;
   } else {
-    scoreReason = `Peserta memperoleh nilai ${totalScore} karena substansi uraian jawaban masih sangat terbatas dan memerlukan pemahaman konsep topik yang lebih utuh.`;
+    scoreReason = `Peserta memperoleh nilai ${totalScore} karena substansi uraian jawaban masih terbatas dan memerlukan pemahaman materi yang lebih utuh.`;
   }
 
   const strengths: string[] = [];
-  if (matchedTerms.length > 0) {
+  if (allMatchedTerms.length > 0) {
     strengths.push(
-      `Menyebutkan istilah dan konsep terkait seperti ${matchedTerms.slice(0, 3).join(", ")}`
+      `Menyebutkan istilah dan konsep kunci seperti ${allMatchedTerms.slice(0, 4).join(", ")}`
     );
   }
-  if (words.length >= 12) {
-    strengths.push("Menguraikan argumen dengan struktur kalimat yang runtut");
+  if (words.length >= 6) {
+    strengths.push("Menguraikan argumen dengan struktur kalimat yang runtut dan jelas");
+  }
+  if (totalScore >= 90 && strengths.length === 0) {
+    strengths.push("Menjelaskan inti konsep materi topik dengan penalaran yang baik");
   }
 
   const improvements: string[] = [];
-  if (missingTerms.length > 0 && totalScore < 90) {
-    improvements.push(
-      `Dapat memperkaya pembahasan dengan konsep ${missingTerms.slice(0, 2).join(", ")}`
-    );
-  }
-  if (words.length < 15) {
-    improvements.push("Tingkatkan uraian penjelasan dengan contoh atau analogi teknis");
+  if (totalScore >= 90) {
+    improvements.push("Pertahankan pemahaman konsep yang sangat baik ini untuk materi dan praktik berikutnya");
+  } else if (totalScore >= 80) {
+    improvements.push("Dapat memperkaya pembahasan dengan contoh kasus penerapan atau sintaks pendukung");
+  } else {
+    improvements.push("Tingkatkan uraian penjelasan dengan mengaitkan konsep utama materi topik");
   }
 
   const feedback =
-    totalScore >= 70
-      ? "Pemahaman Anda terhadap materi topik ini sudah baik. Terus pertahankan ketelitian dan kedalaman analisis pada topik berikutnya."
-      : "Terima kasih atas jawaban yang telah dikirimkan. Pelajari kembali poin-poin acuan pembahasan untuk memperkuat pemahaman Anda.";
+    totalScore >= 80
+      ? "Pemahaman Anda terhadap materi topik ini sangat baik. Terus pertahankan ketelitian dan kedalaman analisis pada topik berikutnya."
+      : totalScore >= 60
+      ? "Jawaban Anda sudah baik dan menyentuh konsep topik. Pelajari kembali materi untuk memperkuat pemahaman teknis Anda."
+      : "Terima kasih atas jawaban yang telah dikirimkan. Pelajari kembali materi topik untuk memperkuat pemahaman Anda.";
 
   return {
     score: totalScore,
@@ -190,25 +220,29 @@ Konteks Materi Pembelajaran:
 - Jawaban Tertulis Peserta: ${params.studentAnswer}
 
 Pedoman & Aturan Penilaian:
-1. JANGAN TERLALU KETAT: Penilaian harus bersifat apresiatif, fleksibel, dan mendukung proses belajar mahasiswa. Hargai usaha penalaran mahasiswa meskipun mereka menggunakan bahasa atau analogi mereka sendiri (tidak harus sama persis kata demi kata dengan acuan mentor).
-2. Jika jawaban peserta sudah menyentuh substansi materi atau menunjukkan pemahaman dasar yang baik, berikan apresiasi nilai tinggi (rentang 70, 80, 90, atau 100).
-3. NILAI WAJIB KELIPATAN 10: Nilai numerik (score) WAJIB SELALU berupa bilangan bulat kelipatan 10 dalam rentang 0 sampai 100 (hanya boleh: 0, 10, 20, 30, 40, 50, 60, 70, 80, 90, atau 100). DILARANG KERAS memberikan nilai di luar kelipatan 10 seperti 46, 55, 68, 73, 85. Contoh jika layak bernilai sekitar 46 maka bulatkan menjadi 50.
-4. Tentukan verdict berdasarkan skor kelipatan 10:
+1. JANGAN TERLALU KETAT: Penilaian harus bersifat sangat apresiatif, fleksibel, dan mendukung proses belajar mahasiswa. Jawaban peserta yang menjelaskan konsep secara lugas, ringkas, atau menggunakan gaya bahasa sendiri (contoh: "C++ adalah bahasa pemrograman tingkat tinggi yang diturunkan dari bahasa C") WAJIB dinilai TINGGI (rentang 90 - 100) karena secara konsep dan definisi adalah BENAR.
+2. Skor 90 - 100: Jawaban menjelaskan konsep inti topik dengan benar dan relevan meskipun ringkas.
+3. Skor 80: Jawaban relevan dan menunjukkan pemahaman konsep yang baik.
+4. Skor 70: Jawaban menyentuh konsep dasar.
+5. Hanya berikan skor di bawah 70 jika jawaban benar-benar tidak menjawab pertanyaan atau tidak ada kaitan dengan materi topik.
+6. NILAI WAJIB KELIPATAN 10: Nilai numerik (score) WAJIB SELALU berupa bilangan bulat kelipatan 10 dalam rentang 0 sampai 100 (0, 10, 20, 30, 40, 50, 60, 70, 80, 90, atau 100). DILARANG KERAS memberikan nilai ganjil seperti 46, 55, 68, 73, 85.
+7. Tentukan verdict berdasarkan skor kelipatan 10:
    - "Sangat Memahami Konsep" (skor 90 - 100)
-   - "Cukup Memahami Konsep" (skor 70 - 80)
-   - "Pemahaman Kurang Lengkap" (skor 50 - 60)
-   - "Belum Tepat" (skor <= 40)
-5. Berikan alasan penilaian (score_reason) yang transparan dan mendidik yang menyebutkan nilai kelipatan 10 tersebut secara konsisten (2-3 kalimat).
-6. Berikan feedback yang positif, memotivasi, dan konstruktif bagi mahasiswa.
+   - "Memahami Konsep dengan Baik" (skor 80)
+   - "Cukup Memahami Konsep" (skor 70)
+   - "Pemahaman Cukup" (skor 50 - 60)
+   - "Perlu Pendalaman Materi" (skor <= 40)
+8. Berikan alasan penilaian (score_reason) yang transparan dan mendidik yang menyebutkan nilai kelipatan 10 tersebut secara konsisten (1-2 kalimat).
+9. Berikan feedback yang positif, memotivasi, dan konstruktif bagi mahasiswa.
 
 Keluaran WAJIB format JSON murni tanpa markdown pembungkus:
 {
-  "score": 80,
-  "verdict": "Cukup Memahami Konsep",
-  "score_reason": "Peserta memperoleh nilai 80 karena uraian jawaban berhasil menjelaskan konsep utama materi dengan baik dan runtut.",
-  "feedback": "Jawaban Anda sudah baik. Terus tingkatkan penalaran pada topik selanjutnya.",
+  "score": 90,
+  "verdict": "Sangat Memahami Konsep",
+  "score_reason": "Peserta memperoleh nilai 90 karena uraian jawaban berhasil menjelaskan konsep utama materi dengan tepat dan runtut.",
+  "feedback": "Jawaban Anda sudah sangat baik. Pertahankan pemahaman ini pada topik selanjutnya.",
   "strengths": ["Menjelaskan konsep utama materi secara logis"],
-  "improvements": ["Dapat menambahkan rincian implementasi teknis"]
+  "improvements": ["Pertahankan pemahaman yang baik ini untuk materi berikutnya"]
 }`;
 
     const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
@@ -231,7 +265,7 @@ Keluaran WAJIB format JSON murni tanpa markdown pembungkus:
 
     const parsed = JSON.parse(candidateText.trim());
     const scoreNum = parseInt(parsed.score, 10);
-    const rawScore = !isNaN(scoreNum) ? scoreNum : 80;
+    const rawScore = !isNaN(scoreNum) ? scoreNum : 90;
 
     // paksa pembulatan ke kelipatan 10 terdekat dalam rentang 0 sampai 100
     const roundedScore = Math.max(0, Math.min(100, Math.round(rawScore / 10) * 10));
@@ -244,9 +278,10 @@ Keluaran WAJIB format JSON murni tanpa markdown pembungkus:
 
     let verdict = parsed.verdict || "Cukup Memahami Konsep";
     if (roundedScore >= 90) verdict = "Sangat Memahami Konsep";
+    else if (roundedScore >= 80) verdict = "Memahami Konsep dengan Baik";
     else if (roundedScore >= 70) verdict = "Cukup Memahami Konsep";
-    else if (roundedScore >= 50) verdict = "Pemahaman Kurang Lengkap";
-    else verdict = "Belum Tepat";
+    else if (roundedScore >= 50) verdict = "Pemahaman Cukup";
+    else verdict = "Perlu Pendalaman Materi";
 
     return {
       score: roundedScore,
@@ -315,6 +350,7 @@ export async function POST(request: Request) {
     if (!evaluation) {
       evaluation = evaluateEssayLocal({
         topicTitle: topicTitle || "Topik Materi",
+        topicContent,
         question,
         mentorKey,
         studentAnswer: cleanAnswer,
