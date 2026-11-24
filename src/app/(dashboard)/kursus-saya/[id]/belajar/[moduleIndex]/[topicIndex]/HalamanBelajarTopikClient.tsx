@@ -506,6 +506,10 @@ export default function HalamanBelajarTopikClient({
   }, [modules, currentModIdx, currentLesIdx, currentModule]);
 
   const toggleLessonCompletion = (lessonKey: string) => {
+    // jika kuis atau essay evaluasi belum dikerjakan cegah menandai selesai
+    if (isContinueDisabled && !completedLessons.includes(lessonKey)) {
+      return;
+    }
     setCompletedLessons((prev) => {
       const exists = prev.includes(lessonKey);
       const next = exists ? prev.filter((k) => k !== lessonKey) : [...prev, lessonKey];
@@ -680,10 +684,13 @@ export default function HalamanBelajarTopikClient({
         improvements: remoteResult.improvements || [],
       });
     } else {
-      // jika belum pernah mengirimkan jawaban essay, form wajib terbuka dan belum terjawab
+      // jika belum pernah mengirimkan jawaban essay form wajib terbuka dan belum terjawab
       setEssayAnswer("");
       setEssaySubmitted(false);
       setEssayEvaluation(null);
+      if (completedLessons.includes(currentLessonKey)) {
+        setCompletedLessons((prev) => prev.filter((k) => k !== currentLessonKey));
+      }
     }
   }, [
     currentLesson,
@@ -850,11 +857,13 @@ export default function HalamanBelajarTopikClient({
 
       setShuffledQuestions(restored);
       setQuizAnswers(savedData.answers || {});
-      setQuizScore(savedData.score ?? 0);
+      const rawSavedScore = typeof savedData.score === "number" ? savedData.score : 0;
+      const normalizedSavedScore = Math.max(0, Math.min(100, Math.round(rawSavedScore / 10) * 10));
+      setQuizScore(normalizedSavedScore);
       setQuizCorrectCount(savedData.correctCount ?? 0);
       setQuizSubmitted(Boolean(savedData.submitted));
-    } else if (remoteQuizResult || isLessonAlreadyCompleted) {
-      // pulihkan jika sudah terekam selesai di database
+    } else if (remoteQuizResult && typeof remoteQuizResult.score === "number") {
+      // pulihkan hanya jika hasil kuis benar-benar sudah ada di database
       const restored = currentQuizQuestions.map((q) => {
         const optsWithIdx = (q.options || []).map((text, origIdx) => ({
           text,
@@ -870,15 +879,17 @@ export default function HalamanBelajarTopikClient({
 
       setShuffledQuestions(restored);
       setQuizAnswers({});
-      setQuizScore(typeof remoteQuizResult?.score === "number" ? remoteQuizResult.score : 100);
+      const rawScore = remoteQuizResult.score;
+      const normalizedScore = Math.max(0, Math.min(100, Math.round(rawScore / 10) * 10));
+      setQuizScore(normalizedScore);
       setQuizCorrectCount(
         typeof remoteQuizResult?.correctCount === "number"
           ? remoteQuizResult.correctCount
-          : currentQuizQuestions.length
+          : Math.round((normalizedScore / 100) * currentQuizQuestions.length)
       );
       setQuizSubmitted(true);
     } else {
-      // buat urutan acak baru untuk opsi setiap pertanyaan kuis
+      // jika belum pernah mengirimkan jawaban kuis form kuis wajib terbuka dan belum selesai
       const freshShuffled = currentQuizQuestions.map((q) => {
         const optsWithIdx = (q.options || []).map((text, origIdx) => ({
           text,
@@ -897,6 +908,9 @@ export default function HalamanBelajarTopikClient({
       setQuizSubmitted(false);
       setQuizScore(null);
       setQuizCorrectCount(null);
+      if (completedLessons.includes(currentLessonKey)) {
+        setCompletedLessons((prev) => prev.filter((k) => k !== currentLessonKey));
+      }
     }
   }, [currentLesson, currentQuizQuestions, currentLessonKey, enrollment?.id, enrollment?.quiz_results, completedLessons]);
 
@@ -914,8 +928,12 @@ export default function HalamanBelajarTopikClient({
       }
     });
 
+    const totalQuestions = shuffledQuestions.length;
+    // bobot tiap soal kuis dihitung dari 100 dibagi jumlah kuis
+    const pointsPerQuestion = totalQuestions > 0 ? 100 / totalQuestions : 0;
+    // nilai dihitung dari jumlah jawaban benar dikali bobot per soal
+    const rawScore = correct * pointsPerQuestion;
     // bulatkan nilai kuis selalu ke kelipatan 10 terdekat
-    const rawScore = (correct / shuffledQuestions.length) * 100;
     const score = Math.max(0, Math.min(100, Math.round(rawScore / 10) * 10));
     setQuizScore(score);
     setQuizCorrectCount(correct);
@@ -1364,9 +1382,9 @@ export default function HalamanBelajarTopikClient({
                         </div>
                       ) : (
                         <div className="p-5 rounded-2xl border border-stone-200 dark:border-stone-800 bg-[#FAF9F6] dark:bg-stone-900/60 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
-                          <div className="space-y-1">
+                          <div className="space-y-1.5">
                             <span className="text-xs font-semibold text-stone-500 dark:text-stone-400 block uppercase tracking-wider">
-                              Hasil Evaluasi Anda
+                              Hasil Evaluasi Kuis Anda
                             </span>
                             <div className="flex items-baseline gap-2">
                               <span className="text-3xl font-black text-[#0F3E2E] dark:text-emerald-400">
@@ -1376,6 +1394,9 @@ export default function HalamanBelajarTopikClient({
                                 / 100 ({quizCorrectCount} dari {shuffledQuestions.length} soal benar)
                               </span>
                             </div>
+                            <p className="text-xs text-stone-600 dark:text-stone-400">
+                              Bobot tiap soal: {(100 / (shuffledQuestions.length || 1)).toFixed(1).replace(".0", "")} poin • {quizCorrectCount ?? 0} benar, {shuffledQuestions.length - (quizCorrectCount ?? 0)} salah
+                            </p>
                             <div className="flex items-center gap-1.5 text-xs text-emerald-700 dark:text-emerald-400 font-medium pt-0.5">
                               <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
                               <span>Nilai telah tersimpan permanen dan materi dinyatakan selesai</span>
