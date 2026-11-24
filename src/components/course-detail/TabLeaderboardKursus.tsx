@@ -94,7 +94,7 @@ export function TabLeaderboardKursus({
     const remainingLessons = Math.max(0, totalLessons - completedCount);
 
     return (
-      <div className="w-full space-y-6 pt-2">
+      <div className="w-full space-y-6">
         <div className="p-8 sm:p-12 rounded-2xl border border-stone-200/80 dark:border-stone-800/80 bg-white dark:bg-stone-900/60 text-center space-y-5 shadow-xs">
           <div className="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center mx-auto shadow-2xs">
             <Lock className="w-8 h-8" />
@@ -153,7 +153,7 @@ export function TabLeaderboardKursus({
   const topThree = leaderboard.slice(0, 3);
 
   return (
-    <div className="w-full space-y-6 pt-2">
+    <div className="w-full space-y-6">
       {/* banner ucapan selamat peringkat terbuka */}
       <div className="p-6 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 dark:bg-emerald-950/20 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="space-y-1">
