@@ -38,6 +38,7 @@ import {
   CourseQuizQuestion,
 } from "@/utils/courseCurriculumParser";
 import WebCodeEditor from "@/components/learning/WebCodeEditor";
+import { getStarterCodePlaceholder } from "@/utils/codeStarterTemplate";
 
 function getYouTubeEmbedUrl(url?: string): string | null {
   if (!url) return null;
@@ -396,19 +397,10 @@ export default function HalamanBelajarTopikClient({
     if (currentLesson?.instructions) {
       return formatContentHtml(currentLesson.instructions);
     }
-    if (
-      currentLesson?.type === "practice" &&
-      !currentLesson?.starter_code &&
-      (currentLesson?.content?.includes("#include") || currentLesson?.content?.includes("def "))
-    ) {
-      return "";
-    }
     return formatContentHtml(currentLesson?.content);
   }, [
     currentLesson?.instructions,
     currentLesson?.content,
-    currentLesson?.type,
-    currentLesson?.starter_code,
   ]);
 
   // daftar materi modul saat ini
@@ -1415,20 +1407,18 @@ export default function HalamanBelajarTopikClient({
                 {/* editor praktik koding dan eksekusi kode interaktif */}
                 {(currentLesson.type === "practice" || Boolean(currentLesson.starter_code)) && (
                   <WebCodeEditor
-                    initialCode={
-                      currentLesson.starter_code ||
-                      (currentLesson.content?.includes("#include") ||
-                      currentLesson.content?.includes("def ") ||
-                      currentLesson.content?.includes("<html")
-                        ? currentLesson.content
-                        : "// tulis kode program anda di sini\n")
-                    }
+                    initialCode={getStarterCodePlaceholder(
+                      courseTopic === "general" ? "cpp" : courseTopic,
+                      currentLesson.starter_code,
+                      activeCleanTitle,
+                      currentLesson.content
+                    )}
                     language={courseTopic === "general" ? "cpp" : courseTopic}
                     title={`Praktik: ${activeCleanTitle}`}
                     tips={
-                      currentLesson.instructions &&
-                      currentLesson.content &&
-                      !currentLesson.content.includes("#include")
+                      currentLesson.instructions
+                        ? currentLesson.instructions
+                        : currentLesson.content && !currentLesson.content.includes("#include")
                         ? currentLesson.content
                         : undefined
                     }

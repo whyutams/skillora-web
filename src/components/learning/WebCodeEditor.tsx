@@ -41,6 +41,7 @@ import {
   extractFinalProgramOutput,
   InteractiveInputStep,
 } from "@/utils/interactiveRunner";
+import { getStarterCodePlaceholder } from "@/utils/codeStarterTemplate";
 
 interface TerminalEntry {
   id: string;
@@ -71,14 +72,18 @@ function getLineBounds(text: string, start: number, end: number) {
 }
 
 export default function WebCodeEditor({
-  initialCode = "// tulis kode program anda di sini\n",
+  initialCode,
   language = "cpp",
   fileName,
   title = "Editor Praktik & Eksekusi Kode",
   tips,
   onChange,
 }: WebCodeEditorProps) {
-  const [code, setCode] = React.useState(initialCode);
+  const resolvedStarterCode = React.useMemo(() => {
+    return getStarterCodePlaceholder(language, initialCode);
+  }, [language, initialCode]);
+
+  const [code, setCode] = React.useState(resolvedStarterCode);
   const [terminalEntries, setTerminalEntries] = React.useState<TerminalEntry[]>([]);
   const [isAwaitingInput, setIsAwaitingInput] = React.useState(false);
   const [terminalInput, setTerminalInput] = React.useState("");
@@ -141,7 +146,7 @@ export default function WebCodeEditor({
 
   // riwayat undo dan redo internal editor
   const historyRef = React.useRef<{ code: string; start: number; end: number }[]>([
-    { code: initialCode, start: 0, end: 0 },
+    { code: resolvedStarterCode, start: 0, end: 0 },
   ]);
   const historyIndexRef = React.useRef<number>(0);
   const isUndoRedoActionRef = React.useRef<boolean>(false);
@@ -175,7 +180,7 @@ export default function WebCodeEditor({
 
   // sinkronkan kode saat materi atau kerangka kode berubah
   React.useEffect(() => {
-    setCode(initialCode);
+    setCode(resolvedStarterCode);
     setOutput(null);
     setTerminalEntries([]);
     setIsAwaitingInput(false);
@@ -186,9 +191,9 @@ export default function WebCodeEditor({
     setStatus("idle");
     setDuration(null);
     setCompilerDiagnostics([]);
-    historyRef.current = [{ code: initialCode, start: 0, end: 0 }];
+    historyRef.current = [{ code: resolvedStarterCode, start: 0, end: 0 }];
     historyIndexRef.current = 0;
-  }, [initialCode]);
+  }, [resolvedStarterCode]);
 
   // analisis diagnostik sintaks kode lokal secara waktu nyata
   const localDiagnostics = React.useMemo(() => {
@@ -542,9 +547,9 @@ export default function WebCodeEditor({
 
   // reset kode ke kerangka awal
   const handleResetCode = () => {
-    setCode(initialCode);
+    setCode(resolvedStarterCode);
     handleClearTerminal();
-    recordHistory(initialCode, 0, 0);
+    recordHistory(resolvedStarterCode, 0, 0);
   };
 
   // jalankan kode melalui terminal konsol interaktif
@@ -1219,7 +1224,7 @@ export default function WebCodeEditor({
     return "main.cpp";
   }, [fileName, language]);
 
-  const isCodeModified = code !== initialCode;
+  const isCodeModified = code !== resolvedStarterCode;
 
   const editorContent = (
     <div
@@ -1453,7 +1458,7 @@ export default function WebCodeEditor({
               lineHeight: "22px",
               tabSize: 4,
             }}
-            placeholder="// masukkan kode program anda di sini..."
+            placeholder="// ketikkan struktur kode program anda di sini..."
           />
 
           {/* widget pencarian dan penggantian teks mengambang ctrl f atau ctrl h */}
