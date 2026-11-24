@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server";
 import { createClient, createAdminClient } from "@/utils/supabase/server";
-import { parseEnrollmentMeta, encodeEnrollmentMeta } from "@/utils/enrollmentMeta";
+import {
+  parseEnrollmentMeta,
+  encodeEnrollmentMeta,
+  isValidGoogleDriveUrl,
+  calculateCombinedScores,
+} from "@/utils/enrollmentMeta";
 import { parseCourseDescription } from "@/utils/courseMeta";
 
 export async function GET(
@@ -226,6 +231,7 @@ export async function GET(
         reviewed_at: parsedMeta.reviewed_at,
         completed_lessons: parsedMeta.completed_lessons || [],
         project_submission_url: parsedMeta.project_submission_url || null,
+        project_submissions: parsedMeta.project_submissions || {},
         quiz_results: parsedMeta.quiz_results || {},
         total_score: typeof parsedMeta.total_score === "number" ? parsedMeta.total_score : null,
         average_score: typeof parsedMeta.average_score === "number" ? parsedMeta.average_score : null,
@@ -267,6 +273,7 @@ export async function PATCH(
     const {
       completed_lessons,
       project_submission_url,
+      project_submission,
       quiz_result,
       last_accessed_lesson,
     } = body;
@@ -312,7 +319,7 @@ export async function PATCH(
     }
 
     const currentMeta = parseEnrollmentMeta(enrollment.whatsapp_number);
-    const updatedLessons = Array.isArray(completed_lessons)
+    let updatedLessons = Array.isArray(completed_lessons)
       ? Array.from(new Set(completed_lessons))
       : currentMeta.completed_lessons || [];
 
@@ -321,21 +328,54 @@ export async function PATCH(
       ...(quiz_result && quiz_result.lessonKey ? { [quiz_result.lessonKey]: quiz_result } : {}),
     };
 
+    const updatedProjectSubmissions = {
+      ...(currentMeta.project_submissions || {}),
+    };
+
+    let resolvedLegacyProjectUrl =
+      project_submission_url !== undefined
+        ? project_submission_url
+        : currentMeta.project_submission_url;
+
+    // tangani pengumpulan tautan google drive proyek per topik
+    if (project_submission && project_submission.lessonKey) {
+      const cleanDriveUrl = String(project_submission.driveUrl || "").trim();
+      if (!isValidGoogleDriveUrl(cleanDriveUrl)) {
+        return NextResponse.json(
+          {
+            error:
+              "Harap masukkan tautan Google Drive yang valid (contoh https://drive.google.com/drive/folders/...).",
+          },
+          { status: 400 }
+        );
+      }
+      const nowIso = new Date().toISOString();
+      const existingItem = updatedProjectSubmissions[project_submission.lessonKey];
+      updatedProjectSubmissions[project_submission.lessonKey] = {
+        lessonKey: project_submission.lessonKey,
+        driveUrl: cleanDriveUrl,
+        status: "submitted",
+        score: existingItem?.score ?? null,
+        feedback: existingItem?.feedback ?? null,
+        submittedAt: existingItem?.submittedAt || nowIso,
+        updatedAt: nowIso,
+        reviewedAt: existingItem?.reviewedAt || null,
+      };
+      resolvedLegacyProjectUrl = cleanDriveUrl;
+      updatedLessons = Array.from(new Set([...updatedLessons, project_submission.lessonKey]));
+    }
+
     // hitung akumulasi skor dan rata rata nilai untuk fitur ranking atau leaderboard
-    const quizEntries = Object.values(updatedQuizResults) as Record<string, unknown>[];
-    const validScores = quizEntries
-      .map((entry) => (typeof entry?.score === "number" ? entry.score : null))
-      .filter((s): s is number => s !== null);
-    const totalScore = validScores.reduce((acc, s) => acc + s, 0);
-    const averageScore = validScores.length > 0 ? Math.round(totalScore / validScores.length) : 0;
+    const { totalScore, averageScore } = calculateCombinedScores(
+      updatedQuizResults,
+      updatedProjectSubmissions
+    );
 
     const newMeta = {
       ...currentMeta,
       completed_lessons: updatedLessons,
-      project_submission_url:
-        project_submission_url !== undefined
-          ? project_submission_url
-          : currentMeta.project_submission_url,
+      project_submission_url: resolvedLegacyProjectUrl,
+      project_submissions: updatedProjectSubmissions,
       quiz_results: updatedQuizResults,
       total_score: totalScore,
       average_score: averageScore,
@@ -382,6 +422,7 @@ export async function PATCH(
       success: true,
       completed_lessons: updatedLessons,
       project_submission_url: newMeta.project_submission_url,
+      project_submissions: newMeta.project_submissions,
       quiz_results: updatedQuizResults,
       last_accessed_lesson: newMeta.last_accessed_lesson,
     });

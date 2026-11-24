@@ -42,6 +42,10 @@ import {
   getStarterCodePlaceholder,
   getTargetPracticeCode,
 } from "@/utils/codeStarterTemplate";
+import {
+  isValidGoogleDriveUrl,
+  ProjectSubmissionItem,
+} from "@/utils/enrollmentMeta";
 
 function getYouTubeEmbedUrl(url?: string): string | null {
   if (!url) return null;
@@ -200,6 +204,8 @@ export default function HalamanBelajarTopikClient({
   const [projectSubmissionUrl, setProjectSubmissionUrl] = React.useState("");
   const [projectSubmittedUrl, setProjectSubmittedUrl] = React.useState("");
   const [projectSavedNotice, setProjectSavedNotice] = React.useState(false);
+  const [projectError, setProjectError] = React.useState<string | null>(null);
+  const [isSavingProject, setIsSavingProject] = React.useState(false);
   const [copiedCode, setCopiedCode] = React.useState(false);
 
   // status evaluasi essay topik pemahaman
@@ -578,7 +584,27 @@ export default function HalamanBelajarTopikClient({
   const hasTopicEssay = Boolean(currentTopicEssayQuestion);
   const isTopicEssayUnanswered = hasTopicEssay && !essaySubmitted;
 
-  const isContinueDisabled = isTopicQuizUnanswered || isTopicEssayUnanswered;
+  const currentProjectSubmission: ProjectSubmissionItem | null = React.useMemo(() => {
+    if (!enrollment || currentLesson?.type !== "project") return null;
+    const perTopic = enrollment.project_submissions?.[currentLessonKey];
+    if (perTopic) return perTopic;
+    if (enrollment.project_submission_url) {
+      return {
+        lessonKey: currentLessonKey,
+        driveUrl: enrollment.project_submission_url,
+        status: "submitted",
+        submittedAt: enrollment.created_at,
+      };
+    }
+    return null;
+  }, [enrollment, currentLesson?.type, currentLessonKey]);
+
+  const hasTopicProject = currentLesson?.type === "project";
+  const isTopicProjectUnsubmitted =
+    hasTopicProject && !projectSubmittedUrl && !currentProjectSubmission?.driveUrl;
+
+  const isContinueDisabled =
+    isTopicQuizUnanswered || isTopicEssayUnanswered || isTopicProjectUnsubmitted;
 
   const handleMarkAndContinue = () => {
     if (isContinueDisabled) return;
@@ -987,29 +1013,89 @@ export default function HalamanBelajarTopikClient({
     }
   };
 
+  // sinkronkan tautan drive proyek per topik saat berpindah materi
+  React.useEffect(() => {
+    if (currentLesson?.type === "project") {
+      const savedDriveUrl = currentProjectSubmission?.driveUrl || "";
+      setProjectSubmissionUrl(savedDriveUrl);
+      setProjectSubmittedUrl(savedDriveUrl);
+      setProjectError(null);
+      setProjectSavedNotice(false);
+    }
+  }, [currentLesson?.type, currentLessonKey, currentProjectSubmission?.driveUrl]);
+
   const handleSaveProjectSubmission = async () => {
     if (!projectSubmissionUrl.trim() || !enrollment?.id) return;
     const url = projectSubmissionUrl.trim();
+
+    if (!isValidGoogleDriveUrl(url)) {
+      setProjectError(
+        "Harap masukkan tautan Google Drive yang valid (contoh https://drive.google.com/drive/folders/...)."
+      );
+      return;
+    }
+
+    setProjectError(null);
+    setIsSavingProject(true);
+
     try {
-      localStorage.setItem(`skillora_project_${enrollment.id}`, url);
-    } catch {
-      // non blocking
-    }
-    setProjectSubmittedUrl(url);
-    setProjectSavedNotice(true);
+      const nextCompleted = completedLessons.includes(currentLessonKey)
+        ? completedLessons
+        : [...completedLessons, currentLessonKey];
 
-    const nextCompleted = completedLessons.includes(currentLessonKey)
-      ? completedLessons
-      : [...completedLessons, currentLessonKey];
-    if (!completedLessons.includes(currentLessonKey)) {
-      setCompletedLessons(nextCompleted);
-    }
+      const res = await fetch(`/api/student/enrollments/${enrollment.id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          completed_lessons: nextCompleted,
+          project_submission: {
+            lessonKey: currentLessonKey,
+            driveUrl: url,
+          },
+          last_accessed_lesson: {
+            moduleIndex: currentModIdx,
+            topicIndex: currentLesIdx,
+          },
+        }),
+      });
 
-    // simpan url tugas proyek dan status progres ke database
-    await syncProgressToDatabase(enrollment.id, nextCompleted, {
-      project_submission_url: url,
-    });
-    setTimeout(() => setProjectSavedNotice(false), 3000);
+      const resData = await res.json();
+      if (!res.ok) {
+        throw new Error(resData.error || "Gagal menyimpan tautan Google Drive proyek.");
+      }
+
+      if (!completedLessons.includes(currentLessonKey)) {
+        setCompletedLessons(nextCompleted);
+      }
+
+      setProjectSubmittedUrl(url);
+      setProjectSavedNotice(true);
+      setEnrollment((prev) =>
+        prev
+          ? {
+              ...prev,
+              project_submission_url: url,
+              project_submissions: resData.project_submissions || prev.project_submissions,
+            }
+          : prev
+      );
+
+      try {
+        localStorage.setItem(`skillora_project_${enrollment.id}_${currentLessonKey}`, url);
+      } catch {
+        // non blocking
+      }
+
+      setTimeout(() => setProjectSavedNotice(false), 3500);
+    } catch (err: unknown) {
+      const msg =
+        err instanceof Error ? err.message : "Gagal menyimpan tautan Google Drive proyek.";
+      setProjectError(msg);
+    } finally {
+      setIsSavingProject(false);
+    }
   };
 
   // jika sedang memuat data tampilkan kerangka skeleton
@@ -1457,55 +1543,118 @@ export default function HalamanBelajarTopikClient({
                   );
                 })()}
 
-                {/* pengumpulan tugas proyek */}
+                {/* pengumpulan tugas proyek link google drive */}
                 {currentLesson.type === "project" && (
-                  <div className="p-6 sm:p-7 rounded-2xl border border-purple-500/30 bg-purple-500/5 dark:bg-purple-500/10 space-y-4">
-                    <div className="flex items-center gap-2 text-purple-700 dark:text-purple-400 font-bold text-xs uppercase tracking-wider">
-                      <Award className="w-4 h-4" />
-                      <span>Pengumpulan Tugas Proyek</span>
+                  <div className="w-full p-6 sm:p-7 rounded-2xl border border-purple-500/30 bg-purple-500/5 dark:bg-purple-500/10 space-y-4">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div className="flex items-center gap-2 text-purple-700 dark:text-purple-400 font-bold text-xs uppercase tracking-wider">
+                        <Award className="w-4 h-4" />
+                        <span>Pengumpulan Tugas Proyek (Link Google Drive)</span>
+                      </div>
+
+                      {currentProjectSubmission?.status === "reviewed" ? (
+                        <span className="px-3 py-1 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 text-xs font-bold">
+                          Sudah Dinilai ({currentProjectSubmission.score ?? 0}/100)
+                        </span>
+                      ) : projectSubmittedUrl ? (
+                        <span className="px-3 py-1 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-400 text-xs font-bold flex items-center gap-1">
+                          <CheckCircle2 className="w-3.5 h-3.5" />
+                          <span>Link Drive Terkirim</span>
+                        </span>
+                      ) : (
+                        <span className="px-3 py-1 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-300 text-xs font-bold">
+                          Wajib Mengirim Link Drive
+                        </span>
+                      )}
                     </div>
 
                     <p className="text-xs sm:text-sm leading-relaxed text-stone-600 dark:text-stone-300">
-                      Silakan cantumkan tautan repositori GitHub, link demo aplikasi, atau dokumen Google Drive hasil pengerjaan proyek mandiri Anda.
+                      Unggah file atau folder proyek Anda ke Google Drive, lalu tempelkan tautan Google Drive pada kolom di bawah ini. Pastikan akses tautan diatur ke{" "}
+                      <span className="font-semibold text-stone-800 dark:text-stone-100">
+                        Siapa saja yang memiliki link (Anyone with the link)
+                      </span>{" "}
+                      agar mentor dapat memeriksa hasil karya Anda.
                     </p>
 
-                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 pt-1">
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 pt-1">
                       <input
                         type="url"
                         value={projectSubmissionUrl}
-                        onChange={(e) => setProjectSubmissionUrl(e.target.value)}
-                        placeholder="https://github.com/username/project"
-                        className="flex-1 p-3 rounded-xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 text-xs text-stone-900 dark:text-stone-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                        onChange={(e) => {
+                          setProjectSubmissionUrl(e.target.value);
+                          if (projectError) setProjectError(null);
+                        }}
+                        placeholder="https://drive.google.com/drive/folders/..."
+                        className="flex-1 p-3 rounded-xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 text-xs sm:text-sm text-stone-900 dark:text-stone-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
                       />
                       <Button
                         size="sm"
                         onClick={handleSaveProjectSubmission}
-                        disabled={!projectSubmissionUrl.trim()}
+                        disabled={!projectSubmissionUrl.trim() || isSavingProject}
                         className="bg-[#0F3E2E] hover:bg-[#15523d] text-white text-xs font-bold py-3 px-5 rounded-xl shrink-0"
                       >
-                        <span>Simpan Proyek</span>
+                        <span>
+                          {isSavingProject
+                            ? "Menyimpan..."
+                            : projectSubmittedUrl
+                            ? "Perbarui Link Drive"
+                            : "Simpan Link Drive"}
+                        </span>
                       </Button>
                     </div>
 
+                    {projectError && (
+                      <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-xs text-rose-700 dark:text-rose-300 font-medium flex items-center gap-2">
+                        <AlertCircle className="w-4 h-4 shrink-0" />
+                        <span>{projectError}</span>
+                      </div>
+                    )}
+
                     {projectSavedNotice && (
-                      <p className="text-xs text-emerald-600 dark:text-emerald-400 font-bold">
-                        Tautan proyek Anda telah berhasil disimpan!
+                      <p className="text-xs text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1.5">
+                        <CheckCircle2 className="w-4 h-4 shrink-0" />
+                        <span>Tautan Google Drive proyek Anda berhasil disimpan! Anda dapat melanjutkan ke materi berikutnya.</span>
                       </p>
                     )}
 
                     {projectSubmittedUrl && !projectSavedNotice && (
-                      <p className="text-xs text-stone-400 truncate">
-                        Tersimpan:{" "}
+                      <div className="p-3.5 rounded-xl bg-white/80 dark:bg-stone-900/70 border border-stone-200 dark:border-stone-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div className="min-w-0">
+                          <span className="text-[11px] font-bold text-stone-500 dark:text-stone-400 block">
+                            Link Google Drive Tersimpan
+                          </span>
+                          <a
+                            href={projectSubmittedUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-xs sm:text-sm font-medium underline text-emerald-700 dark:text-emerald-400 hover:text-emerald-800 truncate block"
+                          >
+                            {projectSubmittedUrl}
+                          </a>
+                        </div>
                         <a
                           href={projectSubmittedUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="underline text-emerald-600 hover:text-emerald-700"
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 text-xs font-bold shrink-0 transition-colors"
                         >
-                          {projectSubmittedUrl}
+                          <span>Buka Link Drive</span>
+                          <ExternalLink className="w-3.5 h-3.5" />
                         </a>
-                      </p>
+                      </div>
                     )}
+
+                    {currentProjectSubmission?.status === "reviewed" &&
+                      currentProjectSubmission.feedback && (
+                        <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 space-y-1">
+                          <span className="text-xs font-bold text-emerald-800 dark:text-emerald-300 block">
+                            Catatan Penilaian Mentor (Nilai {currentProjectSubmission.score ?? 0}/100)
+                          </span>
+                          <p className="text-xs sm:text-sm text-stone-700 dark:text-stone-300 leading-relaxed">
+                            {currentProjectSubmission.feedback}
+                          </p>
+                        </div>
+                      )}
                   </div>
                 )}
 

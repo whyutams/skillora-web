@@ -40,6 +40,7 @@ import { Button } from "@/components/ui/Button";
 import { SmoothImage } from "@/components/ui/SmoothImage";
 import { EnrollmentCardSkeleton, DashboardPageSkeleton } from "@/components/ui/Skeleton";
 import { Profile, Course } from "@/types/database";
+import { ProjectSubmissionItem } from "@/utils/enrollmentMeta";
 
 export interface StudentEnrollmentItem {
   id: string;
@@ -56,6 +57,7 @@ export interface StudentEnrollmentItem {
   reviewed_at: string | null;
   completed_lessons?: string[];
   project_submission_url?: string | null;
+  project_submissions?: Record<string, ProjectSubmissionItem>;
   quiz_results?: Record<string, unknown>;
   total_score?: number | null;
   average_score?: number | null;

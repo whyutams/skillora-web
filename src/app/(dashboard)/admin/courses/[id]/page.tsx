@@ -47,6 +47,7 @@ import {
   CourseLessonItem,
   CourseModuleItem,
 } from "@/utils/courseCurriculumParser";
+import { ProjectSubmissionItem } from "@/utils/enrollmentMeta";
 import { useBreadcrumb } from "@/context/BreadcrumbContext";
 
 interface CourseParticipant {
@@ -61,6 +62,8 @@ interface CourseParticipant {
   review_text?: string | null;
   reviewed_at?: string | null;
   completed_lessons?: string[];
+  project_submission_url?: string | null;
+  project_submissions?: Record<string, ProjectSubmissionItem>;
   quiz_results?: Record<string, unknown>;
   total_score?: number | null;
   average_score?: number | null;
@@ -505,8 +508,144 @@ export default function AdminCourseDetailPage() {
     }
   };
 
-  // tab tampilan peserta di halaman admin antara ranking dan data pendaftaran
-  const [participantTab, setParticipantTab] = React.useState<"ranking" | "directory">("ranking");
+  // tab tampilan peserta di halaman admin antara ranking, proyek, dan data pendaftaran
+  const [participantTab, setParticipantTab] = React.useState<"ranking" | "projects" | "directory">("ranking");
+
+  // state modal penilaian tugas proyek link drive oleh admin
+  const [projectReviewModal, setProjectReviewModal] = React.useState<{
+    isOpen: boolean;
+    enrollmentId: string;
+    participantName: string;
+    lessonKey: string;
+    topicTitle: string;
+    driveUrl: string;
+    score: number;
+    feedback: string;
+  }>({
+    isOpen: false,
+    enrollmentId: "",
+    participantName: "",
+    lessonKey: "",
+    topicTitle: "",
+    driveUrl: "",
+    score: 90,
+    feedback: "",
+  });
+  const [isSavingProjectReview, setIsSavingProjectReview] = React.useState(false);
+
+  // peta nama topik proyek berdasarkan lessonkey
+  const projectTopicTitleMap = React.useMemo(() => {
+    const map: Record<string, string> = {};
+    syllabus.forEach((mod, mIdx) => {
+      (mod.lessons || []).forEach((les, lIdx) => {
+        const key = `mod-${mIdx}-les-${lIdx}`;
+        map[key] = `${mod.title ? `${mod.title} - ` : ""}${les.title || `Topik ${lIdx + 1}`}`;
+      });
+    });
+    return map;
+  }, [syllabus]);
+
+  // daftar seluruh pengumpulan link drive proyek peserta
+  const projectSubmissionsList = React.useMemo(() => {
+    const rows: {
+      enrollmentId: string;
+      participant: CourseParticipant;
+      lessonKey: string;
+      topicTitle: string;
+      submission: ProjectSubmissionItem;
+    }[] = [];
+
+    participants.forEach((p) => {
+      const subs = p.project_submissions || {};
+      const keys = Object.keys(subs);
+      if (keys.length > 0) {
+        keys.forEach((k) => {
+          const item = subs[k];
+          if (item?.driveUrl) {
+            rows.push({
+              enrollmentId: p.id,
+              participant: p,
+              lessonKey: k,
+              topicTitle: projectTopicTitleMap[k] || "Tugas Proyek",
+              submission: item,
+            });
+          }
+        });
+      } else if (p.project_submission_url) {
+        rows.push({
+          enrollmentId: p.id,
+          participant: p,
+          lessonKey: "legacy-project",
+          topicTitle: "Tugas Proyek Kursus",
+          submission: {
+            lessonKey: "legacy-project",
+            driveUrl: p.project_submission_url,
+            status: "submitted",
+            submittedAt: p.created_at,
+          },
+        });
+      }
+    });
+
+    const q = participantSearch.trim().toLowerCase();
+    const filtered = q
+      ? rows.filter((r) => {
+          const name = (r.participant.profiles?.full_name || "").toLowerCase();
+          const uname = (r.participant.profiles?.username || "").toLowerCase();
+          const topic = r.topicTitle.toLowerCase();
+          return name.includes(q) || uname.includes(q) || topic.includes(q);
+        })
+      : rows;
+
+    return filtered.sort((a, b) => {
+      const tA = new Date(a.submission.updatedAt || a.submission.submittedAt || 0).getTime();
+      const tB = new Date(b.submission.updatedAt || b.submission.submittedAt || 0).getTime();
+      return tB - tA;
+    });
+  }, [participants, projectTopicTitleMap, participantSearch]);
+
+  const handleSaveProjectReview = async () => {
+    if (!projectReviewModal.enrollmentId || !projectReviewModal.lessonKey) return;
+    setIsSavingProjectReview(true);
+    try {
+      const res = await fetch("/api/admin/enrollments", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          enrollmentId: projectReviewModal.enrollmentId,
+          project_review: {
+            lessonKey: projectReviewModal.lessonKey,
+            score: projectReviewModal.score,
+            feedback: projectReviewModal.feedback,
+          },
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Gagal menyimpan penilaian proyek.");
+      }
+
+      setParticipants((prev) =>
+        prev.map((p) =>
+          p.id === projectReviewModal.enrollmentId
+            ? {
+                ...p,
+                project_submissions: data.updated?.project_submissions || p.project_submissions,
+                total_score: data.updated?.total_score ?? p.total_score,
+                average_score: data.updated?.average_score ?? p.average_score,
+              }
+            : p
+        )
+      );
+
+      setProjectReviewModal((prev) => ({ ...prev, isOpen: false }));
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Gagal menyimpan penilaian.";
+      console.error(msg);
+    } finally {
+      setIsSavingProjectReview(false);
+    }
+  };
 
   // total materi silabus kursus
   const totalLessonsCount = React.useMemo(() => {
@@ -1106,25 +1245,31 @@ export default function AdminCourseDetailPage() {
             <div className="flex items-center gap-2">
               {participantTab === "ranking" ? (
                 <Trophy className="w-4 h-4 text-emerald-600" />
+              ) : participantTab === "projects" ? (
+                <Award className="w-4 h-4 text-purple-600" />
               ) : (
                 <Users className="w-4 h-4 text-emerald-600" />
               )}
               <CardTitle className="text-lg">
                 {participantTab === "ranking"
                   ? `Papan Peringkat & Nilai Peserta (${participants.length} Peserta)`
+                  : participantTab === "projects"
+                  ? `Pengumpulan Link Proyek Peserta (${projectSubmissionsList.length})`
                   : `Daftar Peserta Terdaftar (${participants.length} Peserta)`}
               </CardTitle>
             </div>
             <CardDescription className="text-xs">
               {participantTab === "ranking"
-                ? "Klasemen ranking peserta berdasarkan akumulasi dan rata-rata nilai hasil evaluasi essay tiap topik silabus."
+                ? "Klasemen ranking peserta berdasarkan akumulasi dan rata-rata nilai hasil evaluasi tiap topik silabus."
+                : participantTab === "projects"
+                ? "Daftar tautan Google Drive proyek yang telah dikumpulkan oleh peserta untuk diperiksa dan diberi nilai."
                 : "Daftar peserta mahasiswa yang telah disetujui pendaftarannya untuk mengikuti kursus ini."}
             </CardDescription>
           </div>
 
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 self-start sm:self-center w-full sm:w-auto">
             {/* tombol beralih tab tampilan */}
-            <div className="flex items-center gap-1 p-1 rounded-xl bg-stone-100 dark:bg-stone-800/80 border border-stone-200 dark:border-stone-700/80">
+            <div className="flex flex-wrap items-center gap-1 p-1 rounded-xl bg-stone-100 dark:bg-stone-800/80 border border-stone-200 dark:border-stone-700/80">
               <button
                 type="button"
                 onClick={() => setParticipantTab("ranking")}
@@ -1136,6 +1281,24 @@ export default function AdminCourseDetailPage() {
               >
                 <Trophy className="w-3.5 h-3.5" />
                 <span>Peringkat & Nilai</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setParticipantTab("projects")}
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  participantTab === "projects"
+                    ? "bg-white dark:bg-stone-900 text-purple-700 dark:text-purple-400 shadow-2xs"
+                    : "text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-200"
+                }`}
+              >
+                <Award className="w-3.5 h-3.5" />
+                <span>Proyek Peserta</span>
+                {projectSubmissionsList.length > 0 && (
+                  <span className="px-1.5 py-0.5 rounded-md bg-purple-500/15 text-purple-700 dark:text-purple-300 text-[10px] font-bold">
+                    {projectSubmissionsList.length}
+                  </span>
+                )}
               </button>
 
               <button
@@ -1409,6 +1572,135 @@ export default function AdminCourseDetailPage() {
                       </tbody>
                     </table>
                   </div>
+                </div>
+              )}
+            </div>
+          ) : participantTab === "projects" ? (
+            // tampilan daftar pengumpulan tautan google drive proyek peserta
+            <div>
+              {projectSubmissionsList.length === 0 ? (
+                <div className="p-12 text-center text-xs text-stone-400 space-y-1.5">
+                  <Award className="w-7 h-7 text-stone-300 dark:text-stone-700 mx-auto mb-1" />
+                  <p className="font-semibold text-stone-700 dark:text-stone-300">
+                    Belum Ada Pengumpulan Link Proyek
+                  </p>
+                  <p>
+                    Tautan Google Drive yang dikumpulkan peserta pada topik bertipe proyek akan tampil di sini.
+                  </p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse text-xs">
+                    <thead>
+                      <tr className="border-b border-stone-100 dark:border-stone-800 bg-stone-50/50 dark:bg-stone-900/40 text-stone-400 font-semibold uppercase tracking-wider text-[10px]">
+                        <th className="py-3 px-4 w-12 text-center">No</th>
+                        <th className="py-3 px-4">Peserta</th>
+                        <th className="py-3 px-4">Topik Proyek</th>
+                        <th className="py-3 px-4">Link Google Drive</th>
+                        <th className="py-3 px-4 text-center">Status & Nilai</th>
+                        <th className="py-3 px-4 text-right">Aksi</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-stone-100 dark:divide-stone-800/60">
+                      {projectSubmissionsList.map((row, idx) => {
+                        const prof = row.participant.profiles;
+                        const sub = row.submission;
+                        return (
+                          <tr
+                            key={`${row.enrollmentId}-${row.lessonKey}`}
+                            className="hover:bg-stone-50/80 dark:hover:bg-stone-900/30 transition-colors"
+                          >
+                            <td className="py-3.5 px-4 text-center text-stone-500 font-semibold">
+                              {idx + 1}
+                            </td>
+                            <td className="py-3.5 px-4">
+                              <div className="flex items-center gap-2.5">
+                                {prof?.avatar_url ? (
+                                  <SmoothImage
+                                    src={prof.avatar_url}
+                                    alt={prof.full_name || "Peserta"}
+                                    className="w-8 h-8 rounded-full object-cover border border-stone-200 dark:border-stone-700 shrink-0"
+                                  />
+                                ) : (
+                                  <div className="w-8 h-8 rounded-full bg-[#0F3E2E] text-emerald-300 flex items-center justify-center font-bold text-xs shrink-0">
+                                    {prof?.full_name ? prof.full_name.charAt(0).toUpperCase() : "M"}
+                                  </div>
+                                )}
+                                <div className="min-w-0">
+                                  <span className="font-bold text-stone-900 dark:text-stone-100 block truncate">
+                                    {prof?.full_name || "Mahasiswa Peserta"}
+                                  </span>
+                                  {prof?.username && (
+                                    <span className="text-[11px] text-stone-400 flex items-center gap-0.5">
+                                      <AtSign className="w-3 h-3 text-stone-400" />
+                                      {prof.username}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            </td>
+                            <td className="py-3.5 px-4">
+                              <span className="font-semibold text-stone-800 dark:text-stone-200 block">
+                                {row.topicTitle}
+                              </span>
+                              <span className="text-[11px] text-stone-400">
+                                Dikirim{" "}
+                                {new Date(sub.updatedAt || sub.submittedAt).toLocaleDateString("id-ID", {
+                                  day: "numeric",
+                                  month: "short",
+                                  year: "numeric",
+                                })}
+                              </span>
+                            </td>
+                            <td className="py-3.5 px-4">
+                              <a
+                                href={sub.driveUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 text-purple-700 dark:text-purple-300 font-bold text-xs transition-colors"
+                              >
+                                <span>Buka Link Drive</span>
+                                <ExternalLink className="w-3.5 h-3.5" />
+                              </a>
+                            </td>
+                            <td className="py-3.5 px-4 text-center">
+                              {sub.status === "reviewed" ? (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-800 dark:text-emerald-300 font-bold text-[11px]">
+                                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                                  <span>Nilai {sub.score ?? 0}/100</span>
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-800 dark:text-amber-300 font-bold text-[11px]">
+                                  <span>Menunggu Penilaian</span>
+                                </span>
+                              )}
+                            </td>
+                            <td className="py-3.5 px-4 text-right">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() =>
+                                  setProjectReviewModal({
+                                    isOpen: true,
+                                    enrollmentId: row.enrollmentId,
+                                    participantName: prof?.full_name || "Mahasiswa Peserta",
+                                    lessonKey: row.lessonKey,
+                                    topicTitle: row.topicTitle,
+                                    driveUrl: sub.driveUrl,
+                                    score: typeof sub.score === "number" ? sub.score : 90,
+                                    feedback: sub.feedback || "",
+                                  })
+                                }
+                                className="text-xs font-bold rounded-xl"
+                              >
+                                <span>{sub.status === "reviewed" ? "Ubah Nilai" : "Beri Nilai"}</span>
+                              </Button>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
                 </div>
               )}
             </div>
@@ -1920,6 +2212,114 @@ export default function AdminCourseDetailPage() {
         </div>,
         document.body
       )}
+
+      {/* modal penilaian tugas proyek google drive peserta */}
+      {mounted &&
+        projectReviewModal.isOpen &&
+        createPortal(
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs">
+            <div className="w-full max-w-lg rounded-2xl bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 shadow-2xl p-6 space-y-5">
+              <div className="flex items-start justify-between gap-3 border-b border-stone-100 dark:border-stone-800 pb-4">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2 text-purple-700 dark:text-purple-400 font-bold text-xs uppercase tracking-wider">
+                    <Award className="w-4 h-4" />
+                    <span>Penilaian Tugas Proyek</span>
+                  </div>
+                  <h3 className="text-base font-bold text-stone-900 dark:text-stone-100">
+                    {projectReviewModal.participantName}
+                  </h3>
+                  <p className="text-xs text-stone-500 dark:text-stone-400">
+                    {projectReviewModal.topicTitle}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setProjectReviewModal((p) => ({ ...p, isOpen: false }))}
+                  className="p-1.5 rounded-xl text-stone-400 hover:text-stone-700 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors cursor-pointer"
+                >
+                  <XCircle className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="p-3.5 rounded-xl bg-stone-50 dark:bg-stone-950 border border-stone-200 dark:border-stone-800 flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <span className="text-[11px] font-bold text-stone-500 dark:text-stone-400 block">
+                    Tautan Google Drive Proyek
+                  </span>
+                  <span className="text-xs text-stone-700 dark:text-stone-300 truncate block">
+                    {projectReviewModal.driveUrl}
+                  </span>
+                </div>
+                <a
+                  href={projectReviewModal.driveUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold shrink-0 transition-colors"
+                >
+                  <span>Buka Drive</span>
+                  <ExternalLink className="w-3.5 h-3.5" />
+                </a>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-stone-800 dark:text-stone-200 block">
+                  Nilai Proyek (Kelipatan 10)
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {[100, 90, 80, 70, 60, 50].map((val) => (
+                    <button
+                      key={val}
+                      type="button"
+                      onClick={() => setProjectReviewModal((p) => ({ ...p, score: val }))}
+                      className={`px-3.5 py-2 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
+                        projectReviewModal.score === val
+                          ? "bg-[#0F3E2E] text-white border-[#0F3E2E]"
+                          : "bg-white dark:bg-stone-950 text-stone-700 dark:text-stone-300 border-stone-200 dark:border-stone-800 hover:border-emerald-500/40"
+                      }`}
+                    >
+                      {val}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-stone-800 dark:text-stone-200 block">
+                  Catatan / Umpan Balik Mentor (Opsional)
+                </label>
+                <textarea
+                  rows={3}
+                  value={projectReviewModal.feedback}
+                  onChange={(e) =>
+                    setProjectReviewModal((p) => ({ ...p, feedback: e.target.value }))
+                  }
+                  placeholder="Tuliskan apresiasi atau catatan evaluasi hasil proyek peserta..."
+                  className="w-full p-3 rounded-xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-950 text-xs text-stone-900 dark:text-stone-100 focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-y"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-stone-100 dark:border-stone-800">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setProjectReviewModal((p) => ({ ...p, isOpen: false }))}
+                  className="text-xs rounded-xl"
+                >
+                  Batal
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={handleSaveProjectReview}
+                  disabled={isSavingProjectReview}
+                  className="bg-[#0F3E2E] hover:bg-[#15523d] text-white text-xs font-bold rounded-xl"
+                >
+                  {isSavingProjectReview ? "Menyimpan..." : "Simpan Nilai Proyek"}
+                </Button>
+              </div>
+            </div>
+          </div>,
+          document.body
+        )}
 
       <ConfirmModal
         isOpen={deleteConfirm.isOpen}

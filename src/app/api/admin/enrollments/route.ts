@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
 import { createClient, createAdminClient } from "@/utils/supabase/server";
 import { isManagerRole } from "@/constants/roles";
-import { parseEnrollmentMeta, encodeEnrollmentMeta } from "@/utils/enrollmentMeta";
+import {
+  parseEnrollmentMeta,
+  encodeEnrollmentMeta,
+  calculateCombinedScores,
+} from "@/utils/enrollmentMeta";
 import { parseCourseDescription } from "@/utils/courseMeta";
 
 export async function GET(request: Request) {
@@ -127,6 +131,8 @@ export async function GET(request: Request) {
         review_text: parsedMeta.review_text,
         reviewed_at: parsedMeta.reviewed_at,
         completed_lessons: parsedMeta.completed_lessons || [],
+        project_submission_url: parsedMeta.project_submission_url || null,
+        project_submissions: parsedMeta.project_submissions || {},
         quiz_results: parsedMeta.quiz_results || {},
         total_score: parsedMeta.total_score ?? 0,
         average_score: parsedMeta.average_score ?? 0,
@@ -168,7 +174,7 @@ export async function PATCH(request: Request) {
     }
 
     const body = await request.json();
-    const { enrollmentId, status, rejection_reason, certificate_url } = body;
+    const { enrollmentId, status, rejection_reason, certificate_url, project_review } = body;
 
     if (!enrollmentId) {
       return NextResponse.json(
@@ -225,6 +231,48 @@ export async function PATCH(request: Request) {
     // 2. Update / Upload E-Sertifikat
     if (certificate_url !== undefined) {
       currentMeta.certificate_url = certificate_url ? certificate_url.trim() : null;
+    }
+
+    // 3. Penilaian tugas proyek link drive oleh admin
+    if (project_review && project_review.lessonKey) {
+      const lessonKey = String(project_review.lessonKey);
+      const rawScore = Number(project_review.score);
+      const roundedScore = Number.isNaN(rawScore)
+        ? 0
+        : Math.max(0, Math.min(100, Math.round(rawScore / 10) * 10));
+
+      const existingMap = { ...(currentMeta.project_submissions || {}) };
+      const existingItem = existingMap[lessonKey];
+      const fallbackUrl =
+        existingItem?.driveUrl || currentMeta.project_submission_url || "";
+
+      if (!fallbackUrl) {
+        return NextResponse.json(
+          { error: "Peserta belum mengumpulkan tautan Google Drive pada topik ini." },
+          { status: 400 }
+        );
+      }
+
+      const nowIso = new Date().toISOString();
+      existingMap[lessonKey] = {
+        lessonKey,
+        driveUrl: fallbackUrl,
+        status: "reviewed",
+        score: roundedScore,
+        feedback: project_review.feedback ? String(project_review.feedback).trim() : null,
+        submittedAt: existingItem?.submittedAt || nowIso,
+        updatedAt: existingItem?.updatedAt || nowIso,
+        reviewedAt: nowIso,
+      };
+
+      currentMeta.project_submissions = existingMap;
+
+      const combined = calculateCombinedScores(
+        currentMeta.quiz_results || {},
+        existingMap
+      );
+      currentMeta.total_score = combined.totalScore;
+      currentMeta.average_score = combined.averageScore;
     }
 
     // Encode kembali ke kolom whatsapp_number
