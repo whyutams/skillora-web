@@ -402,6 +402,38 @@ export default function AdminCourseDetailPage() {
     }));
   };
 
+  // geser urutan topik di dalam modal modul
+  const handleMoveLessonInModal = (fromIndex: number, toIndex: number) => {
+    if (toIndex < 0 || toIndex >= moduleModal.lessons.length) return;
+    setModuleModal((prev) => {
+      const copy = [...prev.lessons];
+      const [moved] = copy.splice(fromIndex, 1);
+      copy.splice(toIndex, 0, moved);
+      return {
+        ...prev,
+        lessons: copy,
+      };
+    });
+  };
+
+  // geser urutan topik langsung di silabus modul utama
+  const handleMoveLessonDirect = (modIndex: number, fromIndex: number, toIndex: number) => {
+    const mod = syllabus[modIndex];
+    if (!mod || !mod.lessons || toIndex < 0 || toIndex >= mod.lessons.length) return;
+    setSyllabus((prev) => {
+      const copy = [...prev];
+      const lessonsCopy = [...(copy[modIndex].lessons || [])];
+      const [moved] = lessonsCopy.splice(fromIndex, 1);
+      lessonsCopy.splice(toIndex, 0, moved);
+      copy[modIndex] = {
+        ...copy[modIndex],
+        lessons: lessonsCopy,
+      };
+      return copy;
+    });
+    setHasUnsavedChanges(true);
+  };
+
   // konfirmasi dan hapus modul
   const handleDeleteModule = () => {
     if (deleteConfirm.moduleIndex === null) return;
@@ -949,14 +981,36 @@ export default function AdminCourseDetailPage() {
                               </div>
                             </div>
 
-                            <Link
-                              href={`/admin/courses/${course.slug || course.id}/topics/${idx}/${lIdx}`}
-                              className="px-2.5 py-1.5 rounded-lg border border-stone-200 dark:border-stone-800 text-stone-700 dark:text-stone-200 hover:bg-stone-100 dark:hover:bg-stone-800 text-xs font-semibold flex items-center gap-1.5 cursor-pointer shrink-0 transition-colors bg-white dark:bg-stone-900 shadow-2xs"
-                              title="Buka Halaman Edit Konten Topik"
-                            >
-                              <Edit2 className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
-                              <span>Edit Topik</span>
-                            </Link>
+                            <div className="flex items-center gap-1 shrink-0">
+                              <button
+                                type="button"
+                                onClick={() => handleMoveLessonDirect(idx, lIdx, lIdx - 1)}
+                                disabled={lIdx === 0}
+                                className="p-1.5 rounded-lg border border-stone-200 dark:border-stone-800 text-stone-500 hover:text-stone-900 dark:hover:text-stone-100 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+                                title="Geser Topik Naik"
+                              >
+                                <MoveUp className="w-3.5 h-3.5" />
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() => handleMoveLessonDirect(idx, lIdx, lIdx + 1)}
+                                disabled={lIdx === (mod.lessons?.length || 0) - 1}
+                                className="p-1.5 rounded-lg border border-stone-200 dark:border-stone-800 text-stone-500 hover:text-stone-900 dark:hover:text-stone-100 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+                                title="Geser Topik Turun"
+                              >
+                                <MoveDown className="w-3.5 h-3.5" />
+                              </button>
+
+                              <Link
+                                href={`/admin/courses/${course.slug || course.id}/topics/${idx}/${lIdx}`}
+                                className="px-2.5 py-1.5 rounded-lg border border-stone-200 dark:border-stone-800 text-stone-700 dark:text-stone-200 hover:bg-stone-100 dark:hover:bg-stone-800 text-xs font-semibold flex items-center gap-1.5 cursor-pointer shrink-0 transition-colors bg-white dark:bg-stone-900 shadow-2xs"
+                                title="Buka Halaman Edit Konten Topik"
+                              >
+                                <Edit2 className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+                                <span>Edit Topik</span>
+                              </Link>
+                            </div>
                           </div>
                         ))}
                       </div>
@@ -1479,10 +1533,32 @@ export default function AdminCourseDetailPage() {
                         </span>
                       </div>
                       <div className="flex items-center gap-1 shrink-0">
+                        {/* tombol geser urutan topik naik */}
+                        <button
+                          type="button"
+                          onClick={() => handleMoveLessonInModal(lIdx, lIdx - 1)}
+                          disabled={lIdx === 0}
+                          className="p-1.5 rounded-lg border border-stone-200 dark:border-stone-800 text-stone-500 hover:text-stone-900 dark:hover:text-stone-100 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+                          title="Geser Topik Naik"
+                        >
+                          <MoveUp className="w-3.5 h-3.5" />
+                        </button>
+
+                        {/* tombol geser urutan topik turun */}
+                        <button
+                          type="button"
+                          onClick={() => handleMoveLessonInModal(lIdx, lIdx + 1)}
+                          disabled={lIdx === moduleModal.lessons.length - 1}
+                          className="p-1.5 rounded-lg border border-stone-200 dark:border-stone-800 text-stone-500 hover:text-stone-900 dark:hover:text-stone-100 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+                          title="Geser Topik Turun"
+                        >
+                          <MoveDown className="w-3.5 h-3.5" />
+                        </button>
+
                         {moduleModal.moduleIndex !== null && (
                           <Link
                             href={`/admin/courses/${course.slug || course.id}/topics/${moduleModal.moduleIndex}/${lIdx}`}
-                            className="text-stone-400 hover:text-emerald-600 transition-colors p-1 cursor-pointer"
+                            className="p-1.5 rounded-lg border border-stone-200 dark:border-stone-800 text-stone-400 hover:text-emerald-600 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors cursor-pointer"
                             title="Buka Halaman Edit Konten Topik"
                           >
                             <Edit2 className="w-3.5 h-3.5" />
@@ -1491,7 +1567,7 @@ export default function AdminCourseDetailPage() {
                         <button
                           type="button"
                           onClick={() => handleRemoveLessonInModal(lIdx)}
-                          className="text-stone-400 hover:text-rose-600 transition-colors p-1 cursor-pointer"
+                          className="p-1.5 rounded-lg border border-stone-200 dark:border-stone-800 text-stone-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
                           title="Hapus Topik"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
