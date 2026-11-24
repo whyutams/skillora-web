@@ -594,18 +594,18 @@ export default function HalamanBelajarTopikClient({
     }
 
     const remoteResult = (enrollment?.quiz_results as any)?.[currentLessonKey];
-    const isCompleted = completedLessons.includes(currentLessonKey);
 
-    if (savedEssay?.submitted) {
-      setEssayAnswer(savedEssay.answer || "");
+    // evaluasi essay hanya dianggap selesai jika benar-benar ada jawaban peserta yang tersimpan
+    if (savedEssay?.submitted && savedEssay.answer) {
+      setEssayAnswer(savedEssay.answer);
       setEssaySubmitted(true);
       if (savedEssay.evaluation) {
         setEssayEvaluation(savedEssay.evaluation);
-      } else if (remoteResult) {
+      } else if (remoteResult && typeof remoteResult.score === "number") {
         setEssayEvaluation({
-          score: typeof remoteResult.score === "number" ? remoteResult.score : 85,
+          score: remoteResult.score,
           score_reason: remoteResult.score_reason || "Jawaban Anda telah dinilai oleh sistem.",
-          verdict: remoteResult.verdict || "Memahami Konsep",
+          verdict: remoteResult.verdict || "Hasil Evaluasi",
           feedback: remoteResult.feedback || "Jawaban telah berhasil terekam.",
           strengths: remoteResult.strengths || [],
           improvements: remoteResult.improvements || [],
@@ -615,16 +615,15 @@ export default function HalamanBelajarTopikClient({
       setEssayAnswer(remoteResult.student_answer);
       setEssaySubmitted(true);
       setEssayEvaluation({
-        score: typeof remoteResult.score === "number" ? remoteResult.score : 85,
+        score: typeof remoteResult.score === "number" ? remoteResult.score : 0,
         score_reason: remoteResult.score_reason || "Jawaban Anda telah dinilai oleh sistem.",
-        verdict: remoteResult.verdict || "Memahami Konsep",
+        verdict: remoteResult.verdict || "Hasil Evaluasi",
         feedback: remoteResult.feedback || "Jawaban telah berhasil terekam.",
         strengths: remoteResult.strengths || [],
         improvements: remoteResult.improvements || [],
       });
-    } else if (isCompleted) {
-      setEssaySubmitted(true);
     } else {
+      // jika belum pernah mengirimkan jawaban essay, form wajib terbuka dan belum terjawab
       setEssayAnswer("");
       setEssaySubmitted(false);
       setEssayEvaluation(null);
@@ -1489,7 +1488,7 @@ export default function HalamanBelajarTopikClient({
                                 </span>
                                 <div className="flex items-baseline gap-2 mt-0.5">
                                   <span className="text-3xl font-black text-[#0F3E2E] dark:text-emerald-400">
-                                    {essayEvaluation?.score ?? 85}
+                                    {essayEvaluation?.score ?? 0}
                                   </span>
                                   <span className="text-xs font-bold text-stone-500 dark:text-stone-400">
                                     / 100
@@ -1499,7 +1498,7 @@ export default function HalamanBelajarTopikClient({
 
                               <div className="flex items-center gap-2 self-start sm:self-auto">
                                 <Badge variant="neutral" className="text-xs font-bold bg-white dark:bg-stone-900 shadow-2xs">
-                                  {essayEvaluation?.verdict || "Memahami Konsep"}
+                                  {essayEvaluation?.verdict || "Hasil Evaluasi"}
                                 </Badge>
                               </div>
                             </div>
@@ -1511,7 +1510,7 @@ export default function HalamanBelajarTopikClient({
                               </span>
                               <p className="text-xs sm:text-sm text-stone-700 dark:text-stone-300 leading-relaxed">
                                 {essayEvaluation?.score_reason ||
-                                  `Peserta memperoleh nilai ${essayEvaluation?.score ?? 85} berdasarkan evaluasi pemahaman materi topik ini.`}
+                                  "Evaluasi pemahaman materi topik telah selesai dinilai oleh sistem."}
                               </p>
                             </div>
 
