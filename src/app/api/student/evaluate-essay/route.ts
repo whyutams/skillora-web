@@ -83,7 +83,7 @@ function evaluateEssayLocal(params: {
       score: 20,
       verdict: "Perlu Pendalaman Materi",
       score_reason:
-        "Peserta memperoleh nilai 20 karena sistem mendeteksi adanya pengulangan karakter yang belum membentuk kalimat penjelasan yang bermakna.",
+        "Peserta memperoleh nilai 20 karena terdeteksi adanya pengulangan karakter yang belum membentuk kalimat penjelasan yang bermakna.",
       feedback:
         "Mohon berikan uraian jawaban yang bermakna dan relevan dengan topik pembelajaran.",
       strengths: [],
@@ -273,7 +273,7 @@ Keluaran WAJIB format JSON murni tanpa markdown pembungkus:
     // pastikan teks alasan nilai sinkron dengan nilai kelipatan 10
     let scoreReason =
       parsed.score_reason ||
-      `Peserta memperoleh nilai ${roundedScore} berdasarkan penilaian komprehensif sistem.`;
+      `Peserta memperoleh nilai ${roundedScore} berdasarkan hasil evaluasi pemahaman materi.`;
     scoreReason = scoreReason.replace(/\b\d{1,3}\b/, String(roundedScore));
 
     let verdict = parsed.verdict || "Cukup Memahami Konsep";

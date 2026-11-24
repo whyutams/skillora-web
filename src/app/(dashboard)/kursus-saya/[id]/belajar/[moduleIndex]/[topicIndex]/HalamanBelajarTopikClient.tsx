@@ -682,7 +682,7 @@ export default function HalamanBelajarTopikClient({
       } else if (remoteResult && typeof remoteResult.score === "number") {
         const rawScore = remoteResult.score;
         const normalizedScore = Math.max(0, Math.min(100, Math.round(rawScore / 10) * 10));
-        let reason = remoteResult.score_reason || "Jawaban Anda telah dinilai oleh sistem.";
+        let reason = remoteResult.score_reason || "Jawaban Anda telah dinilai.";
         if (rawScore !== normalizedScore) {
           reason = reason.replace(new RegExp(`\\b${rawScore}\\b`, "g"), String(normalizedScore));
         }
@@ -700,7 +700,7 @@ export default function HalamanBelajarTopikClient({
       setEssaySubmitted(true);
       const rawScore = typeof remoteResult.score === "number" ? remoteResult.score : 0;
       const normalizedScore = Math.max(0, Math.min(100, Math.round(rawScore / 10) * 10));
-      let reason = remoteResult.score_reason || "Jawaban Anda telah dinilai oleh sistem.";
+      let reason = remoteResult.score_reason || "Jawaban Anda telah dinilai.";
       if (rawScore !== normalizedScore) {
         reason = reason.replace(new RegExp(`\\b${rawScore}\\b`, "g"), String(normalizedScore));
       }
@@ -1726,7 +1726,7 @@ export default function HalamanBelajarTopikClient({
                           <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-800 dark:text-amber-300 text-xs flex items-center gap-2">
                             <AlertCircle className="w-4 h-4 shrink-0 text-amber-600 dark:text-amber-400" />
                             <span>
-                              Perhatian: Jawaban essay bersifat permanen dan tidak dapat diganti setelah dikirim. Pastikan jawaban Anda sudah lengkap dan benar.
+                              Pastikan jawaban Anda sudah lengkap dan sesuai dengan pemahaman materi sebelum dikirim.
                             </span>
                           </div>
 
@@ -1752,7 +1752,7 @@ export default function HalamanBelajarTopikClient({
                             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-emerald-500/20">
                               <div>
                                 <span className="text-[11px] font-bold text-emerald-800 dark:text-emerald-400 uppercase tracking-wider block">
-                                  Hasil Pemeriksaan Sistem
+                                  Hasil Evaluasi Jawaban
                                 </span>
                                 <div className="flex items-baseline gap-2 mt-0.5">
                                   <span className="text-3xl font-black text-[#0F3E2E] dark:text-emerald-400">
@@ -1786,7 +1786,7 @@ export default function HalamanBelajarTopikClient({
                               </span>
                               <p className="text-xs sm:text-sm text-stone-700 dark:text-stone-300 leading-relaxed">
                                 {essayEvaluation?.score_reason ||
-                                  "Evaluasi pemahaman materi topik telah selesai dinilai oleh sistem."}
+                                  "Evaluasi pemahaman materi topik telah selesai dinilai."}
                               </p>
                             </div>
 
@@ -2139,7 +2139,7 @@ export default function HalamanBelajarTopikClient({
             handleExecuteEssaySubmit();
           }}
           title="Kirim Jawaban Evaluasi Essay?"
-          description="Jawaban essay Anda akan dinilai langsung secara objektif oleh sistem dalam rentang nilai 0-100 beserta alasan penilaian. Apakah Anda yakin ingin mengirimkan jawaban ini?"
+          description="Jawaban essay Anda akan dinilai secara objektif dalam rentang nilai 0-100 beserta alasan penilaian. Apakah Anda yakin ingin mengirimkan jawaban ini?"
           confirmText="Ya, Kirim Jawaban"
           cancelText="Periksa Lagi"
           variant="primary"
