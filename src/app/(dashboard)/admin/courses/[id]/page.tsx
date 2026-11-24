@@ -34,6 +34,8 @@ import {
   AtSign,
   Phone,
   Quote,
+  Trophy,
+  Medal,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/Card";
@@ -58,6 +60,10 @@ interface CourseParticipant {
   review_rating?: number | null;
   review_text?: string | null;
   reviewed_at?: string | null;
+  completed_lessons?: string[];
+  quiz_results?: Record<string, unknown>;
+  total_score?: number | null;
+  average_score?: number | null;
   profiles?: {
     id?: string;
     full_name?: string | null;
@@ -499,6 +505,44 @@ export default function AdminCourseDetailPage() {
     }
   };
 
+  // tab tampilan peserta di halaman admin antara ranking dan data pendaftaran
+  const [participantTab, setParticipantTab] = React.useState<"ranking" | "directory">("ranking");
+
+  // total materi silabus kursus
+  const totalLessonsCount = React.useMemo(() => {
+    return syllabus.reduce((acc, m) => acc + (m.lessons?.length || 0), 0);
+  }, [syllabus]);
+
+  // klasemen peringkat peserta berdasarkan perolehan nilai
+  const rankedParticipants = React.useMemo(() => {
+    const list = participants.map((p) => {
+      const avg = typeof p.average_score === "number" ? p.average_score : 0;
+      const tot = typeof p.total_score === "number" ? p.total_score : 0;
+      const comp = Array.isArray(p.completed_lessons) ? p.completed_lessons.length : 0;
+      return {
+        ...p,
+        calculatedAverage: avg,
+        calculatedTotal: tot,
+        calculatedCompleted: comp,
+      };
+    });
+
+    list.sort((a, b) => {
+      if (b.calculatedAverage !== a.calculatedAverage) {
+        return b.calculatedAverage - a.calculatedAverage;
+      }
+      if (b.calculatedTotal !== a.calculatedTotal) {
+        return b.calculatedTotal - a.calculatedTotal;
+      }
+      return b.calculatedCompleted - a.calculatedCompleted;
+    });
+
+    return list.map((item, idx) => ({
+      ...item,
+      rank: idx + 1,
+    }));
+  }, [participants]);
+
   // filter pencarian peserta
   const filteredParticipants = React.useMemo(() => {
     if (!participantSearch.trim()) return participants;
@@ -511,6 +555,17 @@ export default function AdminCourseDetailPage() {
       return name.includes(q) || uname.includes(q) || campus.includes(q) || wa.includes(q);
     });
   }, [participants, participantSearch]);
+
+  const filteredRankedParticipants = React.useMemo(() => {
+    if (!participantSearch.trim()) return rankedParticipants;
+    const q = participantSearch.toLowerCase();
+    return rankedParticipants.filter((p) => {
+      const name = (p.profiles?.full_name || "").toLowerCase();
+      const uname = (p.profiles?.username || "").toLowerCase();
+      const campus = (p.profiles?.school_origin || "").toLowerCase();
+      return name.includes(q) || uname.includes(q) || campus.includes(q);
+    });
+  }, [rankedParticipants, participantSearch]);
 
   const totalParticipantPages = Math.ceil(filteredParticipants.length / PARTICIPANTS_PER_PAGE) || 1;
   const paginatedParticipants = React.useMemo(() => {
@@ -1049,18 +1104,55 @@ export default function AdminCourseDetailPage() {
         <CardHeader className="p-5 sm:p-6 border-b border-stone-100 dark:border-stone-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
-              <Users className="w-4 h-4 text-emerald-600" />
+              {participantTab === "ranking" ? (
+                <Trophy className="w-4 h-4 text-emerald-600" />
+              ) : (
+                <Users className="w-4 h-4 text-emerald-600" />
+              )}
               <CardTitle className="text-lg">
-                Daftar Peserta Terdaftar ({participants.length} Peserta)
+                {participantTab === "ranking"
+                  ? `Papan Peringkat & Nilai Peserta (${participants.length} Peserta)`
+                  : `Daftar Peserta Terdaftar (${participants.length} Peserta)`}
               </CardTitle>
             </div>
             <CardDescription className="text-xs">
-              Daftar peserta mahasiswa yang telah disetujui pendaftarannya untuk mengikuti kursus ini (tidak termasuk peserta yang masih dalam tahap pembayaran).
+              {participantTab === "ranking"
+                ? "Klasemen ranking peserta berdasarkan akumulasi dan rata-rata nilai hasil evaluasi essay tiap topik silabus."
+                : "Daftar peserta mahasiswa yang telah disetujui pendaftarannya untuk mengikuti kursus ini."}
             </CardDescription>
           </div>
 
-          <div className="flex items-center gap-2 self-start sm:self-center w-full sm:w-auto">
-            <div className="relative w-full sm:w-64">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 self-start sm:self-center w-full sm:w-auto">
+            {/* tombol beralih tab tampilan */}
+            <div className="flex items-center gap-1 p-1 rounded-xl bg-stone-100 dark:bg-stone-800/80 border border-stone-200 dark:border-stone-700/80">
+              <button
+                type="button"
+                onClick={() => setParticipantTab("ranking")}
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  participantTab === "ranking"
+                    ? "bg-white dark:bg-stone-900 text-[#0F3E2E] dark:text-emerald-400 shadow-2xs"
+                    : "text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-200"
+                }`}
+              >
+                <Trophy className="w-3.5 h-3.5" />
+                <span>Peringkat & Nilai</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setParticipantTab("directory")}
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  participantTab === "directory"
+                    ? "bg-white dark:bg-stone-900 text-[#0F3E2E] dark:text-emerald-400 shadow-2xs"
+                    : "text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-200"
+                }`}
+              >
+                <Users className="w-3.5 h-3.5" />
+                <span>Data Pendaftaran</span>
+              </button>
+            </div>
+
+            <div className="relative w-full sm:w-56">
               <Search className="w-3.5 h-3.5 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
@@ -1069,7 +1161,7 @@ export default function AdminCourseDetailPage() {
                   setParticipantSearch(e.target.value);
                   setParticipantPage(1);
                 }}
-                placeholder="Cari nama, kampus, WA..."
+                placeholder="Cari nama, kampus..."
                 className="w-full pl-8 pr-3 py-1.5 text-xs rounded-xl border border-stone-200 dark:border-stone-800 bg-stone-50/80 dark:bg-stone-900/80 text-stone-900 dark:text-stone-100 placeholder-stone-400 focus:outline-none focus:ring-1 focus:ring-emerald-500"
               />
             </div>
@@ -1080,7 +1172,7 @@ export default function AdminCourseDetailPage() {
           {loadingParticipants ? (
             <div className="p-12 text-center text-xs text-stone-400 space-y-2">
               <RefreshCw className="w-5 h-5 animate-spin mx-auto text-emerald-600" />
-              <p>Memuat daftar peserta terdaftar...</p>
+              <p>Memuat data peserta kursus...</p>
             </div>
           ) : participants.length === 0 ? (
             <div className="p-12 text-center space-y-3">
@@ -1101,175 +1193,402 @@ export default function AdminCourseDetailPage() {
                 </Link>
               </div>
             </div>
-          ) : filteredParticipants.length === 0 ? (
-            <div className="p-12 text-center text-xs text-stone-400 space-y-1">
-              <p className="font-semibold text-stone-700 dark:text-stone-300">
-                Tidak ada peserta yang cocok
-              </p>
-              <p>Tidak ditemukan data peserta dengan kata kunci &quot;{participantSearch}&quot;.</p>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse text-xs">
-                <thead>
-                  <tr className="border-b border-stone-100 dark:border-stone-800 bg-stone-50/50 dark:bg-stone-900/40 text-stone-400 font-semibold uppercase tracking-wider text-[10px]">
-                    <th className="py-3 px-4 w-12 text-center">No</th>
-                    <th className="py-3 px-4">Mahasiswa / Peserta</th>
-                    <th className="py-3 px-4">Asal Kampus</th>
-                    <th className="py-3 px-4">Kontak WhatsApp</th>
-                    <th className="py-3 px-4">Tanggal Disetujui</th>
-                    <th className="py-3 px-4">Ulasan / Sertifikat</th>
-                    <th className="py-3 px-4 text-center">Status</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-stone-100 dark:divide-stone-800">
-                  {paginatedParticipants.map((p, idx) => {
-                    const rowNumber = (participantPage - 1) * PARTICIPANTS_PER_PAGE + idx + 1;
-                    const prof = p.profiles;
-                    const waNumber = p.whatsapp_number || prof?.whatsapp_number;
-                    const cleanPhone = waNumber ? waNumber.replace(/[^0-9]/g, "") : "";
+          ) : participantTab === "ranking" ? (
+            <div className="p-5 sm:p-6 space-y-6">
+              {/* podium 3 besar peringkat teratas */}
+              {rankedParticipants.length > 0 && !participantSearch && (
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+                  {rankedParticipants.slice(0, 3).map((item) => {
+                    const isFirst = item.rank === 1;
+                    const isSecond = item.rank === 2;
+                    const prof = item.profiles;
 
                     return (
-                      <tr
-                        key={p.id}
-                        className="hover:bg-stone-50/80 dark:hover:bg-stone-900/50 transition-colors"
+                      <div
+                        key={item.id}
+                        className={`p-4 rounded-2xl border relative flex flex-col justify-between space-y-3 transition-all ${
+                          isFirst
+                            ? "border-amber-400/50 bg-amber-500/10 dark:bg-amber-950/20 shadow-2xs"
+                            : isSecond
+                            ? "border-stone-300/80 dark:border-stone-700/80 bg-stone-100/70 dark:bg-stone-800/40"
+                            : "border-amber-700/30 bg-amber-700/10 dark:bg-amber-950/10"
+                        }`}
                       >
-                        <td className="py-3 px-4 text-center text-stone-400 font-medium text-xs">
-                          {rowNumber}
-                        </td>
-                        <td className="py-3 px-4">
-                          <div className="flex items-center gap-2.5">
-                            {prof?.avatar_url ? (
-                              <div className="w-8 h-8 rounded-full overflow-hidden shrink-0 border border-stone-200 dark:border-stone-700">
-                                <SmoothImage
-                                  src={prof.avatar_url}
-                                  alt={prof.full_name || "Peserta"}
-                                  className="w-full h-full object-cover"
-                                  containerClassName="w-full h-full"
-                                />
-                              </div>
-                            ) : (
-                              <div className="w-8 h-8 rounded-full bg-[#0F3E2E] text-emerald-300 flex items-center justify-center font-bold text-xs shrink-0">
-                                {prof?.full_name ? prof.full_name.charAt(0).toUpperCase() : "M"}
-                              </div>
-                            )}
-                            <div className="min-w-0">
-                              <span className="font-bold text-stone-900 dark:text-stone-100 block truncate">
-                                {prof?.full_name || "Mahasiswa Peserta"}
-                              </span>
-                              {prof?.username && (
-                                <span className="text-[11px] text-stone-400 flex items-center gap-0.5">
-                                  <AtSign className="w-3 h-3 text-stone-400" />
-                                  {prof.username}
-                                </span>
-                              )}
+                        <div className="flex items-center justify-between">
+                          <span
+                            className={`text-xs font-black px-2.5 py-1 rounded-lg ${
+                              isFirst
+                                ? "bg-amber-500 text-white"
+                                : isSecond
+                                ? "bg-stone-400 text-white dark:bg-stone-600"
+                                : "bg-amber-700 text-white"
+                            }`}
+                          >
+                            Peringkat #{item.rank}
+                          </span>
+                          <Medal
+                            className={`w-5 h-5 ${
+                              isFirst
+                                ? "text-amber-500"
+                                : isSecond
+                                ? "text-stone-400 dark:text-stone-300"
+                                : "text-amber-700"
+                            }`}
+                          />
+                        </div>
+
+                        <div className="flex items-center gap-3">
+                          {prof?.avatar_url ? (
+                            <div className="w-10 h-10 rounded-full overflow-hidden shrink-0 border border-stone-200 dark:border-stone-700">
+                              <SmoothImage
+                                src={prof.avatar_url}
+                                alt={prof.full_name || "Peserta"}
+                                className="w-full h-full object-cover"
+                                containerClassName="w-full h-full"
+                              />
                             </div>
-                          </div>
-                        </td>
-                        <td className="py-3 px-4">
-                          {prof?.school_origin ? (
-                            <span className="inline-flex items-center gap-1.5 text-stone-700 dark:text-stone-300 font-medium">
-                              <Building2 className="w-3.5 h-3.5 text-stone-400 shrink-0" />
-                              <span className="truncate max-w-[180px]">{prof.school_origin}</span>
-                            </span>
                           ) : (
-                            <span className="text-stone-400 text-[11px]">-</span>
+                            <div className="w-10 h-10 rounded-full bg-[#0F3E2E] text-emerald-300 flex items-center justify-center font-bold text-xs shrink-0">
+                              {prof?.full_name ? prof.full_name.charAt(0).toUpperCase() : "M"}
+                            </div>
                           )}
-                        </td>
-                        <td className="py-3 px-4">
-                          {cleanPhone ? (
-                            <a
-                              href={`https://wa.me/${cleanPhone}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-500/20 text-xs font-semibold transition-colors"
-                              title="Chat WhatsApp Peserta"
-                            >
-                              <Phone className="w-3 h-3" />
-                              <span>+{cleanPhone}</span>
-                            </a>
-                          ) : (
-                            <span className="text-stone-400 text-[11px]">-</span>
-                          )}
-                        </td>
-                        <td className="py-3 px-4 text-stone-600 dark:text-stone-400">
-                          <div className="flex items-center gap-1.5 text-[11px]">
-                            <Calendar className="w-3.5 h-3.5 text-stone-400" />
-                            <span>
-                              {p.created_at
-                                ? new Date(p.created_at).toLocaleDateString("id-ID", {
-                                  day: "numeric",
-                                  month: "short",
-                                  year: "numeric",
-                                })
-                                : "-"}
+
+                          <div className="min-w-0">
+                            <span className="font-bold text-xs sm:text-sm text-stone-900 dark:text-stone-100 truncate block">
+                              {prof?.full_name || "Mahasiswa Peserta"}
                             </span>
-                          </div>
-                        </td>
-                        <td className="py-3 px-4">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            {p.review_rating ? (
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-400 font-bold text-[10px] border border-amber-500/20" title={p.review_text || "Ulasan peserta"}>
-                                <Star className="w-3 h-3 fill-amber-500 text-amber-500" />
-                                <span>{p.review_rating}.0</span>
-                              </span>
-                            ) : null}
-                            {p.certificate_url ? (
-                              <a
-                                href={p.certificate_url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-flex items-center gap-1 text-[11px] text-emerald-600 dark:text-emerald-400 hover:underline font-semibold"
-                                title="Buka e-Sertifikat Peserta"
-                              >
-                                <Award className="w-3.5 h-3.5" />
-                                <span>Sertifikat</span>
-                              </a>
-                            ) : null}
-                            {!p.review_rating && !p.certificate_url && (
-                              <span className="text-stone-400 text-[11px] font-normal">
-                                Sedang Belajar
+                            {prof?.school_origin && (
+                              <span className="text-[11px] text-stone-500 dark:text-stone-400 truncate block">
+                                {prof.school_origin}
                               </span>
                             )}
                           </div>
-                        </td>
-                        <td className="py-3 px-4 text-center">
-                          <Badge variant="approved" className="text-[10px] px-2 py-0.5">
-                            <CheckCircle2 className="w-3 h-3 text-emerald-600 mr-1" />
-                            <span>Aktif</span>
-                          </Badge>
-                        </td>
-                      </tr>
+                        </div>
+
+                        <div className="pt-2 border-t border-stone-200/60 dark:border-stone-800/60 flex items-center justify-between text-xs">
+                          <span className="text-stone-500 dark:text-stone-400 text-[11px]">Rata-Rata Nilai</span>
+                          <span className="font-extrabold text-[#0F3E2E] dark:text-emerald-400 text-sm">
+                            {item.calculatedAverage} / 100
+                          </span>
+                        </div>
+                      </div>
                     );
                   })}
-                </tbody>
-              </table>
+                </div>
+              )}
 
-              {totalParticipantPages > 1 && (
-                <div className="p-3 border-t border-stone-100 dark:border-stone-800 flex items-center justify-between gap-2 text-xs">
-                  <span className="text-stone-400 text-[11px]">
-                    Menampilkan halaman {participantPage} dari {totalParticipantPages}
-                  </span>
-                  <div className="flex items-center gap-1">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setParticipantPage((p) => Math.max(p - 1, 1))}
-                      disabled={participantPage === 1}
-                      className="text-xs h-7 px-2.5"
-                    >
-                      Sebelumnya
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setParticipantPage((p) => Math.min(p + 1, totalParticipantPages))}
-                      disabled={participantPage === totalParticipantPages}
-                      className="text-xs h-7 px-2.5"
-                    >
-                      Selanjutnya
-                    </Button>
+              {/* tabel peringkat peserta */}
+              {filteredRankedParticipants.length === 0 ? (
+                <div className="p-8 text-center text-xs text-stone-400 space-y-1">
+                  <p className="font-semibold text-stone-700 dark:text-stone-300">
+                    Tidak ada peserta yang cocok
+                  </p>
+                  <p>Tidak ditemukan data peringkat dengan kata kunci &quot;{participantSearch}&quot;.</p>
+                </div>
+              ) : (
+                <div className="rounded-2xl border border-stone-200/80 dark:border-stone-800/80 overflow-hidden">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse text-xs">
+                      <thead>
+                        <tr className="border-b border-stone-100 dark:border-stone-800 bg-stone-50/50 dark:bg-stone-900/40 text-stone-400 font-semibold uppercase tracking-wider text-[10px]">
+                          <th className="py-3 px-4 w-14 text-center">Rank</th>
+                          <th className="py-3 px-4">Mahasiswa / Peserta</th>
+                          <th className="py-3 px-4">Asal Kampus</th>
+                          <th className="py-3 px-4 text-center">Topik Selesai</th>
+                          <th className="py-3 px-4 text-center">Rata-Rata Nilai</th>
+                          <th className="py-3 px-4 text-center">Total Nilai</th>
+                          <th className="py-3 px-4 text-center">Status Silabus</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-stone-100 dark:divide-stone-800">
+                        {filteredRankedParticipants.map((p) => {
+                          const prof = p.profiles;
+                          const isCoursePassed = totalLessonsCount > 0 && p.calculatedCompleted >= totalLessonsCount;
+
+                          return (
+                            <tr
+                              key={p.id}
+                              className="hover:bg-stone-50/80 dark:hover:bg-stone-900/50 transition-colors"
+                            >
+                              <td className="py-3.5 px-4 text-center">
+                                <span
+                                  className={`inline-flex items-center justify-center w-7 h-7 rounded-lg text-xs font-black ${
+                                    p.rank === 1
+                                      ? "bg-amber-500 text-white"
+                                      : p.rank === 2
+                                      ? "bg-stone-400 text-white dark:bg-stone-600"
+                                      : p.rank === 3
+                                      ? "bg-amber-700 text-white"
+                                      : "bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-400"
+                                  }`}
+                                >
+                                  #{p.rank}
+                                </span>
+                              </td>
+
+                              <td className="py-3.5 px-4">
+                                <div className="flex items-center gap-2.5">
+                                  {prof?.avatar_url ? (
+                                    <div className="w-8 h-8 rounded-full overflow-hidden shrink-0 border border-stone-200 dark:border-stone-700">
+                                      <SmoothImage
+                                        src={prof.avatar_url}
+                                        alt={prof.full_name || "Peserta"}
+                                        className="w-full h-full object-cover"
+                                        containerClassName="w-full h-full"
+                                      />
+                                    </div>
+                                  ) : (
+                                    <div className="w-8 h-8 rounded-full bg-[#0F3E2E] text-emerald-300 flex items-center justify-center font-bold text-xs shrink-0">
+                                      {prof?.full_name ? prof.full_name.charAt(0).toUpperCase() : "M"}
+                                    </div>
+                                  )}
+                                  <div className="min-w-0">
+                                    <span className="font-bold text-stone-900 dark:text-stone-100 block truncate">
+                                      {prof?.full_name || "Mahasiswa Peserta"}
+                                    </span>
+                                    {prof?.username && (
+                                      <span className="text-[11px] text-stone-400 flex items-center gap-0.5">
+                                        <AtSign className="w-3 h-3 text-stone-400" />
+                                        {prof.username}
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                              </td>
+
+                              <td className="py-3.5 px-4">
+                                {prof?.school_origin ? (
+                                  <span className="inline-flex items-center gap-1.5 text-stone-700 dark:text-stone-300">
+                                    <Building2 className="w-3.5 h-3.5 text-stone-400 shrink-0" />
+                                    <span className="truncate max-w-[170px]">{prof.school_origin}</span>
+                                  </span>
+                                ) : (
+                                  <span className="text-stone-400 text-[11px]">-</span>
+                                )}
+                              </td>
+
+                              <td className="py-3.5 px-4 text-center">
+                                <span className="font-semibold text-stone-700 dark:text-stone-300">
+                                  {p.calculatedCompleted} / {totalLessonsCount} Topik
+                                </span>
+                              </td>
+
+                              <td className="py-3.5 px-4 text-center">
+                                <span
+                                  className={`inline-block font-extrabold px-2.5 py-1 rounded-lg text-xs ${
+                                    p.calculatedAverage >= 80
+                                      ? "bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 border border-emerald-500/20"
+                                      : p.calculatedAverage >= 70
+                                      ? "bg-blue-500/10 text-blue-800 dark:text-blue-300 border border-blue-500/20"
+                                      : "bg-stone-100 dark:bg-stone-800 text-stone-700 dark:text-stone-300"
+                                  }`}
+                                >
+                                  {p.calculatedAverage} / 100
+                                </span>
+                              </td>
+
+                              <td className="py-3.5 px-4 text-center font-bold text-stone-700 dark:text-stone-300">
+                                {p.calculatedTotal}
+                              </td>
+
+                              <td className="py-3.5 px-4 text-center">
+                                {isCoursePassed ? (
+                                  <Badge variant="approved" className="text-[10px] px-2 py-0.5">
+                                    <CheckCircle2 className="w-3 h-3 text-emerald-600 mr-1" />
+                                    <span>Lulus & Selesai</span>
+                                  </Badge>
+                                ) : (
+                                  <Badge variant="neutral" className="text-[10px] px-2 py-0.5">
+                                    <span>Sedang Belajar</span>
+                                  </Badge>
+                                )}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
                   </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            // tampilan daftar data pendaftaran peserta
+            <div>
+              {filteredParticipants.length === 0 ? (
+                <div className="p-12 text-center text-xs text-stone-400 space-y-1">
+                  <p className="font-semibold text-stone-700 dark:text-stone-300">
+                    Tidak ada peserta yang cocok
+                  </p>
+                  <p>Tidak ditemukan data peserta dengan kata kunci &quot;{participantSearch}&quot;.</p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse text-xs">
+                    <thead>
+                      <tr className="border-b border-stone-100 dark:border-stone-800 bg-stone-50/50 dark:bg-stone-900/40 text-stone-400 font-semibold uppercase tracking-wider text-[10px]">
+                        <th className="py-3 px-4 w-12 text-center">No</th>
+                        <th className="py-3 px-4">Mahasiswa / Peserta</th>
+                        <th className="py-3 px-4">Asal Kampus</th>
+                        <th className="py-3 px-4">Kontak WhatsApp</th>
+                        <th className="py-3 px-4">Tanggal Disetujui</th>
+                        <th className="py-3 px-4">Ulasan / Sertifikat</th>
+                        <th className="py-3 px-4 text-center">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-stone-100 dark:divide-stone-800">
+                      {paginatedParticipants.map((p, idx) => {
+                        const rowNumber = (participantPage - 1) * PARTICIPANTS_PER_PAGE + idx + 1;
+                        const prof = p.profiles;
+                        const waNumber = p.whatsapp_number || prof?.whatsapp_number;
+                        const cleanPhone = waNumber ? waNumber.replace(/[^0-9]/g, "") : "";
+
+                        return (
+                          <tr
+                            key={p.id}
+                            className="hover:bg-stone-50/80 dark:hover:bg-stone-900/50 transition-colors"
+                          >
+                            <td className="py-3 px-4 text-center text-stone-400 font-medium text-xs">
+                              {rowNumber}
+                            </td>
+                            <td className="py-3 px-4">
+                              <div className="flex items-center gap-2.5">
+                                {prof?.avatar_url ? (
+                                  <div className="w-8 h-8 rounded-full overflow-hidden shrink-0 border border-stone-200 dark:border-stone-700">
+                                    <SmoothImage
+                                      src={prof.avatar_url}
+                                      alt={prof.full_name || "Peserta"}
+                                      className="w-full h-full object-cover"
+                                      containerClassName="w-full h-full"
+                                    />
+                                  </div>
+                                ) : (
+                                  <div className="w-8 h-8 rounded-full bg-[#0F3E2E] text-emerald-300 flex items-center justify-center font-bold text-xs shrink-0">
+                                    {prof?.full_name ? prof.full_name.charAt(0).toUpperCase() : "M"}
+                                  </div>
+                                )}
+                                <div className="min-w-0">
+                                  <span className="font-bold text-stone-900 dark:text-stone-100 block truncate">
+                                    {prof?.full_name || "Mahasiswa Peserta"}
+                                  </span>
+                                  {prof?.username && (
+                                    <span className="text-[11px] text-stone-400 flex items-center gap-0.5">
+                                      <AtSign className="w-3 h-3 text-stone-400" />
+                                      {prof.username}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            </td>
+                            <td className="py-3 px-4">
+                              {prof?.school_origin ? (
+                                <span className="inline-flex items-center gap-1.5 text-stone-700 dark:text-stone-300 font-medium">
+                                  <Building2 className="w-3.5 h-3.5 text-stone-400 shrink-0" />
+                                  <span className="truncate max-w-[180px]">{prof.school_origin}</span>
+                                </span>
+                              ) : (
+                                <span className="text-stone-400 text-[11px]">-</span>
+                              )}
+                            </td>
+                            <td className="py-3 px-4">
+                              {cleanPhone ? (
+                                <a
+                                  href={`https://wa.me/${cleanPhone}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-500/20 text-xs font-semibold transition-colors"
+                                  title="Chat WhatsApp Peserta"
+                                >
+                                  <Phone className="w-3 h-3" />
+                                  <span>+{cleanPhone}</span>
+                                </a>
+                              ) : (
+                                <span className="text-stone-400 text-[11px]">-</span>
+                              )}
+                            </td>
+                            <td className="py-3 px-4 text-stone-600 dark:text-stone-400">
+                              <div className="flex items-center gap-1.5 text-[11px]">
+                                <Calendar className="w-3.5 h-3.5 text-stone-400" />
+                                <span>
+                                  {p.created_at
+                                    ? new Date(p.created_at).toLocaleDateString("id-ID", {
+                                        day: "numeric",
+                                        month: "short",
+                                        year: "numeric",
+                                      })
+                                    : "-"}
+                                </span>
+                              </div>
+                            </td>
+                            <td className="py-3 px-4">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                {p.review_rating ? (
+                                  <span
+                                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-400 font-bold text-[10px] border border-amber-500/20"
+                                    title={p.review_text || "Ulasan peserta"}
+                                  >
+                                    <Star className="w-3 h-3 fill-amber-500 text-amber-500" />
+                                    <span>{p.review_rating}.0</span>
+                                  </span>
+                                ) : null}
+                                {p.certificate_url ? (
+                                  <a
+                                    href={p.certificate_url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center gap-1 text-[11px] text-emerald-600 dark:text-emerald-400 hover:underline font-semibold"
+                                    title="Buka e-Sertifikat Peserta"
+                                  >
+                                    <Award className="w-3.5 h-3.5" />
+                                    <span>Sertifikat</span>
+                                  </a>
+                                ) : null}
+                                {!p.review_rating && !p.certificate_url && (
+                                  <span className="text-stone-400 text-[11px] font-normal">
+                                    Sedang Belajar
+                                  </span>
+                                )}
+                              </div>
+                            </td>
+                            <td className="py-3 px-4 text-center">
+                              <Badge variant="approved" className="text-[10px] px-2 py-0.5">
+                                <CheckCircle2 className="w-3 h-3 text-emerald-600 mr-1" />
+                                <span>Aktif</span>
+                              </Badge>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+
+                  {totalParticipantPages > 1 && (
+                    <div className="p-3 border-t border-stone-100 dark:border-stone-800 flex items-center justify-between gap-2 text-xs">
+                      <span className="text-stone-400 text-[11px]">
+                        Menampilkan halaman {participantPage} dari {totalParticipantPages}
+                      </span>
+                      <div className="flex items-center gap-1">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setParticipantPage((p) => Math.max(p - 1, 1))}
+                          disabled={participantPage === 1}
+                          className="text-xs h-7 px-2.5"
+                        >
+                          Sebelumnya
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setParticipantPage((p) => Math.min(p + 1, totalParticipantPages))}
+                          disabled={participantPage === totalParticipantPages}
+                          className="text-xs h-7 px-2.5"
+                        >
+                          Selanjutnya
+                        </Button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

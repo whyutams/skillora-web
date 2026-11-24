@@ -40,6 +40,7 @@ import { NavTabKursus, CourseTabKey } from "@/components/course-detail/NavTabKur
 import { TabTentangKursus } from "@/components/course-detail/TabTentangKursus";
 import { TabSilabusKursus } from "@/components/course-detail/TabSilabusKursus";
 import { TabUlasanKursus } from "@/components/course-detail/TabUlasanKursus";
+import { TabLeaderboardKursus } from "@/components/course-detail/TabLeaderboardKursus";
 import { StudentEnrollmentItem } from "../DashboardPesertaClient";
 import {
   parseCourseCurriculum,
@@ -115,6 +116,17 @@ export function DetailKursusPesertaClient({ enrollmentId }: { enrollmentId: stri
 
   // tab navigasi aktif
   const [activeTab, setActiveTab] = React.useState<CourseTabKey>("about");
+
+  // baca parameter tab dari url saat halaman dimuat
+  React.useEffect(() => {
+    if (typeof window !== "undefined") {
+      const urlParams = new URLSearchParams(window.location.search);
+      const tabParam = urlParams.get("tab") as CourseTabKey | null;
+      if (tabParam && ["about", "syllabus", "reviews", "leaderboard"].includes(tabParam)) {
+        setActiveTab(tabParam);
+      }
+    }
+  }, []);
 
   // modal pratinjau zoom gambar banner
   const [previewImage, setPreviewImage] = React.useState<{
@@ -509,6 +521,8 @@ export function DetailKursusPesertaClient({ enrollmentId }: { enrollmentId: stri
                 onTabChange={setActiveTab}
                 totalModules={curriculum.totalModules}
                 totalReviews={reviewsData.totalReviews}
+                showLeaderboard={isApproved}
+                isLeaderboardUnlocked={isApproved && totalLessons > 0 && completedCount >= totalLessons}
               />
             </div>
 
@@ -794,6 +808,20 @@ export function DetailKursusPesertaClient({ enrollmentId }: { enrollmentId: stri
                       </div>
                     </div>
                   )}
+                </div>
+              )}
+
+              {activeTab === "leaderboard" && (
+                <div data-aos="fade-in" className="animate-in fade-in duration-300">
+                  <TabLeaderboardKursus
+                    isUnlocked={isApproved && totalLessons > 0 && completedCount >= totalLessons}
+                    completedCount={completedCount}
+                    totalLessons={totalLessons}
+                    progressPercentage={progressPercentage}
+                    courseTitle={course.title}
+                    enrollmentOrSlug={course.slug || enrollment.id}
+                    lastAccessedLesson={enrollment.last_accessed_lesson}
+                  />
                 </div>
               )}
             </div>

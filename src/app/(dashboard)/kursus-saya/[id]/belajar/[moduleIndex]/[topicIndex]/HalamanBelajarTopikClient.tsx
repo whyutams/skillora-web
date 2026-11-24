@@ -316,6 +316,40 @@ export default function HalamanBelajarTopikClient({
     setCopiedCode(false);
   }, [currentModIdx, currentLesIdx]);
 
+  // proteksi teks materi pembelajaran dari aksi penyalinan atau copy
+  React.useEffect(() => {
+    const handleCopy = (e: ClipboardEvent) => {
+      const activeEl = document.activeElement;
+      // izinkan copy cut hanya pada elemen input dan textarea pengetikan jawaban
+      if (
+        activeEl instanceof HTMLInputElement ||
+        activeEl instanceof HTMLTextAreaElement
+      ) {
+        return;
+      }
+      e.preventDefault();
+    };
+
+    const handleContextMenu = (e: MouseEvent) => {
+      const target = e.target as HTMLElement | null;
+      // cegah klik kanan salin pada materi pembelajaran yang dilindungi
+      if (
+        target?.closest(".learning-content") ||
+        target?.closest(".topic-protected-content")
+      ) {
+        e.preventDefault();
+      }
+    };
+
+    document.addEventListener("copy", handleCopy);
+    document.addEventListener("contextmenu", handleContextMenu);
+
+    return () => {
+      document.removeEventListener("copy", handleCopy);
+      document.removeEventListener("contextmenu", handleContextMenu);
+    };
+  }, []);
+
   const course = enrollment?.course;
 
   // uraikan kurikulum modul dan topik
@@ -339,6 +373,7 @@ export default function HalamanBelajarTopikClient({
 
   const progressPercentage =
     totalLessons > 0 ? Math.min(100, Math.round((completedCount / totalLessons) * 100)) : 0;
+  const isAllCourseCompleted = totalLessons > 0 && completedCount >= totalLessons;
 
   const currentModule: CourseModuleItem | undefined = modules[currentModIdx];
   const currentLesson: CourseLessonItem | undefined = currentModule?.lessons?.[currentLesIdx];
@@ -600,11 +635,27 @@ export default function HalamanBelajarTopikClient({
       setEssayAnswer(savedEssay.answer);
       setEssaySubmitted(true);
       if (savedEssay.evaluation) {
-        setEssayEvaluation(savedEssay.evaluation);
-      } else if (remoteResult && typeof remoteResult.score === "number") {
+        const rawScore = typeof savedEssay.evaluation.score === "number" ? savedEssay.evaluation.score : 0;
+        const normalizedScore = Math.max(0, Math.min(100, Math.round(rawScore / 10) * 10));
+        let reason = savedEssay.evaluation.score_reason || "";
+        if (rawScore !== normalizedScore) {
+          reason = reason.replace(new RegExp(`\\b${rawScore}\\b`, "g"), String(normalizedScore));
+        }
         setEssayEvaluation({
-          score: remoteResult.score,
-          score_reason: remoteResult.score_reason || "Jawaban Anda telah dinilai oleh sistem.",
+          ...savedEssay.evaluation,
+          score: normalizedScore,
+          score_reason: reason || savedEssay.evaluation.score_reason,
+        });
+      } else if (remoteResult && typeof remoteResult.score === "number") {
+        const rawScore = remoteResult.score;
+        const normalizedScore = Math.max(0, Math.min(100, Math.round(rawScore / 10) * 10));
+        let reason = remoteResult.score_reason || "Jawaban Anda telah dinilai oleh sistem.";
+        if (rawScore !== normalizedScore) {
+          reason = reason.replace(new RegExp(`\\b${rawScore}\\b`, "g"), String(normalizedScore));
+        }
+        setEssayEvaluation({
+          score: normalizedScore,
+          score_reason: reason,
           verdict: remoteResult.verdict || "Hasil Evaluasi",
           feedback: remoteResult.feedback || "Jawaban telah berhasil terekam.",
           strengths: remoteResult.strengths || [],
@@ -614,9 +665,15 @@ export default function HalamanBelajarTopikClient({
     } else if (remoteResult?.student_answer) {
       setEssayAnswer(remoteResult.student_answer);
       setEssaySubmitted(true);
+      const rawScore = typeof remoteResult.score === "number" ? remoteResult.score : 0;
+      const normalizedScore = Math.max(0, Math.min(100, Math.round(rawScore / 10) * 10));
+      let reason = remoteResult.score_reason || "Jawaban Anda telah dinilai oleh sistem.";
+      if (rawScore !== normalizedScore) {
+        reason = reason.replace(new RegExp(`\\b${rawScore}\\b`, "g"), String(normalizedScore));
+      }
       setEssayEvaluation({
-        score: typeof remoteResult.score === "number" ? remoteResult.score : 0,
-        score_reason: remoteResult.score_reason || "Jawaban Anda telah dinilai oleh sistem.",
+        score: normalizedScore,
+        score_reason: reason,
         verdict: remoteResult.verdict || "Hasil Evaluasi",
         feedback: remoteResult.feedback || "Jawaban telah berhasil terekam.",
         strengths: remoteResult.strengths || [],
@@ -857,7 +914,9 @@ export default function HalamanBelajarTopikClient({
       }
     });
 
-    const score = Math.round((correct / shuffledQuestions.length) * 100);
+    // bulatkan nilai kuis selalu ke kelipatan 10 terdekat
+    const rawScore = (correct / shuffledQuestions.length) * 100;
+    const score = Math.max(0, Math.min(100, Math.round(rawScore / 10) * 10));
     setQuizScore(score);
     setQuizCorrectCount(correct);
     setQuizSubmitted(true);
@@ -1115,11 +1174,16 @@ export default function HalamanBelajarTopikClient({
                   </div>
                 )}
 
-                {/* konten materi teks bacaan yang dirender sempurna dengan styling typography */}
+                {/* konten materi teks bacaan yang dilindungi dari penyalinan teks */}
                 {activeFormattedHtml && (
-                  <div className="p-6 sm:p-8 rounded-2xl border border-stone-200/80 dark:border-stone-800/80 bg-white/80 dark:bg-stone-900/60 backdrop-blur-md shadow-xs space-y-4">
+                  <div
+                    onCopy={(e) => e.preventDefault()}
+                    onCut={(e) => e.preventDefault()}
+                    onContextMenu={(e) => e.preventDefault()}
+                    className="p-6 sm:p-8 rounded-2xl border border-stone-200/80 dark:border-stone-800/80 bg-white/80 dark:bg-stone-900/60 backdrop-blur-md shadow-xs space-y-4 select-none topic-protected-content"
+                  >
                     <div
-                      className="learning-content w-full"
+                      className="learning-content w-full select-none"
                       dangerouslySetInnerHTML={{ __html: activeFormattedHtml }}
                     />
                   </div>
@@ -1127,7 +1191,12 @@ export default function HalamanBelajarTopikClient({
 
                 {/* kuis evaluasi materi */}
                 {currentLesson.type === "quiz" && (
-                  <div className="p-5 sm:p-7 rounded-2xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-[#161413] shadow-sm space-y-6">
+                  <div
+                    onCopy={(e) => e.preventDefault()}
+                    onCut={(e) => e.preventDefault()}
+                    onContextMenu={(e) => e.preventDefault()}
+                    className="p-5 sm:p-7 rounded-2xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-[#161413] shadow-sm space-y-6 select-none topic-protected-content"
+                  >
                     {/* header kuis evaluasi pemahaman */}
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-stone-100 dark:border-stone-800/80">
                       <div className="flex items-center gap-3">
@@ -1170,9 +1239,10 @@ export default function HalamanBelajarTopikClient({
                               <span className="px-2.5 py-1 rounded-lg bg-emerald-600/10 dark:bg-emerald-400/10 text-emerald-700 dark:text-emerald-300 font-bold text-xs shrink-0">
                                 Soal {qIdx + 1}
                               </span>
-                              <p className="font-semibold text-stone-900 dark:text-stone-100 text-sm sm:text-base leading-relaxed flex-1">
-                                {q.question}
-                              </p>
+                              <div
+                                className="font-semibold text-stone-900 dark:text-stone-100 text-sm sm:text-base leading-relaxed flex-1 prose dark:prose-invert max-w-none prose-p:my-0 prose-p:leading-relaxed"
+                                dangerouslySetInnerHTML={{ __html: formatContentHtml(q.question) }}
+                              />
                             </div>
 
                             <div className="space-y-2.5 pt-1">
@@ -1225,9 +1295,10 @@ export default function HalamanBelajarTopikClient({
                                       >
                                         {optionLetter}
                                       </span>
-                                      <span className="leading-snug break-words flex-1">
-                                        {opt.text}
-                                      </span>
+                                      <span
+                                        className="leading-snug break-words flex-1"
+                                        dangerouslySetInnerHTML={{ __html: formatContentHtml(opt.text) }}
+                                      />
                                     </div>
 
                                     {quizSubmitted ? (
@@ -1428,14 +1499,19 @@ export default function HalamanBelajarTopikClient({
                       </div>
                     </div>
 
-                    {/* konten pertanyaan essay */}
-                    <div className="space-y-4 p-5 sm:p-6 rounded-2xl bg-[#FAF9F6] dark:bg-stone-900/60 border border-stone-200/90 dark:border-stone-800">
+                    {/* konten pertanyaan essay yang dilindungi */}
+                    <div
+                      onCopy={(e) => e.preventDefault()}
+                      onCut={(e) => e.preventDefault()}
+                      onContextMenu={(e) => e.preventDefault()}
+                      className="space-y-4 p-5 sm:p-6 rounded-2xl bg-[#FAF9F6] dark:bg-stone-900/60 border border-stone-200/90 dark:border-stone-800 select-none topic-protected-content"
+                    >
                       <div className="flex items-start gap-3">
-                        <span className="px-2.5 py-1 rounded-lg bg-emerald-600/10 dark:bg-emerald-400/10 text-emerald-700 dark:text-emerald-300 font-bold text-xs shrink-0">
+                        <span className="px-2.5 py-1 rounded-lg bg-emerald-600/10 dark:bg-emerald-400/10 text-emerald-700 dark:text-emerald-300 font-bold text-xs shrink-0 select-none">
                           Soal Essay
                         </span>
                         <div
-                          className="font-semibold text-stone-900 dark:text-stone-100 text-sm sm:text-base leading-relaxed flex-1 learning-content"
+                          className="font-semibold text-stone-900 dark:text-stone-100 text-sm sm:text-base leading-relaxed flex-1 learning-content select-none"
                           dangerouslySetInnerHTML={{ __html: formatContentHtml(currentTopicEssayQuestion.question) }}
                         />
                       </div>
@@ -1573,9 +1649,10 @@ export default function HalamanBelajarTopikClient({
                               <span className="text-xs font-bold text-stone-800 dark:text-stone-200 block">
                                 Kunci Acuan / Pembahasan Mentor:
                               </span>
-                              <p className="text-xs sm:text-sm text-stone-600 dark:text-stone-400 whitespace-pre-wrap leading-relaxed">
-                                {currentTopicEssayQuestion.explanation}
-                              </p>
+                              <div
+                                className="text-xs sm:text-sm text-stone-600 dark:text-stone-400 leading-relaxed font-sans prose dark:prose-invert max-w-none prose-p:my-0.5"
+                                dangerouslySetInnerHTML={{ __html: formatContentHtml(currentTopicEssayQuestion.explanation) }}
+                              />
                             </div>
                           )}
 
@@ -1795,8 +1872,32 @@ export default function HalamanBelajarTopikClient({
                 })}
               </div>
 
-              {/* tautan ke detail kursus di luar ruang belajar */}
-              <div className="pt-2 border-t border-stone-100 dark:border-stone-800/60">
+              {/* tautan ke detail kursus dan papan peringkat kelas */}
+              <div className="pt-2 border-t border-stone-100 dark:border-stone-800/60 space-y-1">
+                {isAllCourseCompleted ? (
+                  <Link
+                    href={`/kursus-saya/${enrollmentOrSlug}?tab=leaderboard`}
+                    className="w-full flex items-center justify-between p-2 rounded-xl text-xs font-bold text-amber-700 dark:text-amber-400 bg-amber-500/10 hover:bg-amber-500/20 transition-colors"
+                  >
+                    <span className="flex items-center gap-1.5">
+                      <Trophy className="w-3.5 h-3.5 text-amber-600" />
+                      <span>Lihat Peringkat Kelas</span>
+                    </span>
+                    <ExternalLink className="w-3.5 h-3.5" />
+                  </Link>
+                ) : (
+                  <Link
+                    href={`/kursus-saya/${enrollmentOrSlug}?tab=leaderboard`}
+                    className="w-full flex items-center justify-between p-2 rounded-xl text-xs font-semibold text-stone-500 dark:text-stone-400 hover:text-stone-700 hover:bg-stone-100 dark:hover:bg-stone-800/60 transition-colors"
+                  >
+                    <span className="flex items-center gap-1.5">
+                      <Lock className="w-3.5 h-3.5 text-stone-400" />
+                      <span>Peringkat Kelas (Terkunci)</span>
+                    </span>
+                    <ExternalLink className="w-3.5 h-3.5" />
+                  </Link>
+                )}
+
                 <Link
                   href={`/kursus-saya/${enrollmentOrSlug}`}
                   className="w-full flex items-center justify-between p-2 rounded-xl text-xs font-semibold text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-100 hover:bg-stone-100 dark:hover:bg-stone-800/60 transition-colors"

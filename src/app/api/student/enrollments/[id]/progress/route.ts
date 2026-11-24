@@ -89,10 +89,23 @@ async function handleProgressUpdate(
       ? Array.from(new Set(completed_lessons))
       : currentMeta.completed_lessons || [];
 
+    if (quiz_result && typeof quiz_result.score === "number") {
+      // pastikan skor kuis selalu dibulatkan ke kelipatan 10 terdekat
+      quiz_result.score = Math.max(0, Math.min(100, Math.round(quiz_result.score / 10) * 10));
+    }
+
     const updatedQuizResults = {
       ...(currentMeta.quiz_results || {}),
       ...(quiz_result && quiz_result.lessonKey ? { [quiz_result.lessonKey]: quiz_result } : {}),
     };
+
+    // hitung akumulasi skor dan rata rata nilai untuk fitur ranking atau leaderboard
+    const quizEntries = Object.values(updatedQuizResults) as Record<string, unknown>[];
+    const validScores = quizEntries
+      .map((entry) => (typeof entry?.score === "number" ? entry.score : null))
+      .filter((s): s is number => s !== null);
+    const totalScore = validScores.reduce((acc, s) => acc + s, 0);
+    const averageScore = validScores.length > 0 ? Math.round(totalScore / validScores.length) : 0;
 
     const newMeta = {
       ...currentMeta,
@@ -102,6 +115,8 @@ async function handleProgressUpdate(
           ? project_submission_url
           : currentMeta.project_submission_url,
       quiz_results: updatedQuizResults,
+      total_score: totalScore,
+      average_score: averageScore,
       last_accessed_lesson:
         last_accessed_lesson !== undefined
           ? last_accessed_lesson

@@ -58,6 +58,24 @@ export function parseEnrollmentMeta(
   const phone = rawWhatsapp.replace(metaMatch[0], "").trim() || "-";
   try {
     const meta: EnrollmentMetadata = JSON.parse(metaMatch[1]);
+    const quizResults =
+      meta.quiz_results && typeof meta.quiz_results === "object" ? meta.quiz_results : {};
+
+    // hitung akumulasi skor dan rata rata secara otomatis jika belum tersimpan
+    let totalScore = typeof meta.total_score === "number" ? meta.total_score : null;
+    let averageScore = typeof meta.average_score === "number" ? meta.average_score : null;
+
+    if (totalScore === null && Object.keys(quizResults).length > 0) {
+      const validScores = Object.values(quizResults)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .map((entry: any) => (typeof entry?.score === "number" ? entry.score : null))
+        .filter((s): s is number => s !== null);
+      if (validScores.length > 0) {
+        totalScore = validScores.reduce((acc, s) => acc + s, 0);
+        averageScore = Math.round(totalScore / validScores.length);
+      }
+    }
+
     return {
       phone,
       payment_proof_url: meta.payment_proof_url || null,
@@ -71,9 +89,9 @@ export function parseEnrollmentMeta(
         ? meta.completed_lessons
         : [],
       project_submission_url: meta.project_submission_url || null,
-      quiz_results: meta.quiz_results && typeof meta.quiz_results === "object" ? meta.quiz_results : {},
-      total_score: typeof meta.total_score === "number" ? meta.total_score : null,
-      average_score: typeof meta.average_score === "number" ? meta.average_score : null,
+      quiz_results: quizResults,
+      total_score: totalScore,
+      average_score: averageScore,
       last_accessed_lesson: meta.last_accessed_lesson || null,
       updated_at: meta.updated_at || undefined,
     };

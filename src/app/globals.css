@@ -51,6 +51,17 @@
 .learning-content {
   color: #292524;
   line-height: 1.75;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+.learning-content * {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
 }
 
 .dark .learning-content {

@@ -1,9 +1,9 @@
 "use client";
 
 import * as React from "react";
-import { Info, BookOpen, Star } from "lucide-react";
+import { Info, BookOpen, Star, Trophy, Lock } from "lucide-react";
 
-export type CourseTabKey = "about" | "syllabus" | "reviews";
+export type CourseTabKey = "about" | "syllabus" | "reviews" | "leaderboard";
 export type NavTabKey = CourseTabKey;
 
 interface NavTabKursusProps {
@@ -11,6 +11,8 @@ interface NavTabKursusProps {
   onTabChange: (tab: CourseTabKey) => void;
   totalModules: number;
   totalReviews: number;
+  showLeaderboard?: boolean;
+  isLeaderboardUnlocked?: boolean;
 }
 
 export function NavTabKursus({
@@ -18,6 +20,8 @@ export function NavTabKursus({
   onTabChange,
   totalModules,
   totalReviews,
+  showLeaderboard = false,
+  isLeaderboardUnlocked = false,
 }: NavTabKursusProps) {
   const tabs = [
     {
@@ -25,19 +29,33 @@ export function NavTabKursus({
       label: "Tentang",
       icon: Info,
       badge: null,
+      isLocked: false,
     },
     {
       key: "syllabus" as CourseTabKey,
       label: "Silabus",
       icon: BookOpen,
       badge: totalModules > 0 ? `${totalModules}` : null,
+      isLocked: false,
     },
     {
       key: "reviews" as CourseTabKey,
       label: "Testimoni",
       icon: Star,
       badge: totalReviews > 0 ? `${totalReviews}` : null,
+      isLocked: false,
     },
+    ...(showLeaderboard
+      ? [
+          {
+            key: "leaderboard" as CourseTabKey,
+            label: "Peringkat Kelas",
+            icon: Trophy,
+            badge: isLeaderboardUnlocked ? "Terbuka" : "Terkunci",
+            isLocked: !isLeaderboardUnlocked,
+          },
+        ]
+      : []),
   ];
 
   return (
@@ -74,13 +92,16 @@ export function NavTabKursus({
 
               {tab.badge && (
                 <span
-                  className={`text-[11px] font-bold px-2 py-0.5 rounded-full transition-colors ${
+                  className={`text-[11px] font-bold px-2 py-0.5 rounded-full transition-colors flex items-center gap-1 ${
                     isActive
                       ? "bg-[#0F3E2E] text-white dark:bg-emerald-600"
+                      : tab.isLocked
+                      ? "bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20"
                       : "bg-stone-200/80 dark:bg-stone-800 text-stone-600 dark:text-stone-400 group-hover:bg-stone-300/80 dark:group-hover:bg-stone-700"
                   }`}
                 >
-                  {tab.badge}
+                  {tab.isLocked && <Lock className="w-3 h-3 text-amber-600 dark:text-amber-400" />}
+                  <span>{tab.badge}</span>
                 </span>
               )}
             </button>

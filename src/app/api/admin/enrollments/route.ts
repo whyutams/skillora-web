@@ -126,6 +126,11 @@ export async function GET(request: Request) {
         review_rating: parsedMeta.review_rating,
         review_text: parsedMeta.review_text,
         reviewed_at: parsedMeta.reviewed_at,
+        completed_lessons: parsedMeta.completed_lessons || [],
+        quiz_results: parsedMeta.quiz_results || {},
+        total_score: parsedMeta.total_score ?? 0,
+        average_score: parsedMeta.average_score ?? 0,
+        last_accessed_lesson: parsedMeta.last_accessed_lesson || null,
         profiles: item.profiles,
         courses: parsedCourse,
       };
