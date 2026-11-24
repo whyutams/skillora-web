@@ -63,6 +63,10 @@ export default function CreateUserPage() {
       setErrorMessage("Username wajib diisi.");
       return;
     }
+    if (username.trim().length < 8) {
+      setErrorMessage("Username minimal terdiri dari 8 karakter.");
+      return;
+    }
     if (!email.trim()) {
       setErrorMessage("Email akun wajib diisi.");
       return;
@@ -175,7 +179,7 @@ export default function CreateUserPage() {
                 <input
                   type="text"
                   required
-                  placeholder="Masukkan username"
+                  placeholder="Masukkan username (min. 8 karakter)"
                   value={username}
                   onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/\s+/g, ""))}
                   className="w-full px-3.5 py-2 text-xs sm:text-sm rounded-xl border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-900 text-stone-900 dark:text-stone-100 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-[#0F3E2E] dark:focus:ring-emerald-500"

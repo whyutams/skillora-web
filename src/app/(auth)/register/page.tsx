@@ -191,6 +191,11 @@ function RegisterForm() {
       return;
     }
 
+    if (cleanUsername.length < 8) {
+      setError("Username minimal terdiri dari 8 karakter.");
+      return;
+    }
+
     if (usernameStatus.available === false) {
       setError("Username sudah digunakan. Silakan gunakan username lain.");
       return;
@@ -380,7 +385,7 @@ function RegisterForm() {
                       required
                       autoCapitalize="none"
                       autoCorrect="off"
-                      placeholder="Masukkan username"
+                      placeholder="Masukkan username (min. 8 karakter)"
                       value={username}
                       onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/\s+/g, ""))}
                       className={`w-full pl-9 pr-9 py-2 text-sm rounded-lg border bg-white dark:bg-stone-950 text-stone-900 dark:text-stone-100 placeholder-stone-400 focus:outline-none focus:ring-2 transition-colors ${

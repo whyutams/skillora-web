@@ -56,12 +56,12 @@ export async function POST(request: Request) {
     }
 
     const cleanUsername = username.trim().toLowerCase().replace(/\s+/g, "");
-    const usernameRegex = /^[a-z0-9_.]{3,20}$/;
+    const usernameRegex = /^[a-z0-9_.]{8,30}$/;
     if (!usernameRegex.test(cleanUsername)) {
       return NextResponse.json(
         {
           error:
-            "Username harus 3-20 karakter (hanya huruf kecil, angka, titik, atau underscore tanpa spasi).",
+            "Username harus minimal 8 karakter (hanya huruf kecil, angka, titik, atau underscore tanpa spasi).",
         },
         { status: 400 }
       );

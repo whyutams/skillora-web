@@ -70,6 +70,7 @@ export async function POST(request: Request) {
 
     if (!fullName?.trim()) return NextResponse.json({ error: "Nama lengkap wajib diisi." }, { status: 400 });
     if (!username?.trim()) return NextResponse.json({ error: "Username wajib diisi." }, { status: 400 });
+    if (username.trim().length < 8) return NextResponse.json({ error: "Username minimal terdiri dari 8 karakter." }, { status: 400 });
     if (!email?.trim()) return NextResponse.json({ error: "Email wajib diisi." }, { status: 400 });
     if (!password || password.length < 6) return NextResponse.json({ error: "Kata sandi minimal 6 karakter." }, { status: 400 });
     if (isSuperadmin(role)) return NextResponse.json({ error: "Akun Superadmin bersifat tunggal." }, { status: 400 });

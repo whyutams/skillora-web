@@ -42,15 +42,15 @@ export async function POST(request: Request) {
     const cleanValue = value.trim();
     const adminClient = createAdminClient();
 
-    // 1. Validasi Username
+    // 1. validasi username
     if (type === "username") {
       const lower = cleanValue.toLowerCase();
-      const usernameRegex = /^[a-z0-9_.]{3,20}$/;
+      const usernameRegex = /^[a-z0-9_.]{8,30}$/;
       if (!usernameRegex.test(lower)) {
         return NextResponse.json({
           valid: false,
           available: false,
-          message: "Username harus 3-20 karakter (huruf kecil, angka, titik/underscore, tanpa spasi).",
+          message: "Username harus minimal 8 karakter (huruf kecil, angka, titik/underscore, tanpa spasi).",
         });
       }
 
