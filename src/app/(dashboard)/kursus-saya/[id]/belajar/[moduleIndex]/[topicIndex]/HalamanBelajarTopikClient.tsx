@@ -1698,12 +1698,12 @@ export default function HalamanBelajarTopikClient({
                       onContextMenu={(e) => e.preventDefault()}
                       className="space-y-4 p-5 sm:p-6 rounded-2xl bg-[#FAF9F6] dark:bg-stone-900/60 border border-stone-200/90 dark:border-stone-800 select-none topic-protected-content"
                     >
-                      <div className="flex items-start gap-3">
-                        <span className="px-2.5 py-1 rounded-lg bg-emerald-600/10 dark:bg-emerald-400/10 text-emerald-700 dark:text-emerald-300 font-bold text-xs shrink-0 select-none">
+                      <div className="flex items-center gap-3">
+                        <span className="px-2.5 py-1.5 rounded-lg bg-emerald-600/10 dark:bg-emerald-400/10 text-emerald-700 dark:text-emerald-300 font-bold text-xs leading-none shrink-0 select-none">
                           Soal Essay
                         </span>
                         <div
-                          className="font-semibold text-stone-900 dark:text-stone-100 text-sm sm:text-base leading-relaxed flex-1 learning-content select-none"
+                          className="font-semibold text-stone-900 dark:text-stone-100 text-sm sm:text-base leading-relaxed flex-1 learning-content select-none [&>p]:my-0"
                           dangerouslySetInnerHTML={{ __html: formatContentHtml(currentTopicEssayQuestion.question) }}
                         />
                       </div>
@@ -1926,40 +1926,31 @@ export default function HalamanBelajarTopikClient({
                       </Link>
                     )}
 
-                    {isContinueDisabled && (
-                      <span className="text-[11px] font-semibold text-amber-700 dark:text-amber-400 flex items-center gap-1.5 bg-amber-500/10 px-3 py-1.5 rounded-xl border border-amber-500/20">
-                        <Lock className="w-3.5 h-3.5 shrink-0" />
-                        <span>
-                          {hasTopicEssay
-                            ? "Jawab soal essay pemahaman untuk lanjut"
-                            : "Selesaikan kuis untuk lanjut"}
-                        </span>
-                      </span>
-                    )}
-
-                    <Button
-                      variant="primary"
-                      size="sm"
-                      onClick={handleMarkAndContinue}
-                      disabled={isContinueDisabled}
-                      className={`gap-2 text-xs font-bold py-2.5 px-4 rounded-xl transition-all ${
-                        isContinueDisabled
-                          ? "bg-stone-300 dark:bg-stone-800 text-stone-500 dark:text-stone-400 cursor-not-allowed opacity-75 shadow-none"
-                          : "bg-[#0F3E2E] hover:bg-[#16533e] text-white shadow-xs"
-                      }`}
+                    <span
+                      className={isContinueDisabled ? "inline-flex cursor-not-allowed" : "inline-flex"}
                       title={
                         isContinueDisabled
-                          ? hasTopicEssay
-                            ? "Kirimkan jawaban essay pemahaman terlebih dahulu"
-                            : "Selesaikan kuis terlebih dahulu"
+                          ? isTopicEssayUnanswered
+                            ? "Harap menjawab soal evaluasi terlebih dahulu untuk melanjutkan."
+                            : isTopicQuizUnanswered
+                            ? "Harap menyelesaikan kuis terlebih dahulu untuk melanjutkan."
+                            : "Harap mengumpulkan link Google Drive proyek terlebih dahulu untuk melanjutkan."
                           : undefined
                       }
                     >
-                      <span className="max-w-[140px] truncate">
-                        {navigationPointers.next ? "Selesai & Lanjut" : "Selesai Mempelajari"}
-                      </span>
-                      {navigationPointers.next && <ChevronRight className="w-4 h-4" />}
-                    </Button>
+                      <Button
+                        variant="primary"
+                        size="sm"
+                        onClick={handleMarkAndContinue}
+                        disabled={isContinueDisabled}
+                        className="gap-2 text-xs font-bold py-2.5 px-4 rounded-xl transition-all bg-[#0F3E2E] hover:bg-[#16533e] text-white shadow-xs"
+                      >
+                        <span className="max-w-[140px] truncate">
+                          {navigationPointers.next ? "Selesai & Lanjut" : "Selesai Mempelajari"}
+                        </span>
+                        {navigationPointers.next && <ChevronRight className="w-4 h-4" />}
+                      </Button>
+                    </span>
                   </div>
                 </div>
               </div>
