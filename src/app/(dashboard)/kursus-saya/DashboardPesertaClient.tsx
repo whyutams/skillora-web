@@ -57,6 +57,8 @@ export interface StudentEnrollmentItem {
   completed_lessons?: string[];
   project_submission_url?: string | null;
   quiz_results?: Record<string, unknown>;
+  total_score?: number | null;
+  average_score?: number | null;
   last_accessed_lesson?: { moduleIndex: number; topicIndex: number } | null;
   course: (Course & {
     content?: string;

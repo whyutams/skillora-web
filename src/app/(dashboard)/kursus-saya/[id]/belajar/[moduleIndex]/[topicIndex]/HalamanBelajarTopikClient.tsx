@@ -193,6 +193,20 @@ export default function HalamanBelajarTopikClient({
   const [projectSavedNotice, setProjectSavedNotice] = React.useState(false);
   const [copiedCode, setCopiedCode] = React.useState(false);
 
+  // status evaluasi essay topik pemahaman
+  const [essayAnswer, setEssayAnswer] = React.useState("");
+  const [essaySubmitted, setEssaySubmitted] = React.useState(false);
+  const [isSubmittingEssay, setIsSubmittingEssay] = React.useState(false);
+  const [showEssayConfirmModal, setShowEssayConfirmModal] = React.useState(false);
+  const [essayEvaluation, setEssayEvaluation] = React.useState<{
+    score: number;
+    score_reason: string;
+    verdict: string;
+    feedback: string;
+    strengths?: string[];
+    improvements?: string[];
+  } | null>(null);
+
   // simpan pembaruan progres belajar ke database supabase
   const syncProgressToDatabase = React.useCallback(
     async (
@@ -473,7 +487,59 @@ export default function HalamanBelajarTopikClient({
     });
   };
 
+  // kuis data khusus untuk tipe materi kuis
+  const currentQuizQuestions: CourseQuizQuestion[] = React.useMemo(() => {
+    if (!currentLesson || currentLesson.type !== "quiz") return [];
+    const qData = currentLesson.quiz_data;
+    if (!qData) return [];
+    if (Array.isArray(qData.questions) && qData.questions.length > 0) {
+      return qData.questions.filter((q) => {
+        const t = (q?.question || "").replace(/<[^>]*>/g, "").trim();
+        const hasImg = /<img[^>]*>/i.test(q?.question || "");
+        return Boolean(t || hasImg);
+      });
+    }
+    if (qData.question) {
+      const t = (qData.question || "").replace(/<[^>]*>/g, "").trim();
+      const hasImg = /<img[^>]*>/i.test(qData.question || "");
+      if (t || hasImg) {
+        return [
+          {
+            question: qData.question,
+            options: qData.options || [],
+            correct_index: qData.correct_index ?? 0,
+            explanation: qData.explanation,
+          },
+        ];
+      }
+    }
+    return [];
+  }, [currentLesson]);
+
+  // soal evaluasi essay untuk materi bacaan dan praktik
+  const currentTopicEssayQuestion = React.useMemo(() => {
+    if (!currentLesson || currentLesson.type === "quiz") return null;
+    const qData = currentLesson.quiz_data;
+    if (!qData || !qData.question) return null;
+    const t = qData.question.replace(/<[^>]*>/g, "").trim();
+    const hasImg = /<img[^>]*>/i.test(qData.question);
+    if (!t && !hasImg) return null;
+    return {
+      question: qData.question,
+      explanation: qData.explanation || "",
+    };
+  }, [currentLesson]);
+
+  const hasTopicQuiz = currentLesson?.type === "quiz" && currentQuizQuestions.length > 0;
+  const isTopicQuizUnanswered = hasTopicQuiz && !quizSubmitted;
+
+  const hasTopicEssay = Boolean(currentTopicEssayQuestion);
+  const isTopicEssayUnanswered = hasTopicEssay && !essaySubmitted;
+
+  const isContinueDisabled = isTopicQuizUnanswered || isTopicEssayUnanswered;
+
   const handleMarkAndContinue = () => {
+    if (isContinueDisabled) return;
     if (!isCurrentLessonCompleted) {
       toggleLessonCompletion(currentLessonKey);
     }
@@ -492,30 +558,184 @@ export default function HalamanBelajarTopikClient({
     }
   };
 
-  // kuis data
-  const currentQuizQuestions: CourseQuizQuestion[] = React.useMemo(() => {
-    if (!currentLesson || currentLesson.type !== "quiz") return [];
-    const qData = currentLesson.quiz_data;
-    if (!qData) return [];
-    if (Array.isArray(qData.questions) && qData.questions.length > 0) {
-      return qData.questions;
+  // pulihkan atau inisialisasi status essay topik
+  React.useEffect(() => {
+    if (!currentLesson || currentLesson.type === "quiz" || !currentTopicEssayQuestion) {
+      setEssayAnswer("");
+      setEssaySubmitted(false);
+      setEssayEvaluation(null);
+      return;
     }
-    if (qData.question) {
-      return [
-        {
-          question: qData.question,
-          options: qData.options || [],
-          correct_index: qData.correct_index ?? 0,
-          explanation: qData.explanation,
-        },
-      ];
+
+    const essayStorageKey = enrollment?.id
+      ? `skillora_essay_${enrollment.id}_${currentLessonKey}`
+      : null;
+
+    let savedEssay: {
+      answer: string;
+      submitted: boolean;
+      evaluation?: {
+        score: number;
+        score_reason: string;
+        verdict: string;
+        feedback: string;
+        strengths?: string[];
+        improvements?: string[];
+      };
+    } | null = null;
+
+    if (essayStorageKey && typeof window !== "undefined") {
+      try {
+        const raw = localStorage.getItem(essayStorageKey);
+        if (raw) savedEssay = JSON.parse(raw);
+      } catch {
+        // non blocking
+      }
     }
-    return [];
-  }, [currentLesson]);
+
+    const remoteResult = (enrollment?.quiz_results as any)?.[currentLessonKey];
+    const isCompleted = completedLessons.includes(currentLessonKey);
+
+    if (savedEssay?.submitted) {
+      setEssayAnswer(savedEssay.answer || "");
+      setEssaySubmitted(true);
+      if (savedEssay.evaluation) {
+        setEssayEvaluation(savedEssay.evaluation);
+      } else if (remoteResult) {
+        setEssayEvaluation({
+          score: typeof remoteResult.score === "number" ? remoteResult.score : 85,
+          score_reason: remoteResult.score_reason || "Jawaban Anda telah dinilai oleh sistem.",
+          verdict: remoteResult.verdict || "Memahami Konsep",
+          feedback: remoteResult.feedback || "Jawaban telah berhasil terekam.",
+          strengths: remoteResult.strengths || [],
+          improvements: remoteResult.improvements || [],
+        });
+      }
+    } else if (remoteResult?.student_answer) {
+      setEssayAnswer(remoteResult.student_answer);
+      setEssaySubmitted(true);
+      setEssayEvaluation({
+        score: typeof remoteResult.score === "number" ? remoteResult.score : 85,
+        score_reason: remoteResult.score_reason || "Jawaban Anda telah dinilai oleh sistem.",
+        verdict: remoteResult.verdict || "Memahami Konsep",
+        feedback: remoteResult.feedback || "Jawaban telah berhasil terekam.",
+        strengths: remoteResult.strengths || [],
+        improvements: remoteResult.improvements || [],
+      });
+    } else if (isCompleted) {
+      setEssaySubmitted(true);
+    } else {
+      setEssayAnswer("");
+      setEssaySubmitted(false);
+      setEssayEvaluation(null);
+    }
+  }, [
+    currentLesson,
+    currentLessonKey,
+    currentTopicEssayQuestion,
+    enrollment?.id,
+    enrollment?.quiz_results,
+    completedLessons,
+  ]);
+
+  // buka modal konfirmasi sebelum pengiriman jawaban essay final
+  const handleOpenEssayConfirm = () => {
+    if (!essayAnswer.trim() || essayAnswer.trim().length < 10) return;
+    setShowEssayConfirmModal(true);
+  };
+
+  // eksekusi pengiriman jawaban essay periksa nilai otomatis dan simpan permanen ke database
+  const handleExecuteEssaySubmit = async () => {
+    if (!essayAnswer.trim() || !enrollment?.id || !currentTopicEssayQuestion) return;
+    setIsSubmittingEssay(true);
+    const answerText = essayAnswer.trim();
+
+    try {
+      const res = await fetch("/api/student/evaluate-essay", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          enrollmentId: enrollment.id,
+          lessonKey: currentLessonKey,
+          topicTitle: activeCleanTitle,
+          topicContent: currentLesson?.content || currentLesson?.instructions,
+          question: currentTopicEssayQuestion.question,
+          mentorKey: currentTopicEssayQuestion.explanation,
+          studentAnswer: answerText,
+        }),
+      });
+
+      const resData = await res.json();
+      if (!res.ok) {
+        throw new Error(resData.error || "Gagal mengevaluasi jawaban essay.");
+      }
+
+      const evaluation = resData.evaluation;
+      setEssayEvaluation(evaluation);
+      setEssaySubmitted(true);
+
+      // simpan ke penyimpanan lokal browser agar riwayat langsung persisten
+      try {
+        const payload = {
+          answer: answerText,
+          submitted: true,
+          evaluation,
+          submittedAt: new Date().toISOString(),
+        };
+        localStorage.setItem(
+          `skillora_essay_${enrollment.id}_${currentLessonKey}`,
+          JSON.stringify(payload)
+        );
+      } catch {
+        // non blocking
+      }
+
+      // perbarui daftar materi yang telah diselesaikan
+      const nextCompleted = Array.isArray(resData.completed_lessons)
+        ? resData.completed_lessons
+        : completedLessons.includes(currentLessonKey)
+        ? completedLessons
+        : [...completedLessons, currentLessonKey];
+
+      setCompletedLessons(nextCompleted);
+
+      // sinkronkan data pendaftaran kursus lokal
+      setEnrollment((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          completed_lessons: nextCompleted,
+          quiz_results: {
+            ...(prev.quiz_results || {}),
+            [currentLessonKey]: {
+              lessonKey: currentLessonKey,
+              type: "essay",
+              question: currentTopicEssayQuestion.question,
+              student_answer: answerText,
+              score: evaluation.score,
+              score_reason: evaluation.score_reason,
+              verdict: evaluation.verdict,
+              feedback: evaluation.feedback,
+              strengths: evaluation.strengths,
+              improvements: evaluation.improvements,
+              submittedAt: new Date().toISOString(),
+            },
+          },
+          total_score: typeof resData.total_score === "number" ? resData.total_score : prev.total_score,
+          average_score: typeof resData.average_score === "number" ? resData.average_score : prev.average_score,
+        };
+      });
+    } catch (err) {
+      console.error("Gagal memeriksa jawaban essay", err);
+      alert(err instanceof Error ? err.message : "Terjadi kesalahan saat memeriksa jawaban.");
+    } finally {
+      setIsSubmittingEssay(false);
+    }
+  };
 
   // inisialisasi kuis interaktif dengan pengacakan opsi dan pemulihan riwayat nilai tersimpan
   React.useEffect(() => {
-    if (!currentLesson || currentLesson.type !== "quiz" || currentQuizQuestions.length === 0) {
+    if (!currentLesson || currentQuizQuestions.length === 0) {
       setShuffledQuestions([]);
       setQuizAnswers({});
       setQuizSubmitted(false);
@@ -545,6 +765,9 @@ export default function HalamanBelajarTopikClient({
       }
     }
 
+    const remoteQuizResult = (enrollment?.quiz_results as any)?.[currentLessonKey];
+    const isLessonAlreadyCompleted = completedLessons.includes(currentLessonKey);
+
     if (savedData && Array.isArray(savedData.shuffledOrders)) {
       // pulihkan urutan opsi yang diacak sebelumnya dan jawaban yang telah tersimpan
       const restored = currentQuizQuestions.map((q, qIdx) => {
@@ -573,6 +796,30 @@ export default function HalamanBelajarTopikClient({
       setQuizAnswers(savedData.answers || {});
       setQuizScore(savedData.score ?? 0);
       setQuizCorrectCount(savedData.correctCount ?? 0);
+      setQuizSubmitted(Boolean(savedData.submitted));
+    } else if (remoteQuizResult || isLessonAlreadyCompleted) {
+      // pulihkan jika sudah terekam selesai di database
+      const restored = currentQuizQuestions.map((q) => {
+        const optsWithIdx = (q.options || []).map((text, origIdx) => ({
+          text,
+          originalIndex: origIdx,
+        }));
+        return {
+          question: q.question,
+          shuffledOptions: optsWithIdx,
+          correct_index: q.correct_index,
+          explanation: q.explanation,
+        };
+      });
+
+      setShuffledQuestions(restored);
+      setQuizAnswers({});
+      setQuizScore(typeof remoteQuizResult?.score === "number" ? remoteQuizResult.score : 100);
+      setQuizCorrectCount(
+        typeof remoteQuizResult?.correctCount === "number"
+          ? remoteQuizResult.correctCount
+          : currentQuizQuestions.length
+      );
       setQuizSubmitted(true);
     } else {
       // buat urutan acak baru untuk opsi setiap pertanyaan kuis
@@ -595,7 +842,7 @@ export default function HalamanBelajarTopikClient({
       setQuizScore(null);
       setQuizCorrectCount(null);
     }
-  }, [currentLesson, currentQuizQuestions, currentLessonKey, enrollment?.id]);
+  }, [currentLesson, currentQuizQuestions, currentLessonKey, enrollment?.id, enrollment?.quiz_results, completedLessons]);
 
   // kirim jawaban kuis hitung nilai dan simpan secara permanen
   const handleQuizSubmit = () => {
@@ -615,6 +862,7 @@ export default function HalamanBelajarTopikClient({
     setQuizScore(score);
     setQuizCorrectCount(correct);
     setQuizSubmitted(true);
+    setShowQuizConfirmModal(false);
 
     // simpan riwayat kuis ke penyimpanan lokal agar nilai tersimpan permanen
     if (enrollment?.id) {
@@ -1148,17 +1396,216 @@ export default function HalamanBelajarTopikClient({
                   </div>
                 )}
 
+                {/* soal evaluasi pemahaman essay untuk materi bacaan dan praktik */}
+                {hasTopicEssay && currentTopicEssayQuestion && (
+                  <div className="p-5 sm:p-7 rounded-2xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-[#161413] shadow-xs space-y-5">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-stone-100 dark:border-stone-800/80">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+                          <HelpCircle className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <h3 className="font-bold text-stone-900 dark:text-stone-100 text-sm sm:text-base">
+                            Evaluasi Pemahaman Topik
+                          </h3>
+                          <p className="text-xs text-stone-500 dark:text-stone-400">
+                            Jawablah pertanyaan essay uraian berikut. Tombol lanjut materi akan aktif setelah jawaban Anda dikirimkan.
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 self-start sm:self-auto">
+                        {essaySubmitted ? (
+                          <span className="px-3 py-1 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 font-bold text-xs flex items-center gap-1.5">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                            <span>Jawaban Terekam</span>
+                          </span>
+                        ) : (
+                          <span className="px-3 py-1 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-700 dark:text-amber-400 font-bold text-xs flex items-center gap-1.5">
+                            <Lock className="w-3.5 h-3.5" />
+                            <span>Wajib Diisi</span>
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* konten pertanyaan essay */}
+                    <div className="space-y-4 p-5 sm:p-6 rounded-2xl bg-[#FAF9F6] dark:bg-stone-900/60 border border-stone-200/90 dark:border-stone-800">
+                      <div className="flex items-start gap-3">
+                        <span className="px-2.5 py-1 rounded-lg bg-emerald-600/10 dark:bg-emerald-400/10 text-emerald-700 dark:text-emerald-300 font-bold text-xs shrink-0">
+                          Soal Essay
+                        </span>
+                        <div
+                          className="font-semibold text-stone-900 dark:text-stone-100 text-sm sm:text-base leading-relaxed flex-1 learning-content"
+                          dangerouslySetInnerHTML={{ __html: formatContentHtml(currentTopicEssayQuestion.question) }}
+                        />
+                      </div>
+
+                      {/* area pengetikan atau jawaban tersimpan */}
+                      {!essaySubmitted ? (
+                        <div className="space-y-3 pt-2">
+                          <label className="text-xs font-semibold text-stone-700 dark:text-stone-300 block">
+                            Tuliskan Uraian Jawaban Anda
+                          </label>
+                          <textarea
+                            rows={5}
+                            value={essayAnswer}
+                            onChange={(e) => setEssayAnswer(e.target.value)}
+                            disabled={isSubmittingEssay}
+                            placeholder="Ketikkan uraian jawaban Anda di sini dengan lengkap..."
+                            className="w-full p-4 text-xs sm:text-sm rounded-xl border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-950 text-stone-900 dark:text-stone-100 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-[#0F3E2E] resize-y leading-relaxed disabled:opacity-60"
+                          />
+
+                          <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-800 dark:text-amber-300 text-xs flex items-center gap-2">
+                            <AlertCircle className="w-4 h-4 shrink-0 text-amber-600 dark:text-amber-400" />
+                            <span>
+                              Perhatian: Jawaban essay bersifat permanen dan tidak dapat diganti setelah dikirim. Pastikan jawaban Anda sudah lengkap dan benar.
+                            </span>
+                          </div>
+
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-1">
+                            <span className="text-[11px] text-stone-400">
+                              {essayAnswer.trim().length} karakter tertulis {essayAnswer.trim().length < 10 && "(minimal 10 karakter)"}
+                            </span>
+                            <Button
+                              size="sm"
+                              onClick={handleOpenEssayConfirm}
+                              disabled={!essayAnswer.trim() || essayAnswer.trim().length < 10 || isSubmittingEssay}
+                              className="bg-[#0F3E2E] hover:bg-[#15523d] text-white text-xs gap-2 font-bold py-2.5 px-5 rounded-xl cursor-pointer disabled:opacity-50"
+                            >
+                              <Check className="w-4 h-4" />
+                              <span>{isSubmittingEssay ? "Memeriksa & Menilai..." : "Kirim & Periksa Jawaban"}</span>
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="space-y-4 pt-2">
+                          {/* kartu nilai hasil pemeriksaan otomatis */}
+                          <div className="p-5 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 dark:bg-emerald-950/20 space-y-4">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-emerald-500/20">
+                              <div>
+                                <span className="text-[11px] font-bold text-emerald-800 dark:text-emerald-400 uppercase tracking-wider block">
+                                  Hasil Pemeriksaan Sistem
+                                </span>
+                                <div className="flex items-baseline gap-2 mt-0.5">
+                                  <span className="text-3xl font-black text-[#0F3E2E] dark:text-emerald-400">
+                                    {essayEvaluation?.score ?? 85}
+                                  </span>
+                                  <span className="text-xs font-bold text-stone-500 dark:text-stone-400">
+                                    / 100
+                                  </span>
+                                </div>
+                              </div>
+
+                              <div className="flex items-center gap-2 self-start sm:self-auto">
+                                <Badge variant="neutral" className="text-xs font-bold bg-white dark:bg-stone-900 shadow-2xs">
+                                  {essayEvaluation?.verdict || "Memahami Konsep"}
+                                </Badge>
+                              </div>
+                            </div>
+
+                            {/* alasan perolehan nilai */}
+                            <div className="space-y-1">
+                              <span className="text-xs font-bold text-stone-800 dark:text-stone-200 block">
+                                Alasan Penilaian:
+                              </span>
+                              <p className="text-xs sm:text-sm text-stone-700 dark:text-stone-300 leading-relaxed">
+                                {essayEvaluation?.score_reason ||
+                                  `Peserta memperoleh nilai ${essayEvaluation?.score ?? 85} berdasarkan evaluasi pemahaman materi topik ini.`}
+                              </p>
+                            </div>
+
+                            {/* umpan balik edukatif */}
+                            {essayEvaluation?.feedback && (
+                              <div className="p-3 rounded-xl bg-white/70 dark:bg-stone-900/60 border border-emerald-500/20 text-xs text-stone-700 dark:text-stone-300 space-y-1">
+                                <span className="font-bold text-emerald-800 dark:text-emerald-400 block">
+                                  Umpan Balik:
+                                </span>
+                                <p className="leading-relaxed">{essayEvaluation.feedback}</p>
+                              </div>
+                            )}
+
+                            {/* catatan kekuatan dan peningkatan jika ada */}
+                            {((essayEvaluation?.strengths && essayEvaluation.strengths.length > 0) ||
+                              (essayEvaluation?.improvements && essayEvaluation.improvements.length > 0)) && (
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
+                                {essayEvaluation?.strengths && essayEvaluation.strengths.length > 0 && (
+                                  <div className="p-2.5 rounded-xl bg-emerald-600/10 border border-emerald-600/20 text-xs text-emerald-800 dark:text-emerald-300 space-y-1">
+                                    <span className="font-bold block">Poin Positif:</span>
+                                    <ul className="list-disc list-inside space-y-0.5 text-[11px]">
+                                      {essayEvaluation.strengths.map((str, idx) => (
+                                        <li key={idx}>{str}</li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                )}
+                                {essayEvaluation?.improvements && essayEvaluation.improvements.length > 0 && (
+                                  <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-800 dark:text-amber-300 space-y-1">
+                                    <span className="font-bold block">Ruang Peningkatan:</span>
+                                    <ul className="list-disc list-inside space-y-0.5 text-[11px]">
+                                      {essayEvaluation.improvements.map((imp, idx) => (
+                                        <li key={idx}>{imp}</li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </div>
+
+                          {/* uraian jawaban peserta yang tersimpan permanen */}
+                          <div className="p-4 rounded-xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-950 space-y-1.5">
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs font-bold text-stone-700 dark:text-stone-300">
+                                Jawaban Essay Anda (Tersimpan Permanen):
+                              </span>
+                              <Badge variant="neutral" className="text-[10px] font-semibold">
+                                Tidak Dapat Diubah
+                              </Badge>
+                            </div>
+                            <p className="text-xs sm:text-sm text-stone-800 dark:text-stone-200 whitespace-pre-wrap leading-relaxed">
+                              {essayAnswer}
+                            </p>
+                          </div>
+
+                          {/* kunci acuan atau pembahasan jika tersedia */}
+                          {currentTopicEssayQuestion.explanation && (
+                            <div className="p-4 rounded-xl border border-stone-200 dark:border-stone-800 bg-stone-50/50 dark:bg-stone-900/40 space-y-1.5">
+                              <span className="text-xs font-bold text-stone-800 dark:text-stone-200 block">
+                                Kunci Acuan / Pembahasan Mentor:
+                              </span>
+                              <p className="text-xs sm:text-sm text-stone-600 dark:text-stone-400 whitespace-pre-wrap leading-relaxed">
+                                {currentTopicEssayQuestion.explanation}
+                              </p>
+                            </div>
+                          )}
+
+                          <div className="flex items-center gap-2 text-xs text-emerald-700 dark:text-emerald-400 font-bold pt-1">
+                            <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                            <span>Nilai telah tersimpan permanen ke database untuk silabus ini. Anda dapat melanjutkan ke materi berikutnya.</span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
                 {/* bilah navigasi materi bawah */}
                 <div className="p-4 sm:p-5 rounded-2xl border border-stone-200/80 dark:border-stone-800/80 bg-white/80 dark:bg-stone-900/60 backdrop-blur-md flex flex-wrap items-center justify-between gap-3 shadow-xs">
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => toggleLessonCompletion(currentLessonKey)}
+                    disabled={isContinueDisabled}
+                    onClick={() => {
+                      if (!isContinueDisabled) {
+                        toggleLessonCompletion(currentLessonKey);
+                      }
+                    }}
                     className={`gap-1.5 text-xs font-bold py-2.5 px-4 rounded-xl transition-colors ${
                       isCurrentLessonCompleted
                         ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
                         : "border-stone-300 dark:border-stone-700 text-stone-700 dark:text-stone-300"
-                    }`}
+                    } ${isContinueDisabled ? "opacity-60 cursor-not-allowed" : ""}`}
                   >
                     <CheckCircle2
                       className={`w-4 h-4 ${
@@ -1170,7 +1617,7 @@ export default function HalamanBelajarTopikClient({
                     </span>
                   </Button>
 
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     {navigationPointers.prev && (
                       <Link
                         href={`/kursus-saya/${enrollmentOrSlug}/belajar/${navigationPointers.prev.modIdx}/${navigationPointers.prev.lesIdx}`}
@@ -1189,11 +1636,34 @@ export default function HalamanBelajarTopikClient({
                       </Link>
                     )}
 
+                    {isContinueDisabled && (
+                      <span className="text-[11px] font-semibold text-amber-700 dark:text-amber-400 flex items-center gap-1.5 bg-amber-500/10 px-3 py-1.5 rounded-xl border border-amber-500/20">
+                        <Lock className="w-3.5 h-3.5 shrink-0" />
+                        <span>
+                          {hasTopicEssay
+                            ? "Jawab soal essay pemahaman untuk lanjut"
+                            : "Selesaikan kuis untuk lanjut"}
+                        </span>
+                      </span>
+                    )}
+
                     <Button
                       variant="primary"
                       size="sm"
                       onClick={handleMarkAndContinue}
-                      className="gap-2 bg-[#0F3E2E] hover:bg-[#16533e] text-white text-xs font-bold py-2.5 px-4 rounded-xl"
+                      disabled={isContinueDisabled}
+                      className={`gap-2 text-xs font-bold py-2.5 px-4 rounded-xl transition-all ${
+                        isContinueDisabled
+                          ? "bg-stone-300 dark:bg-stone-800 text-stone-500 dark:text-stone-400 cursor-not-allowed opacity-75 shadow-none"
+                          : "bg-[#0F3E2E] hover:bg-[#16533e] text-white shadow-xs"
+                      }`}
+                      title={
+                        isContinueDisabled
+                          ? hasTopicEssay
+                            ? "Kirimkan jawaban essay pemahaman terlebih dahulu"
+                            : "Selesaikan kuis terlebih dahulu"
+                          : undefined
+                      }
                     >
                       <span className="max-w-[140px] truncate">
                         {navigationPointers.next ? "Selesai & Lanjut" : "Selesai Mempelajari"}
@@ -1352,6 +1822,21 @@ export default function HalamanBelajarTopikClient({
           description="Apakah Anda yakin ingin mengirimkan jawaban kuis ini? Pastikan seluruh soal telah Anda jawab dengan teliti, karena setelah terkirim jawaban tidak dapat diubah lagi dan nilai kuis bersifat final."
           confirmText="Ya, Kirim Sekarang"
           cancelText="Periksa Kembali"
+          variant="primary"
+        />
+
+        {/* modal konfirmasi kirim jawaban essay final */}
+        <ConfirmModal
+          isOpen={showEssayConfirmModal}
+          onClose={() => setShowEssayConfirmModal(false)}
+          onConfirm={() => {
+            setShowEssayConfirmModal(false);
+            handleExecuteEssaySubmit();
+          }}
+          title="Kirim Jawaban Essay Final?"
+          description="Jawaban essay Anda akan dinilai langsung oleh sistem dengan rentang nilai 0-100 dan alasan penilaian. Jawaban bersifat permanen dan tidak dapat diganti setelah dikirim. Apakah Anda yakin ingin mengirimkan jawaban ini?"
+          confirmText="Yakin & Kirim Final"
+          cancelText="Periksa Lagi"
           variant="primary"
         />
       </div>

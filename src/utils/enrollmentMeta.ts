@@ -8,6 +8,8 @@ export interface EnrollmentMetadata {
   completed_lessons?: string[];
   project_submission_url?: string | null;
   quiz_results?: Record<string, unknown>;
+  total_score?: number | null;
+  average_score?: number | null;
   last_accessed_lesson?: { moduleIndex: number; topicIndex: number } | null;
   updated_at?: string;
 }
@@ -70,6 +72,8 @@ export function parseEnrollmentMeta(
         : [],
       project_submission_url: meta.project_submission_url || null,
       quiz_results: meta.quiz_results && typeof meta.quiz_results === "object" ? meta.quiz_results : {},
+      total_score: typeof meta.total_score === "number" ? meta.total_score : null,
+      average_score: typeof meta.average_score === "number" ? meta.average_score : null,
       last_accessed_lesson: meta.last_accessed_lesson || null,
       updated_at: meta.updated_at || undefined,
     };
@@ -85,6 +89,8 @@ export function parseEnrollmentMeta(
       completed_lessons: [],
       project_submission_url: null,
       quiz_results: {},
+      total_score: null,
+      average_score: null,
       last_accessed_lesson: null,
     };
   }
@@ -124,6 +130,12 @@ export function encodeEnrollmentMeta(
   }
   if (meta.quiz_results && typeof meta.quiz_results === "object" && Object.keys(meta.quiz_results).length > 0) {
     cleanMeta.quiz_results = meta.quiz_results;
+  }
+  if (typeof meta.total_score === "number") {
+    cleanMeta.total_score = meta.total_score;
+  }
+  if (typeof meta.average_score === "number") {
+    cleanMeta.average_score = meta.average_score;
   }
   if (meta.last_accessed_lesson && typeof meta.last_accessed_lesson === "object") {
     cleanMeta.last_accessed_lesson = meta.last_accessed_lesson;

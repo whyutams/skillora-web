@@ -149,17 +149,19 @@ export default function HalamanEditTopikClient({
       setStarterCode(targetLesson.starter_code || "");
       setInstructions(targetLesson.instructions || "");
 
-      // inisialisasi kuis banyak soal
+      // inisialisasi kuis banyak soal atau 1 soal evaluasi pemahaman
       if (targetLesson.quiz_data) {
         const qd = targetLesson.quiz_data;
         if (Array.isArray(qd.questions) && qd.questions.length > 0) {
           setQuizQuestions(
             qd.questions.map((q) => ({
               question: q.question || "",
-              options:
-                Array.isArray(q.options) && q.options.length >= 4
-                  ? q.options.slice(0, 4)
-                  : [q.options?.[0] || "", q.options?.[1] || "", q.options?.[2] || "", q.options?.[3] || ""],
+              options: [
+                q.options?.[0] || "",
+                q.options?.[1] || "",
+                q.options?.[2] || "",
+                q.options?.[3] || "",
+              ],
               correct_index: typeof q.correct_index === "number" ? q.correct_index : 0,
               explanation: q.explanation || "",
             }))
@@ -169,15 +171,27 @@ export default function HalamanEditTopikClient({
           setQuizQuestions([
             {
               question: qd.question || "",
-              options:
-                Array.isArray(qd.options) && qd.options.length >= 4
-                  ? qd.options.slice(0, 4)
-                  : ["", "", "", ""],
+              options: [
+                qd.options?.[0] || "",
+                qd.options?.[1] || "",
+                qd.options?.[2] || "",
+                qd.options?.[3] || "",
+              ],
               correct_index: typeof qd.correct_index === "number" ? qd.correct_index : 0,
               explanation: qd.explanation || "",
             },
           ]);
         }
+      } else {
+        // jika belum ada soal sediakan 1 slot soal baru yang bersih
+        setQuizQuestions([
+          {
+            question: "",
+            options: ["", "", "", ""],
+            correct_index: 0,
+            explanation: "",
+          },
+        ]);
       }
 
       // inisialisasi proyek
@@ -263,6 +277,16 @@ export default function HalamanEditTopikClient({
       return;
     }
 
+    const firstQ = quizQuestions[0] || {
+      question: "",
+      options: ["", "", "", ""],
+      correct_index: 0,
+      explanation: "",
+    };
+    const firstQText = (firstQ.question || "").replace(/<[^>]*>/g, "").trim();
+    const firstQHasImg = /<img[^>]*>/i.test(firstQ.question || "");
+    const hasFirstQuestion = Boolean(firstQText || firstQHasImg);
+
     if (type === "quiz") {
       const emptyQ = quizQuestions.find((q) => {
         // bersihkan tag html untuk memeriksa ketiadaan teks dan gambar
@@ -275,6 +299,18 @@ export default function HalamanEditTopikClient({
           isOpen: true,
           title: "Validasi Kuis",
           message: "Terdapat pertanyaan soal kuis yang masih kosong. Mohon lengkapi seluruh pertanyaan.",
+          type: "error",
+        });
+        return;
+      }
+      const emptyOptions = quizQuestions.some((q) =>
+        (q.options || []).some((opt) => !opt.trim())
+      );
+      if (emptyOptions) {
+        setAlertData({
+          isOpen: true,
+          title: "Opsi Pilihan Belum Lengkap",
+          message: "Harap isi lengkap 4 opsi pilihan jawaban untuk setiap soal kuis.",
           type: "error",
         });
         return;
@@ -297,32 +333,45 @@ export default function HalamanEditTopikClient({
             duration: "",
           };
 
+          // siapkan data soal essay atau kuis jika tersedia
+          const quizDataToSave = hasFirstQuestion
+            ? {
+                question: firstQ.question,
+                options: type === "quiz" ? firstQ.options.map((o) => o.trim()) : [],
+                correct_index: type === "quiz" ? firstQ.correct_index : 0,
+                explanation: firstQ.explanation?.trim() || "",
+                questions: type === "quiz" ? quizQuestions : [],
+              }
+            : undefined;
+
           if (type === "reading") {
             updatedItem.content = content;
             updatedItem.video_url = videoUrl.trim();
             delete updatedItem.starter_code;
             delete updatedItem.instructions;
-            delete updatedItem.quiz_data;
             delete updatedItem.project_data;
+            if (quizDataToSave) {
+              updatedItem.quiz_data = quizDataToSave;
+            } else {
+              delete updatedItem.quiz_data;
+            }
           } else if (type === "practice") {
             updatedItem.instructions = instructions;
             updatedItem.starter_code = starterCode;
             updatedItem.content = content;
             delete updatedItem.video_url;
-            delete updatedItem.quiz_data;
             delete updatedItem.project_data;
+            if (quizDataToSave) {
+              updatedItem.quiz_data = quizDataToSave;
+            } else {
+              delete updatedItem.quiz_data;
+            }
           } else if (type === "quiz") {
-            const firstQ = quizQuestions[0] || {
-              question: "",
-              options: ["", "", "", ""],
-              correct_index: 0,
-              explanation: "",
-            };
             updatedItem.quiz_data = {
               question: firstQ.question,
-              options: firstQ.options,
+              options: firstQ.options.map((o) => o.trim()),
               correct_index: firstQ.correct_index,
-              explanation: firstQ.explanation,
+              explanation: firstQ.explanation?.trim() || "",
               questions: quizQuestions,
             };
             delete updatedItem.content;
@@ -340,7 +389,11 @@ export default function HalamanEditTopikClient({
             delete updatedItem.video_url;
             delete updatedItem.starter_code;
             delete updatedItem.instructions;
-            delete updatedItem.quiz_data;
+            if (quizDataToSave) {
+              updatedItem.quiz_data = quizDataToSave;
+            } else {
+              delete updatedItem.quiz_data;
+            }
           }
 
           return updatedItem;
@@ -828,6 +881,68 @@ export default function HalamanEditTopikClient({
                 onChange={(e) => setProjectStarterUrl(e.target.value)}
                 placeholder="https://github.com/... atau https://drive.google.com/..."
                 className="w-full px-4 py-2 text-xs sm:text-sm rounded-xl border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-950 text-stone-900 dark:text-stone-100 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-[#0F3E2E]"
+              />
+            </div>
+          </div>
+        </Card>
+      )}
+
+      {/* soal evaluasi pemahaman topik 1 soal essay uraian untuk semua materi */}
+      {type !== "quiz" && (
+        <Card className="p-6 border-stone-200/80 dark:border-stone-800/80 space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-stone-100 dark:border-stone-800">
+            <div className="flex items-center gap-2.5">
+              <div className="p-2 rounded-xl bg-amber-500/10 text-amber-600">
+                <HelpCircle className="w-5 h-5" />
+              </div>
+              <div>
+                <h2 className="text-sm font-bold text-stone-900 dark:text-stone-100">
+                  Soal Evaluasi Pemahaman Topik
+                </h2>
+                <p className="text-xs text-stone-500">
+                  Setiap topik wajib memiliki 1 pertanyaan essay uraian. Peserta wajib menjawab pertanyaan ini sebelum tombol lanjut materi aktif.
+                </p>
+              </div>
+            </div>
+
+            <Badge variant="neutral" className="text-xs font-semibold self-start sm:self-auto">
+              1 Soal Essay
+            </Badge>
+          </div>
+
+          <div className="space-y-5">
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-semibold text-stone-700 dark:text-stone-300 block">
+                  Pertanyaan Soal Essay <span className="text-rose-500">*</span>
+                </label>
+                <span className="text-[11px] text-stone-400">
+                  Mendukung format teks, daftar butir, dan gambar soal
+                </span>
+              </div>
+              <HtmlEditor
+                value={quizQuestions[0]?.question || ""}
+                onChange={(val) => handleQuestionChange(0, "question", val)}
+                placeholder="Tuliskan 1 pertanyaan soal essay untuk menguji pemahaman mahasiswa terhadap materi topik ini di sini..."
+                minHeight="140px"
+              />
+            </div>
+
+            <div className="space-y-1.5 pt-1">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-semibold text-stone-700 dark:text-stone-300 block">
+                  Kunci Jawaban Acuan / Pembahasan Mentor (Opsional)
+                </label>
+                <span className="text-[11px] text-stone-400">
+                  Akan ditampilkan kepada peserta setelah mereka mengirimkan jawaban essay
+                </span>
+              </div>
+              <textarea
+                rows={3}
+                value={quizQuestions[0]?.explanation || ""}
+                onChange={(e) => handleQuestionChange(0, "explanation", e.target.value)}
+                placeholder="Tuliskan poin-poin jawaban yang diharapkan atau pembahasan untuk refleksi mahasiswa..."
+                className="w-full px-4 py-2.5 text-xs rounded-xl border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-950 text-stone-900 dark:text-stone-100 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-[#0F3E2E] resize-y leading-relaxed"
               />
             </div>
           </div>

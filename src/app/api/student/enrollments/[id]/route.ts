@@ -220,6 +220,8 @@ export async function GET(
         completed_lessons: parsedMeta.completed_lessons || [],
         project_submission_url: parsedMeta.project_submission_url || null,
         quiz_results: parsedMeta.quiz_results || {},
+        total_score: typeof parsedMeta.total_score === "number" ? parsedMeta.total_score : null,
+        average_score: typeof parsedMeta.average_score === "number" ? parsedMeta.average_score : null,
         last_accessed_lesson: parsedMeta.last_accessed_lesson || null,
         course: parsedCourse,
       },
@@ -312,6 +314,14 @@ export async function PATCH(
       ...(quiz_result && quiz_result.lessonKey ? { [quiz_result.lessonKey]: quiz_result } : {}),
     };
 
+    // hitung akumulasi skor dan rata rata nilai untuk fitur ranking atau leaderboard
+    const quizEntries = Object.values(updatedQuizResults) as Record<string, unknown>[];
+    const validScores = quizEntries
+      .map((entry) => (typeof entry?.score === "number" ? entry.score : null))
+      .filter((s): s is number => s !== null);
+    const totalScore = validScores.reduce((acc, s) => acc + s, 0);
+    const averageScore = validScores.length > 0 ? Math.round(totalScore / validScores.length) : 0;
+
     const newMeta = {
       ...currentMeta,
       completed_lessons: updatedLessons,
@@ -320,6 +330,8 @@ export async function PATCH(
           ? project_submission_url
           : currentMeta.project_submission_url,
       quiz_results: updatedQuizResults,
+      total_score: totalScore,
+      average_score: averageScore,
       last_accessed_lesson:
         last_accessed_lesson !== undefined
           ? last_accessed_lesson
