@@ -101,17 +101,11 @@ export function ProgressBar() {
         left: 0;
         width: 100%;
         height: 3px;
-        box-shadow: 0 0 10px #34d399, 0 0 5px #0f3e2e;
+        box-shadow: none;
       }
       #nprogress .peg {
-        display: block;
-        position: absolute;
-        right: 0px;
-        width: 100px;
-        height: 100%;
-        box-shadow: 0 0 10px #34d399, 0 0 5px #34d399;
-        opacity: 1;
-        transform: rotate(3deg) translate(0px, -4px);
+        display: none;
+        box-shadow: none;
       }
     `}</style>
   );
