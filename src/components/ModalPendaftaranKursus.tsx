@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/Button";
 import { Course, UserRole, isManagerRole } from "@/types/database";
 import { createClient } from "@/utils/supabase/client";
 import {
-  MessageCircle,
   CheckCircle2,
   AlertCircle,
   ArrowRight,
@@ -89,9 +88,6 @@ export function ModalPendaftaranKursus({
 
   if (!course) return null;
 
-  const adminPhone =
-    process.env.NEXT_PUBLIC_ADMIN_WHATSAPP_NUMBER || "6281234567890";
-
   // jika pengguna adalah admin atau superadmin tampilkan proteksi modal
   const isAdminOrSuperadmin = isManagerRole(userRole);
 
@@ -149,17 +145,6 @@ export function ModalPendaftaranKursus({
       setSuccess(true);
       const isAuto = Boolean(data.isAutoApproved);
       setAutoApproved(isAuto);
-
-      if (!isAuto) {
-        // siapkan pesan whatsapp terformat untuk konfirmasi pembayaran kursus berbayar
-        const message = encodeURIComponent(
-          `Halo Admin Skillora, saya sudah mendaftar kursus "${course.title}" dengan email ${userEmail}. Mohon info instruksi pembayaran dan verifikasinya.`
-        );
-        const waUrl = `https://wa.me/${adminPhone}?text=${message}`;
-
-        // buka otomatis whatsapp admin di tab baru
-        window.open(waUrl, "_blank", "noopener,noreferrer");
-      }
 
       // redirect ke menu kursus saya atau detail kursus
       setTimeout(() => {
@@ -222,7 +207,7 @@ export function ModalPendaftaranKursus({
             <p className="text-xs sm:text-sm text-stone-600 dark:text-stone-400 mt-1 max-w-sm mx-auto">
               {autoApproved
                 ? "Kursus gratis ini telah langsung aktif. Anda dapat langsung membuka materi dan kurikulum pembelajaran."
-                : "WhatsApp Admin telah dibuka di tab baru. Anda juga dapat mengunggah bukti transfer langsung di menu Kursus Saya."}
+                : "Pendaftaran berhasil dicatat. Silakan lakukan pembayaran dan unggah bukti transfer langsung di menu Kursus Saya."}
             </p>
           </div>
           <p className="text-xs text-stone-400">
@@ -347,13 +332,12 @@ export function ModalPendaftaranKursus({
               disabled={!hasValidWhatsapp || isProfileIncomplete || isLoading || !course.is_published}
               className="gap-2 bg-[#0F3E2E] hover:bg-[#15523d] disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold"
             >
-              <MessageCircle className="w-4 h-4" />
               <span>
                 {!course.is_published
                   ? "Pendaftaran Belum Dibuka (Draft)"
                   : Number(course.price || 0) <= 0
                   ? "Daftar & Mulai Belajar Gratis"
-                  : "Daftar Sekarang & Lanjut ke WA"}
+                  : "Daftar Kursus Sekarang"}
               </span>
               <ArrowRight className="w-3.5 h-3.5" />
             </Button>
