@@ -94,8 +94,11 @@ export default function WebCodeEditor({
   onPracticeMatchChange,
 }: WebCodeEditorProps) {
   const resolvedStarterCode = React.useMemo(() => {
+    if (targetCode && initialCode !== undefined) {
+      return initialCode;
+    }
     return getStarterCodePlaceholder(language, initialCode);
-  }, [language, initialCode]);
+  }, [language, initialCode, targetCode]);
 
   const [code, setCode] = React.useState(resolvedStarterCode);
 

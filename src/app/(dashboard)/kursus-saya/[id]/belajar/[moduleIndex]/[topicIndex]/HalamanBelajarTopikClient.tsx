@@ -38,10 +38,7 @@ import {
   CourseQuizQuestion,
 } from "@/utils/courseCurriculumParser";
 import WebCodeEditor from "@/components/learning/WebCodeEditor";
-import {
-  getStarterCodePlaceholder,
-  getTargetPracticeCode,
-} from "@/utils/codeStarterTemplate";
+import { getTargetPracticeCode } from "@/utils/codeStarterTemplate";
 import {
   isValidGoogleDriveUrl,
   ProjectSubmissionItem,
@@ -1575,13 +1572,12 @@ export default function HalamanBelajarTopikClient({
                     currentLesson.content,
                     dynamicName
                   );
-                  const starterCode = getStarterCodePlaceholder(
-                    practiceLang,
-                    currentLesson.starter_code,
-                    activeCleanTitle,
-                    currentLesson.content,
-                    dynamicName
-                  );
+                  const savedPracticeCode =
+                    (
+                      enrollment?.quiz_results?.[currentLessonKey] as
+                        | { student_code?: string }
+                        | undefined
+                    )?.student_code || "";
                   const dynamicValues = [
                     dynamicName,
                     userProfile?.username || "",
@@ -1591,7 +1587,7 @@ export default function HalamanBelajarTopikClient({
                     <div className="space-y-4">
                       <WebCodeEditor
                         key={`code-editor-${currentModIdx}-${currentLesIdx}`}
-                        initialCode={starterCode}
+                        initialCode={savedPracticeCode}
                         targetCode={targetCode}
                         dynamicValues={dynamicValues}
                         language={practiceLang}
