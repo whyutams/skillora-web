@@ -530,18 +530,18 @@ export function DashboardPesertaClient() {
                   )}
 
                   {/* tombol aksi kartu kursus */}
-                  <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+                  <div className="flex flex-wrap items-center gap-2">
                     {isApproved && (
                       <Link
                         href={`/kursus-saya/${item.course?.slug || item.id}/belajar`}
-                        className="flex-1 min-w-[120px]"
+                        className="flex-1 min-w-[130px]"
                       >
                         <Button
                           variant="primary"
                           size="sm"
-                          className="w-full gap-2 text-xs font-bold justify-center bg-[#0F3E2E] hover:bg-[#16533e] text-white shadow-xs"
+                          className="w-full gap-2 text-xs font-bold justify-center whitespace-nowrap bg-[#0F3E2E] hover:bg-[#16533e] text-white shadow-xs"
                         >
-                          <Play className="w-3.5 h-3.5 fill-current" />
+                          <Play className="w-3.5 h-3.5 fill-current shrink-0" />
                           <span>Mulai Belajar</span>
                         </Button>
                       </Link>
@@ -549,16 +549,16 @@ export function DashboardPesertaClient() {
 
                     <Link
                       href={`/kursus-saya/${item.course?.slug || item.id}`}
-                      className={isApproved ? "flex-1 min-w-[110px]" : "w-full"}
+                      className={isApproved ? "flex-1 min-w-[115px]" : "w-full"}
                     >
                       <Button
                         variant="outline"
                         size="sm"
-                        className="w-full gap-2 text-xs justify-center"
+                        className="w-full gap-2 text-xs justify-center whitespace-nowrap"
                       >
-                        <Eye className="w-3.5 h-3.5" />
+                        <Eye className="w-3.5 h-3.5 shrink-0" />
                         <span>Lihat Detail</span>
-                        {!isApproved && <ChevronRight className="w-3.5 h-3.5 ml-auto" />}
+                        {!isApproved && <ChevronRight className="w-3.5 h-3.5 ml-auto shrink-0" />}
                       </Button>
                     </Link>
 
@@ -567,16 +567,16 @@ export function DashboardPesertaClient() {
                         href={course.whatsapp_group_url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="shrink-0"
+                        className="flex-1 min-w-[130px]"
                       >
                         <Button
                           variant="outline"
                           size="sm"
-                          className="gap-1.5 text-xs whitespace-nowrap text-emerald-700 dark:text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/10"
+                          className="w-full justify-center gap-1.5 text-xs whitespace-nowrap text-emerald-700 dark:text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/10"
                         >
-                          <MessageCircle className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                          <MessageCircle className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
                           <span>Gabung Grup</span>
-                          <ExternalLink className="w-3 h-3" />
+                          <ExternalLink className="w-3 h-3 shrink-0" />
                         </Button>
                       </a>
                     )}
@@ -586,9 +586,9 @@ export function DashboardPesertaClient() {
                         variant="secondary"
                         size="sm"
                         onClick={() => handleOpenReviewModal(item)}
-                        className="gap-1.5 text-xs whitespace-nowrap border-amber-500/30 text-amber-700 dark:text-amber-300 shrink-0"
+                        className="flex-1 min-w-[120px] justify-center gap-1.5 text-xs whitespace-nowrap border-amber-500/30 text-amber-700 dark:text-amber-300"
                       >
-                        <Star className="w-3.5 h-3.5" />
+                        <Star className="w-3.5 h-3.5 shrink-0" />
                         <span>Beri Ulasan</span>
                       </Button>
                     )}
