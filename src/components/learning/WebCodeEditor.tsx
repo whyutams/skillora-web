@@ -61,6 +61,12 @@ interface WebCodeEditorProps {
   title?: string;
   tips?: string;
   onChange?: (code: string) => void;
+  onPracticeMatchChange?: (state: {
+    isMatched: boolean;
+    matchPercentage: number;
+    code: string;
+    hasRunSuccess: boolean;
+  }) => void;
 }
 
 // helper batas awal dan akhir baris dari posisi kursor
@@ -85,6 +91,7 @@ export default function WebCodeEditor({
   title = "Editor Praktik & Eksekusi Kode",
   tips,
   onChange,
+  onPracticeMatchChange,
 }: WebCodeEditorProps) {
   const resolvedStarterCode = React.useMemo(() => {
     return getStarterCodePlaceholder(language, initialCode);
@@ -115,6 +122,18 @@ export default function WebCodeEditor({
   const [output, setOutput] = React.useState<string | null>(null);
   const [isRunning, setIsRunning] = React.useState(false);
   const [status, setStatus] = React.useState<"idle" | "running" | "success" | "error">("idle");
+
+  // kabari komponen induk saat status kecocokan kode latihan berubah
+  React.useEffect(() => {
+    if (onPracticeMatchChange) {
+      onPracticeMatchChange({
+        isMatched,
+        matchPercentage,
+        code,
+        hasRunSuccess: status === "success",
+      });
+    }
+  }, [isMatched, matchPercentage, code, status, onPracticeMatchChange]);
   const [duration, setDuration] = React.useState<string | null>(null);
   const [copied, setCopied] = React.useState(false);
   const [savedTooltip, setSavedTooltip] = React.useState(false);

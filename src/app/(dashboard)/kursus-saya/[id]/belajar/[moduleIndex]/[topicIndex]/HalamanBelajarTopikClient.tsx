@@ -206,6 +206,13 @@ export default function HalamanBelajarTopikClient({
   const [projectSavedNotice, setProjectSavedNotice] = React.useState(false);
   const [projectError, setProjectError] = React.useState<string | null>(null);
   const [isSavingProject, setIsSavingProject] = React.useState(false);
+  const [practiceMatchState, setPracticeMatchState] = React.useState<{
+    isMatched: boolean;
+    matchPercentage: number;
+    code: string;
+    hasRunSuccess: boolean;
+  }>({ isMatched: false, matchPercentage: 0, code: "", hasRunSuccess: false });
+  const [isSavingPractice, setIsSavingPractice] = React.useState(false);
   const [copiedCode, setCopiedCode] = React.useState(false);
 
   // status evaluasi essay topik pemahaman
@@ -603,8 +610,21 @@ export default function HalamanBelajarTopikClient({
   const isTopicProjectUnsubmitted =
     hasTopicProject && !projectSubmittedUrl && !currentProjectSubmission?.driveUrl;
 
+  const hasTopicPractice =
+    currentLesson?.type === "practice" || Boolean(currentLesson?.starter_code);
+  const practiceSavedResult = enrollment?.quiz_results?.[currentLessonKey] as
+    | { type?: string; score?: number; matchPercentage?: number }
+    | undefined;
+  const isPracticeCompleted =
+    hasTopicPractice &&
+    Boolean(practiceSavedResult && typeof practiceSavedResult.score === "number");
+  const isTopicPracticeUncompleted = hasTopicPractice && !isPracticeCompleted;
+
   const isContinueDisabled =
-    isTopicQuizUnanswered || isTopicEssayUnanswered || isTopicProjectUnsubmitted;
+    isTopicQuizUnanswered ||
+    isTopicEssayUnanswered ||
+    isTopicProjectUnsubmitted ||
+    isTopicPracticeUncompleted;
 
   const handleMarkAndContinue = () => {
     if (isContinueDisabled) return;
@@ -1010,6 +1030,49 @@ export default function HalamanBelajarTopikClient({
           submittedAt: new Date().toISOString(),
         },
       });
+    }
+  };
+
+  const handleSavePracticeSubmission = async () => {
+    if (!enrollment?.id || !practiceMatchState.isMatched) return;
+    setIsSavingPractice(true);
+    try {
+      const pct = practiceMatchState.matchPercentage;
+      const practiceScore = pct >= 95 ? 100 : pct >= 85 ? 90 : 80;
+      const nextCompleted = completedLessons.includes(currentLessonKey)
+        ? completedLessons
+        : [...completedLessons, currentLessonKey];
+
+      const practiceResultPayload = {
+        lessonKey: currentLessonKey,
+        type: "practice",
+        score: practiceScore,
+        matchPercentage: pct,
+        student_code: practiceMatchState.code,
+        submittedAt: new Date().toISOString(),
+      };
+
+      await syncProgressToDatabase(enrollment.id, nextCompleted, {
+        quiz_result: practiceResultPayload,
+      });
+
+      if (!completedLessons.includes(currentLessonKey)) {
+        setCompletedLessons(nextCompleted);
+      }
+
+      setEnrollment((prev) =>
+        prev
+          ? {
+              ...prev,
+              quiz_results: {
+                ...(prev.quiz_results || {}),
+                [currentLessonKey]: practiceResultPayload,
+              },
+            }
+          : prev
+      );
+    } finally {
+      setIsSavingPractice(false);
     }
   };
 
@@ -1525,21 +1588,66 @@ export default function HalamanBelajarTopikClient({
                   ].filter(Boolean);
 
                   return (
-                    <WebCodeEditor
-                      key={`code-editor-${currentModIdx}-${currentLesIdx}`}
-                      initialCode={starterCode}
-                      targetCode={targetCode}
-                      dynamicValues={dynamicValues}
-                      language={practiceLang}
-                      title={`Praktik ${activeCleanTitle}`}
-                      tips={
-                        currentLesson.instructions
-                          ? currentLesson.instructions
-                          : currentLesson.content && !currentLesson.content.includes("#include")
-                          ? currentLesson.content
-                          : undefined
-                      }
-                    />
+                    <div className="space-y-4">
+                      <WebCodeEditor
+                        key={`code-editor-${currentModIdx}-${currentLesIdx}`}
+                        initialCode={starterCode}
+                        targetCode={targetCode}
+                        dynamicValues={dynamicValues}
+                        language={practiceLang}
+                        title={`Praktik ${activeCleanTitle}`}
+                        onPracticeMatchChange={setPracticeMatchState}
+                        tips={
+                          currentLesson.instructions
+                            ? currentLesson.instructions
+                            : currentLesson.content && !currentLesson.content.includes("#include")
+                            ? currentLesson.content
+                            : undefined
+                        }
+                      />
+
+                      {/* panel status penilaian latihan koding peserta */}
+                      <div className="w-full p-4 sm:p-5 rounded-2xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900/70 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-bold text-stone-800 dark:text-stone-200">
+                              Evaluasi Latihan Koding
+                            </span>
+                            {isPracticeCompleted ? (
+                              <span className="px-2.5 py-0.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-300 text-[11px] font-bold">
+                                Selesai (Nilai {practiceSavedResult?.score ?? 100}/100)
+                              </span>
+                            ) : practiceMatchState.isMatched ? (
+                              <span className="px-2.5 py-0.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-300 text-[11px] font-bold">
+                                Struktur Kode Sesuai ({practiceMatchState.matchPercentage}%)
+                              </span>
+                            ) : (
+                              <span className="px-2.5 py-0.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-300 text-[11px] font-bold">
+                                Kesesuaian {practiceMatchState.matchPercentage}%
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-xs text-stone-500 dark:text-stone-400">
+                            {isPracticeCompleted
+                              ? "Latihan koding telah tersimpan dan dinilai. Anda dapat melanjutkan ke materi berikutnya."
+                              : practiceMatchState.isMatched
+                              ? "Kode Anda telah sesuai dengan acuan placeholder. Klik simpan untuk mencatat nilai dan membuka materi selanjutnya."
+                              : "Tuliskan ulang struktur kode pada editor dan ganti placeholder nama dengan data Anda sendiri hingga struktur sesuai."}
+                          </p>
+                        </div>
+
+                        {!isPracticeCompleted && (
+                          <Button
+                            size="sm"
+                            onClick={handleSavePracticeSubmission}
+                            disabled={!practiceMatchState.isMatched || isSavingPractice}
+                            className="bg-[#0F3E2E] hover:bg-[#15523d] text-white text-xs font-bold py-2.5 px-4 rounded-xl shrink-0 disabled:opacity-50"
+                          >
+                            {isSavingPractice ? "Menyimpan..." : "Simpan & Nilai Latihan"}
+                          </Button>
+                        )}
+                      </div>
+                    </div>
                   );
                 })()}
 
@@ -1882,76 +1990,51 @@ export default function HalamanBelajarTopikClient({
 
                 {/* bilah navigasi materi bawah */}
                 <div className="p-4 sm:p-5 rounded-2xl border border-stone-200/80 dark:border-stone-800/80 bg-white/80 dark:bg-stone-900/60 backdrop-blur-md flex flex-wrap items-center justify-between gap-3 shadow-xs">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={isContinueDisabled}
-                    onClick={() => {
-                      if (!isContinueDisabled) {
-                        toggleLessonCompletion(currentLessonKey);
-                      }
-                    }}
-                    className={`gap-1.5 text-xs font-bold py-2.5 px-4 rounded-xl transition-colors ${
-                      isCurrentLessonCompleted
-                        ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
-                        : "border-stone-300 dark:border-stone-700 text-stone-700 dark:text-stone-300"
-                    } ${isContinueDisabled ? "opacity-60 cursor-not-allowed" : ""}`}
-                  >
-                    <CheckCircle2
-                      className={`w-4 h-4 ${
-                        isCurrentLessonCompleted ? "text-emerald-600" : "text-stone-400"
-                      }`}
-                    />
-                    <span>
-                      {isCurrentLessonCompleted ? "Telah Diselesaikan" : "Tandai Selesai"}
-                    </span>
-                  </Button>
-
-                  <div className="flex items-center gap-2 flex-wrap">
-                    {navigationPointers.prev && (
-                      <Link
-                        href={`/kursus-saya/${enrollmentOrSlug}/belajar/${navigationPointers.prev.modIdx}/${navigationPointers.prev.lesIdx}`}
-                      >
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="gap-1.5 text-xs font-semibold py-2.5 px-3 rounded-xl"
-                          title={navigationPointers.prev.title}
-                        >
-                          <ChevronLeft className="w-4 h-4" />
-                          <span className="hidden sm:inline max-w-[140px] truncate">
-                            {navigationPointers.prev.title}
-                          </span>
-                        </Button>
-                      </Link>
-                    )}
-
-                    <span
-                      className={isContinueDisabled ? "inline-flex cursor-not-allowed" : "inline-flex"}
-                      title={
-                        isContinueDisabled
-                          ? isTopicEssayUnanswered
-                            ? "Harap menjawab soal evaluasi terlebih dahulu untuk melanjutkan."
-                            : isTopicQuizUnanswered
-                            ? "Harap menyelesaikan kuis terlebih dahulu untuk melanjutkan."
-                            : "Harap mengumpulkan link Google Drive proyek terlebih dahulu untuk melanjutkan."
-                          : undefined
-                      }
+                  {navigationPointers.prev && (
+                    <Link
+                      href={`/kursus-saya/${enrollmentOrSlug}/belajar/${navigationPointers.prev.modIdx}/${navigationPointers.prev.lesIdx}`}
                     >
                       <Button
-                        variant="primary"
+                        variant="outline"
                         size="sm"
-                        onClick={handleMarkAndContinue}
-                        disabled={isContinueDisabled}
-                        className="gap-2 text-xs font-bold py-2.5 px-4 rounded-xl transition-all bg-[#0F3E2E] hover:bg-[#16533e] text-white shadow-xs"
+                        className="gap-1.5 text-xs font-semibold py-2.5 px-3 rounded-xl"
+                        title={navigationPointers.prev.title}
                       >
-                        <span className="max-w-[140px] truncate">
-                          {navigationPointers.next ? "Selesai & Lanjut" : "Selesai Mempelajari"}
+                        <ChevronLeft className="w-4 h-4" />
+                        <span className="hidden sm:inline max-w-[140px] truncate">
+                          {navigationPointers.prev.title}
                         </span>
-                        {navigationPointers.next && <ChevronRight className="w-4 h-4" />}
                       </Button>
-                    </span>
-                  </div>
+                    </Link>
+                  )}
+
+                  <span
+                    className={`${isContinueDisabled ? "inline-flex cursor-not-allowed" : "inline-flex"} ml-auto`}
+                    title={
+                      isContinueDisabled
+                        ? isTopicEssayUnanswered
+                          ? "Harap menjawab soal evaluasi terlebih dahulu untuk melanjutkan."
+                          : isTopicQuizUnanswered
+                          ? "Harap menyelesaikan kuis terlebih dahulu untuk melanjutkan."
+                          : isTopicPracticeUncompleted
+                          ? "Harap selesaikan latihan koding sesuai placeholder terlebih dahulu untuk melanjutkan."
+                          : "Harap mengumpulkan link Google Drive proyek terlebih dahulu untuk melanjutkan."
+                        : undefined
+                    }
+                  >
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      onClick={handleMarkAndContinue}
+                      disabled={isContinueDisabled}
+                      className="gap-2 text-xs font-bold py-2.5 px-4 rounded-xl transition-all bg-[#0F3E2E] hover:bg-[#16533e] text-white shadow-xs"
+                    >
+                      <span className="max-w-[140px] truncate">
+                        {navigationPointers.next ? "Selesai & Lanjut" : "Selesai Mempelajari"}
+                      </span>
+                      {navigationPointers.next && <ChevronRight className="w-4 h-4" />}
+                    </Button>
+                  </span>
                 </div>
               </div>
             ) : (

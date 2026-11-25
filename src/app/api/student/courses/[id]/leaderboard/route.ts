@@ -111,6 +111,25 @@ export async function GET(
       0
     );
 
+    const evaluationKeys: string[] = [];
+    (curriculum?.modules || []).forEach((mod, mIdx) => {
+      (mod.lessons || []).forEach((les, lIdx) => {
+        const qData = les.quiz_data;
+        const hasQuizQuestions =
+          les.type === "quiz" &&
+          ((Array.isArray(qData?.questions) && qData.questions.length > 0) ||
+            Boolean(qData?.question));
+        const hasEssayQuestion =
+          les.type !== "quiz" &&
+          Boolean(qData?.question && qData.question.replace(/<[^>]*>/g, "").trim());
+        const isPractice = les.type === "practice" || Boolean(les.starter_code);
+        const isProject = les.type === "project";
+        if (hasQuizQuestions || hasEssayQuestion || isPractice || isProject) {
+          evaluationKeys.push(`mod-${mIdx}-les-${lIdx}`);
+        }
+      });
+    });
+
     const userMeta = parseEnrollmentMeta(currentUserEnrollment.whatsapp_number);
     const completedCount = userMeta.completed_lessons?.length || 0;
     const isCompleted = totalLessons > 0 && completedCount >= totalLessons;
@@ -152,6 +171,16 @@ export async function GET(
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const prof = Array.isArray(item.profiles) ? item.profiles[0] : (item.profiles as any);
 
+      const answeredEvaluations =
+        evaluationKeys.length > 0
+          ? evaluationKeys.filter(
+              (k) =>
+                Boolean(meta.quiz_results && meta.quiz_results[k]) ||
+                Boolean(meta.project_submissions && meta.project_submissions[k]?.driveUrl)
+            ).length
+          : Object.keys(meta.quiz_results || {}).length +
+            Object.keys(meta.project_submissions || {}).length;
+
       return {
         enrollment_id: item.id,
         user_id: item.user_id,
@@ -163,6 +192,8 @@ export async function GET(
         total_score: meta.total_score ?? 0,
         completed_count: meta.completed_lessons?.length || 0,
         total_lessons: totalLessons,
+        answered_evaluations_count: answeredEvaluations,
+        total_evaluations_count: evaluationKeys.length,
         is_course_completed: totalLessons > 0 && (meta.completed_lessons?.length || 0) >= totalLessons,
         is_current_user: item.user_id === user.id,
         created_at: item.created_at,

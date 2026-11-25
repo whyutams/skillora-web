@@ -272,3 +272,20 @@ export function getCourseReviewsData(
   };
 }
 
+// cari indeks modul dan topik pertama yang belum diselesaikan oleh peserta
+export function getNextIncompleteLesson(
+  modules: CourseModuleItem[],
+  completedLessons: string[] = []
+): { moduleIndex: number; topicIndex: number } {
+  for (let mIdx = 0; mIdx < modules.length; mIdx++) {
+    const lessons = modules[mIdx]?.lessons || [];
+    for (let lIdx = 0; lIdx < lessons.length; lIdx++) {
+      const key = `mod-${mIdx}-les-${lIdx}`;
+      if (!completedLessons.includes(key)) {
+        return { moduleIndex: mIdx, topicIndex: lIdx };
+      }
+    }
+  }
+  return { moduleIndex: 0, topicIndex: 0 };
+}
+

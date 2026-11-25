@@ -652,17 +652,52 @@ export default function AdminCourseDetailPage() {
     return syllabus.reduce((acc, m) => acc + (m.lessons?.length || 0), 0);
   }, [syllabus]);
 
+  // daftar kunci topik evaluasi termasuk kuis, essay, latihan koding, dan proyek
+  const evaluationLessonKeys = React.useMemo(() => {
+    const keys: string[] = [];
+    syllabus.forEach((mod, mIdx) => {
+      (mod.lessons || []).forEach((les, lIdx) => {
+        const qData = les.quiz_data;
+        const hasQuizQuestions =
+          les.type === "quiz" &&
+          ((Array.isArray(qData?.questions) && qData.questions.length > 0) ||
+            Boolean(qData?.question));
+        const hasEssayQuestion =
+          les.type !== "quiz" &&
+          Boolean(qData?.question && qData.question.replace(/<[^>]*>/g, "").trim());
+        const isPractice = les.type === "practice" || Boolean(les.starter_code);
+        const isProject = les.type === "project";
+        if (hasQuizQuestions || hasEssayQuestion || isPractice || isProject) {
+          keys.push(`mod-${mIdx}-les-${lIdx}`);
+        }
+      });
+    });
+    return keys;
+  }, [syllabus]);
+
+  const totalEvaluationsCount = evaluationLessonKeys.length;
+
   // klasemen peringkat peserta berdasarkan perolehan nilai
   const rankedParticipants = React.useMemo(() => {
     const list = participants.map((p) => {
       const avg = typeof p.average_score === "number" ? p.average_score : 0;
       const tot = typeof p.total_score === "number" ? p.total_score : 0;
       const comp = Array.isArray(p.completed_lessons) ? p.completed_lessons.length : 0;
+      const answeredEval =
+        evaluationLessonKeys.length > 0
+          ? evaluationLessonKeys.filter(
+              (k) =>
+                Boolean(p.quiz_results && p.quiz_results[k]) ||
+                Boolean(p.project_submissions && p.project_submissions[k]?.driveUrl)
+            ).length
+          : Object.keys(p.quiz_results || {}).length +
+            Object.keys(p.project_submissions || {}).length;
       return {
         ...p,
         calculatedAverage: avg,
         calculatedTotal: tot,
         calculatedCompleted: comp,
+        calculatedAnsweredEvaluations: answeredEval,
       };
     });
 
@@ -680,7 +715,7 @@ export default function AdminCourseDetailPage() {
       ...item,
       rank: idx + 1,
     }));
-  }, [participants]);
+  }, [participants, evaluationLessonKeys]);
 
   // filter pencarian peserta
   const filteredParticipants = React.useMemo(() => {
@@ -1458,6 +1493,7 @@ export default function AdminCourseDetailPage() {
                           <th className="py-3 px-4">Mahasiswa / Peserta</th>
                           <th className="py-3 px-4">Asal Kampus</th>
                           <th className="py-3 px-4 text-center">Topik Selesai</th>
+                          <th className="py-3 px-4 text-center">Soal Evaluasi</th>
                           <th className="py-3 px-4 text-center">Rata-Rata Nilai</th>
                           <th className="py-3 px-4 text-center">Total Nilai</th>
                           <th className="py-3 px-4 text-center">Status Silabus</th>
@@ -1533,6 +1569,12 @@ export default function AdminCourseDetailPage() {
                               <td className="py-3.5 px-4 text-center">
                                 <span className="font-semibold text-stone-700 dark:text-stone-300">
                                   {p.calculatedCompleted} / {totalLessonsCount} Topik
+                                </span>
+                              </td>
+
+                              <td className="py-3.5 px-4 text-center">
+                                <span className="font-semibold text-stone-700 dark:text-stone-300">
+                                  {p.calculatedAnsweredEvaluations}/{totalEvaluationsCount} Soal
                                 </span>
                               </td>
 

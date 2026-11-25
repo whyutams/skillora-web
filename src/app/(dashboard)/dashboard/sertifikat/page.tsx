@@ -216,7 +216,7 @@ export default function DashboardSertifikatPage() {
                       </p>
                     </div>
 
-                    <Link href={`/kursus-saya/${item.course?.slug || item.id}/belajar/0/0`}>
+                    <Link href={`/kursus-saya/${item.course?.slug || item.id}/belajar`}>
                       <Button variant="outline" size="sm" className="w-full text-xs font-semibold gap-1.5">
                         <span>Lanjutkan Belajar</span>
                         <ArrowRight className="w-3.5 h-3.5" />

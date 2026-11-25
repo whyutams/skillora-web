@@ -362,7 +362,7 @@ export function DashboardPesertaOverview() {
 
                   <div className="flex items-center gap-2.5 pt-1">
                     <Link
-                      href={`/kursus-saya/${resumeEnrollment.course.slug}/belajar/0/0`}
+                      href={`/kursus-saya/${resumeEnrollment.course.slug}/belajar`}
                       className="flex-1 sm:flex-none"
                     >
                       <Button

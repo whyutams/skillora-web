@@ -27,6 +27,8 @@ export interface LeaderboardParticipant {
   total_score: number;
   completed_count: number;
   total_lessons: number;
+  answered_evaluations_count?: number;
+  total_evaluations_count?: number;
   is_course_completed: boolean;
   is_current_user: boolean;
   created_at: string;
@@ -85,9 +87,7 @@ export function TabLeaderboardKursus({
     }
   }, [isUnlocked, fetchLeaderboard]);
 
-  const targetModuleIdx = lastAccessedLesson?.moduleIndex ?? 0;
-  const targetTopicIdx = lastAccessedLesson?.topicIndex ?? 0;
-  const learnUrl = `/kursus-saya/${enrollmentOrSlug}/belajar/${targetModuleIdx}/${targetTopicIdx}`;
+  const learnUrl = `/kursus-saya/${enrollmentOrSlug}/belajar`;
 
   // tampilan jika peringkat kelas masih terkunci
   if (!isUnlocked) {
@@ -317,6 +317,7 @@ export function TabLeaderboardKursus({
                     <th className="py-3 px-4">Mahasiswa / Peserta</th>
                     <th className="py-3 px-4">Asal Kampus</th>
                     <th className="py-3 px-4 text-center">Topik Selesai</th>
+                    <th className="py-3 px-4 text-center">Soal Evaluasi</th>
                     <th className="py-3 px-4 text-center">Rata-Rata Nilai</th>
                     <th className="py-3 px-4 text-center">Total Nilai</th>
                     <th className="py-3 px-4 text-center">Status</th>
@@ -399,6 +400,11 @@ export function TabLeaderboardKursus({
                       <td className="py-3.5 px-4 text-center">
                         <span className="font-semibold text-stone-700 dark:text-stone-300">
                           {item.completed_count} / {item.total_lessons} Topik
+                        </span>
+                      </td>
+                      <td className="py-3.5 px-4 text-center">
+                        <span className="font-semibold text-stone-700 dark:text-stone-300">
+                          {item.answered_evaluations_count ?? 0}/{item.total_evaluations_count ?? 0} Soal
                         </span>
                       </td>
 

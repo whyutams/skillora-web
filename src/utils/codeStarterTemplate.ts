@@ -313,6 +313,12 @@ export function calculateCodeMatch(
     return { matchPercentage: 0, isMatched: false };
   }
 
+  // pastikan peserta telah mengganti placeholder instruksi dengan nilai aktual mereka
+  const hasUnfilledPlaceholder = /\[\s*tuliskan nama anda di sini\s*\]/i.test(writtenCode);
+  if (hasUnfilledPlaceholder) {
+    return { matchPercentage: 40, isMatched: false };
+  }
+
   let matchedCount = 0;
   let searchIdx = 0;
 
