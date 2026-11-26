@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient, createAdminClient } from "@/utils/supabase/server";
 import { parseEnrollmentMeta } from "@/utils/enrollmentMeta";
+import { parseCourseDescription } from "@/utils/courseMeta";
 import { parseCourseCurriculum } from "@/utils/courseCurriculumParser";
 
 // mengambil data leaderboard peringkat kelas untuk peserta yang telah menyelesaikan seluruh silabus
@@ -93,7 +94,7 @@ export async function GET(
     // ambil data kursus untuk menghitung total silabus
     const { data: courseData } = await adminClient
       .from("courses")
-      .select("id, title, slug, content, description")
+      .select("id, title, slug, description")
       .eq("id", targetCourseId)
       .maybeSingle();
 
@@ -104,8 +105,9 @@ export async function GET(
       );
     }
 
+    const courseParsed = parseCourseDescription(courseData.description);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const curriculum = parseCourseCurriculum(courseData as any, courseData.content);
+    const curriculum = parseCourseCurriculum(courseData as any, courseParsed.content);
     const totalLessons = (curriculum?.modules || []).reduce(
       (acc, m) => acc + (m.lessons?.length || 0),
       0

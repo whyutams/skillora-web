@@ -7,6 +7,8 @@ import {
   getNextIncompleteLesson,
 } from "@/utils/courseCurriculumParser";
 
+export const dynamic = "force-dynamic";
+
 export default async function BelajarKursusRedirectPage({
   params,
 }: {
@@ -37,7 +39,7 @@ export default async function BelajarKursusRedirectPage({
       if (isUUID) {
         const { data } = await adminClient
           .from("enrollments")
-          .select("id, whatsapp_number, courses (id, description, content)")
+          .select("id, whatsapp_number, courses (id, title, slug, description)")
           .eq("id", cleanId)
           .eq("user_id", user.id)
           .maybeSingle();
@@ -51,7 +53,7 @@ export default async function BelajarKursusRedirectPage({
         if (c?.id) {
           const { data } = await adminClient
             .from("enrollments")
-            .select("id, whatsapp_number, courses (id, description, content)")
+            .select("id, whatsapp_number, courses (id, title, slug, description)")
             .eq("course_id", c.id)
             .eq("user_id", user.id)
             .order("created_at", { ascending: false })
@@ -71,7 +73,7 @@ export default async function BelajarKursusRedirectPage({
           const courseParsed = parseCourseDescription(rawCourse.description);
           const curriculum = parseCourseCurriculum(
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            { ...rawCourse, description: courseParsed.description, content: courseParsed.content } as any,
+            rawCourse as any,
             courseParsed.content
           );
           const next = getNextIncompleteLesson(
