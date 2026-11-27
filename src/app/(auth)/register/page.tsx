@@ -276,8 +276,8 @@ function RegisterForm() {
         });
 
       if (!signInError && signInData.session) {
-        router.push(redirectPath);
-        router.refresh();
+        window.location.href = redirectPath;
+        return;
       } else {
         setSuccess(true);
       }

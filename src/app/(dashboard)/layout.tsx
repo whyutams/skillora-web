@@ -341,8 +341,8 @@ function DashboardLayoutContent({
 
       await supabase.auth.signOut();
       setIsLogoutModalOpen(false);
-      router.push("/login");
-      router.refresh();
+      window.location.href = "/login";
+      return;
     } catch (err) {
       console.error("Logout error:", err);
     } finally {

@@ -109,13 +109,13 @@ function LoginForm() {
         }
 
         if (role === USER_ROLES.SUPERADMIN) {
-          router.push("/superadmin/users");
+          window.location.href = "/superadmin/users";
         } else if (role === USER_ROLES.ADMIN) {
-          router.push("/admin/dashboard");
+          window.location.href = "/admin/dashboard";
         } else {
-          router.push(redirectPath);
+          window.location.href = redirectPath;
         }
-        router.refresh();
+        return;
       }
     } catch (err: unknown) {
       if (err instanceof Error) {

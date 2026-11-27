@@ -125,12 +125,13 @@ export default function MaintenanceLoginPage() {
 
       // jika akun terverifikasi sebagai admin atau superadmin izinkan masuk ke dashboard
       if (userRole === USER_ROLES.SUPERADMIN) {
-        router.push("/superadmin/dashboard");
+        window.location.href = "/superadmin/dashboard";
       } else if (userRole === USER_ROLES.ADMIN) {
-        router.push("/admin/dashboard");
+        window.location.href = "/admin/dashboard";
       } else {
-        router.push("/maintenance");
+        window.location.href = "/maintenance";
       }
+      return;
     } catch (err: unknown) {
       setErrorMessage(
         err instanceof Error

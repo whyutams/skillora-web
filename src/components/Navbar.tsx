@@ -199,8 +199,8 @@ export function Navbar() {
       await supabase.auth.signOut();
       setIsLogoutModalOpen(false);
       setUser(null);
-      router.push("/");
-      router.refresh();
+      window.location.href = "/";
+      return;
     } catch (err) {
       console.error("Logout error:", err);
     } finally {
