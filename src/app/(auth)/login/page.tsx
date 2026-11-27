@@ -86,27 +86,26 @@ function LoginForm() {
 
         const role = profile?.role || (data.user.email === "skillorastartup26@gmail.com" ? USER_ROLES.SUPERADMIN : USER_ROLES.STUDENT);
 
-        // catat aktivitas login pengguna
-        try {
-          await fetch("/api/logs", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              action: "USER_LOGIN",
-              tableName: "auth.users",
-              recordId: data.user.id,
-              userId: data.user.id,
-              userEmail: data.user.email,
-              userRole: role,
-              details: {
-                username: profile?.username || username.trim().toLowerCase(),
-                full_name: profile?.full_name || null,
-              },
-            }),
-          });
-        } catch {
+        // catat aktivitas login pengguna tanpa menghambat redirect
+        fetch("/api/logs", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          keepalive: true,
+          body: JSON.stringify({
+            action: "USER_LOGIN",
+            tableName: "auth.users",
+            recordId: data.user.id,
+            userId: data.user.id,
+            userEmail: data.user.email,
+            userRole: role,
+            details: {
+              username: profile?.username || username.trim().toLowerCase(),
+              full_name: profile?.full_name || null,
+            },
+          }),
+        }).catch(() => {
           // non-blocking
-        }
+        });
 
         if (role === USER_ROLES.SUPERADMIN) {
           window.location.href = "/superadmin/users";

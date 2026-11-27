@@ -108,7 +108,16 @@ export function Navbar() {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
+      const currentPath =
+        typeof window !== "undefined" ? window.location.pathname : "";
+      const onAuthScreen =
+        currentPath === "/login" ||
+        currentPath === "/register" ||
+        currentPath === "/forgot-password" ||
+        currentPath === "/reset-password";
+
       if (session?.user) {
+        if (onAuthScreen) return;
         setUser({ id: session.user.id, email: session.user.email });
         loadUser();
       } else {
@@ -332,7 +341,11 @@ export function Navbar() {
 
             {loading ? (
               <NavbarUserSkeleton />
-            ) : user ? (
+            ) : user &&
+              pathname !== "/login" &&
+              pathname !== "/register" &&
+              pathname !== "/forgot-password" &&
+              pathname !== "/reset-password" ? (
               <div className="relative" ref={dropdownRef}>
                 {/* Profile Trigger Button with Dropdown Indicator */}
                 <button
@@ -556,7 +569,11 @@ export function Navbar() {
             </nav>
 
             <div className="pt-3 border-t border-stone-200 dark:border-stone-800 flex flex-col gap-2">
-              {user ? (
+              {user &&
+              pathname !== "/login" &&
+              pathname !== "/register" &&
+              pathname !== "/forgot-password" &&
+              pathname !== "/reset-password" ? (
                 <>
                   <div className="p-3 rounded-xl bg-stone-100 dark:bg-stone-900 flex items-center gap-3">
                     {avatarUrl ? (
